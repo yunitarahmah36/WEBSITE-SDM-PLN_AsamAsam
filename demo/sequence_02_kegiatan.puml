@@ -1,0 +1,45 @@
+@startuml sequence_02_kegiatan
+title Sequence Diagram - Kegiatan Harian & Logbook
+
+actor "Peserta\n(Mahasiswa/Siswa)" as Peserta
+boundary "Halaman Web" as UI
+control "LogbookController" as Ctrl
+entity "Database" as DB
+actor "Pembimbing\nLapangan" as PL
+
+Peserta -> UI : Isi form logbook harian (teks & foto)
+UI -> Ctrl : POST /logbookku/save
+activate Ctrl
+Ctrl -> Ctrl : Validasi data & Upload foto
+Ctrl -> DB : Simpan data logbook (status 'pending')
+activate DB
+DB --> Ctrl : Success
+deactivate DB
+Ctrl --> UI : Redirect dengan pesan sukses
+deactivate Ctrl
+UI --> Peserta : Tampilkan logbook baru di tabel
+
+== Validasi oleh Pembimbing Lapangan ==
+PL -> UI : Lihat daftar logbook siswa binaan
+UI -> Ctrl : GET /logbook/siswa/{id}
+activate Ctrl
+Ctrl -> DB : Ambil data logbook siswa
+activate DB
+DB --> Ctrl : Data logbook
+deactivate DB
+Ctrl --> UI : Tampilkan detail logbook
+deactivate Ctrl
+UI --> PL : Menampilkan data logbook
+
+PL -> UI : Klik "Approve" (Setujui) Logbook
+UI -> Ctrl : POST /logbook/approve
+activate Ctrl
+Ctrl -> DB : Update status logbook menjadi 'approved'
+activate DB
+DB --> Ctrl : Success
+deactivate DB
+Ctrl --> UI : Response JSON / Redirect
+deactivate Ctrl
+UI --> PL : Status logbook berubah menjadi disetujui
+
+@enduml

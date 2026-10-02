@@ -1,0 +1,46 @@
+@startuml sequence_01_pendaftaran
+title Sequence Diagram - Pendaftaran Magang
+
+actor "Peserta\n(Mahasiswa/Siswa)" as Peserta
+boundary "Halaman Web" as UI
+control "SiswaController" as Ctrl
+entity "Database" as DB
+actor Admin as Admin
+
+Peserta -> UI : Isi formulir pendaftaran & Upload berkas
+UI -> Ctrl : POST /siswa/apply
+activate Ctrl
+Ctrl -> DB : Simpan data aplikasi (status='pending')
+activate DB
+DB --> Ctrl : Response success
+deactivate DB
+Ctrl --> UI : Redirect & Tampilkan notifikasi "Pending"
+deactivate Ctrl
+UI --> Peserta : Tampilan Dashboard Pending
+
+== Verifikasi oleh Admin ==
+Admin -> UI : Lihat daftar lamaran masuk
+UI -> Ctrl : GET /application
+activate Ctrl
+Ctrl -> DB : Ambil data lamaran 'pending'
+activate DB
+DB --> Ctrl : Data lamaran
+deactivate DB
+Ctrl --> UI : Tampilkan tabel lamaran
+deactivate Ctrl
+
+UI --> Admin : Tabel data lamaran
+
+Admin -> UI : Klik "Terima" & tetapkan divisi/pembimbing
+UI -> Ctrl : POST /application/accept
+activate Ctrl
+Ctrl -> DB : Update status='accepted', set pembimbing
+activate DB
+DB --> Ctrl : Success
+deactivate DB
+Ctrl -> Ctrl : Generate Surat Balasan Penerimaan\nKirim Notifikasi Email
+Ctrl --> UI : Redirect & success message
+deactivate Ctrl
+UI --> Admin : Notifikasi berhasil
+
+@enduml

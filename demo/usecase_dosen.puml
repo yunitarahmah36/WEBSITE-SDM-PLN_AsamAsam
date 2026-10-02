@@ -1,0 +1,40 @@
+@startuml UC-04 Dosen Pembimbing
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam usecase {
+    BackgroundColor #EBF5FB
+    BorderColor #2E86C1
+    ArrowColor #1A5276
+    ActorBorderColor #1A5276
+    ActorBackgroundColor #D6EAF8
+    ActorFontColor #1A5276
+    ActorFontSize 13
+}
+skinparam package {
+    BackgroundColor #EBF5FB
+    BorderColor #2E86C1
+    FontColor #1A5276
+    FontStyle bold
+}
+
+title Use Case Diagram - Dosen Pembimbing\nSIAMAM - Sistem Informasi Administrasi Praktek Magang
+
+actor "Dosen / Guru\nPembimbing" as dos
+
+rectangle "Fitur Dosen Pembimbing" {
+    usecase "Lihat Logbook Bimbingan"   as UC1
+    usecase "Input Nilai Akademik"      as UC2
+    usecase "Lihat Pengumuman Dosen"    as UC3
+    usecase "Kirim Pesan (Dosen)"       as UC4
+    usecase "Lihat Siswa / Mahasiswa Bimbingan" as UC5
+}
+
+dos --> UC1
+dos --> UC2
+dos --> UC3
+dos --> UC4
+dos --> UC5
+
+@enduml

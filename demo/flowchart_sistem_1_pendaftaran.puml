@@ -1,0 +1,45 @@
+@startuml flowchart_sistem_1_pendaftaran
+title Flowchart SIAMAM (Bagian 1: Pendaftaran)
+
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor #E3F2FD
+  BorderColor #1976D2
+  ArrowColor #0D47A1
+}
+
+start
+
+:Calon Peserta Magang (Siswa/Mahasiswa);
+:Melakukan Pendaftaran Akun (Register);
+:Login ke Sistem;
+
+:Lengkapi Data Profil & Unggah Dokumen Prasyarat
+(KTP, KTM/Kartu Pelajar, BPJS, Surat Pengantar);
+
+if (Berkas Lengkap?) then (Ya)
+  :Peserta memilih Divisi Magang yang tersedia;
+  :Mengajukan Lamaran (Apply);
+else (Tidak)
+  :Peserta melengkapi berkas kembali;
+  note right: Kembali ke Form Profil
+endif
+
+:Sistem menampilkan status lamaran "Pending";
+
+partition Admin {
+  :Admin memverifikasi berkas dan ketersediaan kuota;
+  if (Terima Lamaran?) then (Ditolak)
+    :Sistem mengirim notifikasi penolakan;
+    :Peserta dapat melamar ke divisi lain;
+    note right: Kembali ke Pilih Divisi
+  else (Diterima)
+    :Admin mengubah status menjadi "Accepted";
+    :Sistem menetapkan Pembimbing Lapangan;
+    :Sistem mengunggah Surat Balasan Penerimaan;
+    :Sistem mengirim Notifikasi Email ke Peserta;
+  endif
+}
+
+stop
+@enduml

@@ -1,0 +1,431 @@
+<?= $this->extend('main'); ?>
+<?= $this->section('content'); ?>
+<style>
+    li.errors:not(:last-child) {
+        margin-bottom: 7px;
+    }
+
+    li.errors {
+        text-transform: capitalize;
+        font-size: 14px;
+    }
+</style>
+<div class="row mb-5">
+    <div class="col-lg-3">
+        <div class="card position-sticky top-3">
+            <ul class="nav flex-column bg-white border-radius-lg p-3">
+                <li class="nav-item">
+                    <a class="nav-link text-dark d-flex" data-scroll="" href="#profile">
+                        <i class="material-icons text-lg me-2">person</i>
+                        <span class="text-sm">Profile</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark d-flex" data-scroll="" href="#password">
+                        <i class="material-icons text-lg me-2">key</i>
+                        <span class="text-sm">Password</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <?php $data = in_groups('admin') || in_groups('pembimbing') || in_groups('dosen_pembimbing') ? getPembimbingData(user_id()) : getSiswaData(user_id()) ?>
+    <div class="col-lg-9 mt-lg-0 mt-4">
+        <div class="card card-body p-4 mb-4" id="profile">
+            <div class="mb-3 d-flex align-items-center gap-3">
+                <div class="avatar avatar-xl position-relative cursor-pointer" data-bs-toggle="modal" data-bs-target="#viewPhoto">
+                    <img src="<?= !empty($data->foto) ? (in_groups('siswa') ? base_url('assets/img/foto_siswa/') : base_url('assets/img/foto_pembimbing/')) . $data->foto : base_url('assets/img/default-avatar.svg') ?>" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="object-fit: cover; height: 74px;">
+                </div>
+                <div>
+                    <h4 class="m-0 p-0 d-flex align-items-center gap-2"><?= $data->nama ?> <span class="text-sm" title="Username" data-bs-toggle="tooltip">( <?= $data->username ?> )</span></h4>
+                    <div class="text-gray-400 text-xs"><abbr title="waktu akun dibuat"><?= $data->created_at ?></abbr></div>
+                </div>
+            </div>
+
+            <?php if (in_groups('siswa')) : ?>
+                <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                    <i class="fa fa-user"></i>
+                    <div class="text-gray-800"><?= getIdentityLabel($data) ?>: <?= $data->nim ?></div>
+                </div>
+            <?php endif ?>
+
+            <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                <i class="fa fa-user-cog"></i>
+                <div class="text-gray-800"><?= implode(',', user()->getRoles()) ?></div>
+            </div>
+
+            <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                <i class="fa fa-envelope"></i>
+                <div class="text-gray-800"><?= $data->uemail ?></div>
+            </div>
+
+            <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                <i class="fa fa-phone"></i>
+                <div class="text-gray-800"><?= $data->no_hp ?></div>
+            </div>
+
+            <?php if (in_groups('siswa')) : ?>
+                <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                    <i class="fa fa-home"></i>
+                    <div class="text-gray-800"><?= $data->alamat ?></div>
+                </div>
+                <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                    <i class="fa fa-school"></i>
+                    <div class="text-gray-800"><b>Jurusan: </b> <?= $data->jurusan ?: '-' ?></div>
+                </div>
+                <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                    <i class="fa fa-building"></i>
+                    <div class="text-gray-800"><b>Instansi: </b> <?= $data->instansi ?: '-' ?></div>
+                </div>
+                <hr>
+                <h6 class="text-sm">Informasi Tambahan</h6>
+                <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                    <i class="fa fa-id-card"></i>
+                    <div class="text-gray-800"><b>NIK: </b> <?= $data->nik ?? '-' ?></div>
+                </div>
+                <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                    <i class="fa fa-map-marker-alt"></i>
+                    <div class="text-gray-800"><b>Tempat, Tanggal Lahir: </b> <?= $data->tempat_lahir ?? '-' ?>, <?= $data->tanggal_lahir ?? '-' ?></div>
+                </div>
+                <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                    <i class="fa fa-venus-mars"></i>
+                    <div class="text-gray-800"><b>Jenis Kelamin: </b> <?= $data->jenis_kelamin ?? '-' ?></div>
+                </div>
+                <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                    <i class="fa fa-phone-alt"></i>
+                    <div class="text-gray-800"><b>No HP Emergency: </b> <?= $data->no_hp_emergency ?? '-' ?></div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-xs font-weight-bold">Berkas:</span><br>
+                    <?php if (isset($data->ktp) && $data->ktp) : ?>
+                        <a href="/assets/berkas/<?= $data->ktp ?>" target="_blank" class="badge badge-info border border-info mb-1"><i class="fa fa-file-pdf"></i> KTP</a>
+                    <?php endif; ?>
+                    <?php if (isset($data->bpjs) && $data->bpjs) : ?>
+                        <a href="/assets/berkas/<?= $data->bpjs ?>" target="_blank" class="badge badge-info border border-info mb-1"><i class="fa fa-file-pdf"></i> BPJS</a>
+                    <?php endif; ?>
+                    <?php if (isset($data->ktm) && $data->ktm) : ?>
+                        <a href="/assets/berkas/<?= $data->ktm ?>" target="_blank" class="badge badge-info border border-info mb-1"><i class="fa fa-file-pdf"></i> KTM</a>
+                    <?php endif; ?>
+                    <?php if (isset($data->surat_balasan) && $data->surat_balasan) : ?>
+                        <a href="/assets/berkas/<?= $data->surat_balasan ?>" target="_blank" class="badge bg-gradient-success mb-1"><i class="fa fa-file-pdf"></i> Surat Balasan</a>
+                    <?php endif; ?>
+                </div>
+            <?php endif ?>
+
+            <div class="mt-4 d-flex justify-content-end mb-0">
+                <button class="btn btn-sm bg-gradient-dark m-0" data-bs-toggle="modal" data-bs-target="#userEdit">EDIT</button>
+            </div>
+        </div>
+
+        <div class="card card-body p-4 mb-4" id="password">
+            <div class="mb-4">
+                <h4 class="m-0 p-0">Password</h4>
+                <div class="text-gray-400 text-sm">Ubah password akun anda</div>
+            </div>
+
+            <?php if (session('errors')) : ?>
+                <div class="badge border badge-danger border-danger w-100 mb-3" style="text-align: left;">
+                    <ul class="list-unstyled mb-0 p-2">
+                        <?php foreach (session('errors') as $error) : ?>
+                            <li class="errors"><?= $error ?></li>
+                        <?php endforeach ?>
+                    </ul>
+                </div>
+            <?php endif ?>
+
+            <?php if (session('error')) : ?>
+                <div class="alert alert-danger">
+                    <?= session('error') ?>
+                </div>
+            <?php endif ?>
+
+            <?php if (session('message')) : ?>
+                <div class="alert alert-success">
+                    <?= session('message') ?>
+                </div>
+            <?php endif ?>
+
+            <form method="post" action="/user/reset_pass" id="fpass">
+                <?= csrf_field() ?>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <div class="input-group input-group-outline">
+                            <label for="email" class="form-label"><?= lang('Auth.email') ?></label>
+                            <input type="email" id="email" readonly class="form-control" name="email" value="<?= user()->email ?>">
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 mb-3">
+                        <div class="input-group input-group-outline">
+                            <label for="password" class="form-label"><?= lang('Auth.password') ?></label>
+                            <input type="password" class="form-control" id="password" name="password">
+                            <span class="password-toggle-icon"><i class="fa fa-eye-slash font-weight-bold"></i></span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 mb-3">
+                        <div class="input-group input-group-outline">
+                            <label for="password_confirm" class="form-label"><?= lang('Auth.repeatPassword') ?></label>
+                            <input type="password" class="form-control" id="pass_confirm" name="pass_confirm">
+                            <span class="password-toggle-icon"><i class="fa fa-eye-slash font-weight-bold"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-sm bg-gradient-dark m-0">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- modal userEdit -->
+<div class="modal fade" id="userEdit" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="mejurusan" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <div class="card card-plain">
+                    <div class="card-header pb-0 text-left">
+                        <h5 class="m-0 p-0">Edit Data</h5>
+                        <p class="mb-0 p-0 text-xs">Edit detail user</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="badge badge-info border border-info w-100 mb-3" style="white-space: normal !important; text-align: left; text-transform: capitalize; font-size: 14px;">
+                            <div class="p-2">
+                                <div class="d-flex gap-2 mb-2">
+                                    <i class="fa fa-info"></i>
+                                    PERHATIAN !
+                                </div>
+                                <div style="font-weight: 400; line-height: .45cm;" class="mb-2">
+                                    Jika terdapat kesalahan data, silahkan menggantinya dengan form dibawah ini, dengan mengisi data yang benar. <br>
+                                </div>
+                                <div style="font-weight: 400;">
+                                    Jika <strong><?= getIdentityLabel($data) ?></strong> dan <strong>angkatan</strong> tidak sesuai, silahkan hubungi admin.
+                                </div>
+                            </div>
+                        </div>
+                        <form method="post" id="fedetail" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <div class="input-group input-group-outline">
+                                        <label for="nama" class="form-label">Nama</label>
+                                        <input type="text" class="form-control" id="nama" name="nama" value="<?= $data->nama ?>" required>
+                                    </div>
+                                </div>
+
+                                <div class="<?= !in_groups('siswa') ? 'col-md-12' : 'col-md-6' ?> mb-3">
+                                    <div class="input-group input-group-outline">
+                                        <label for="hp" class="form-label">Nomor HP</label>
+                                        <input type="text" class="form-control" id="hp" name="no_hp" value="<?= $data->no_hp ?>" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                                    </div>
+                                </div>
+                                <div class="<?= !in_groups('siswa') ? 'col-md-12' : 'col-md-6' ?> mb-3">
+                                    <div class="input-group input-group-outline">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email" value="<?= $data->uemail ?>" required>
+                                    </div>
+                                </div>
+                                <?php if (in_groups('siswa')) : ?>
+                                    <div class="col-12 mb-3">
+                                        <div class="input-group input-group-outline">
+                                            <label for="kelas" class="form-label">Jumlah</label>
+                                            <input type="text" class="form-control" id="kelas" name="kelas" value="<?= $data->kelas ?>" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <div class="input-group input-group-outline">
+                                            <label for="jurusan" class="form-label">Jurusan</label>
+                                            <input type="text" class="form-control" id="jurusan" name="jurusan" value="<?= $data->jurusan ?>" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <div class="input-group input-group-outline">
+                                            <label for="instansi" class="form-label">Instansi</label>
+                                            <input type="text" class="form-control" id="instansi" name="instansi" value="<?= $data->instansi ?>" required>
+                                        </div>
+                                        <small class="text-xs text-danger font-weight-bold">
+                                            *PENTING: Bagi pendaftar berkelompok, penulisan nama Instansi <b>wajib sama persis/serempak</b> antar anggota kelompok (misal: "Kelompok A - Poliban").
+                                        </small>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
+                                        <div class="input-group input-group-outline">
+                                            <label for="alamat" class="form-label">Alamat</label>
+                                            <textarea name="alamat" id="alamat" class="form-control" rows="2" required><?= $data->alamat ?></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="input-group input-group-outline">
+                                            <label for="nik" class="form-label">NIK</label>
+                                            <input type="text" class="form-control" id="nik" name="nik" value="<?= $data->nik ?? '' ?>" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="input-group input-group-outline">
+                                            <label for="no_hp_emergency" class="form-label">No HP Emergency</label>
+                                            <input type="text" class="form-control" id="no_hp_emergency" name="no_hp_emergency" value="<?= $data->no_hp_emergency ?? '' ?>" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="input-group input-group-outline">
+                                            <label for="tempat_lahir" class="form-label">Tempat Lahir</label>
+                                            <input type="text" class="form-control" id="tempat_lahir" name="tempat_lahir" value="<?= $data->tempat_lahir ?? '' ?>">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="input-group input-group-outline <?= !empty($data->tanggal_lahir) ? 'is-filled' : '' ?>">
+                                            <label for="tanggal_lahir" class="form-label">Tanggal Lahir</label>
+                                            <input type="date" class="form-control" id="tanggal_lahir" name="tanggal_lahir" value="<?= $data->tanggal_lahir ?? '' ?>">
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label mb-0 text-sm">Jenis Kelamin</label>
+                                        <select class="form-control border px-2" name="jenis_kelamin">
+                                            <option value="" <?= empty($data->jenis_kelamin) ? 'selected' : '' ?>>Pilih Jenis Kelamin</option>
+                                            <option value="Laki-laki" <?= (isset($data->jenis_kelamin) && $data->jenis_kelamin == 'Laki-laki') ? 'selected' : '' ?>>Laki-laki</option>
+                                            <option value="Perempuan" <?= (isset($data->jenis_kelamin) && $data->jenis_kelamin == 'Perempuan') ? 'selected' : '' ?>>Perempuan</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label mb-0 text-sm">Berkas KTP (PDF)</label>
+                                        <input type="file" name="ktp" class="form-control border px-2" accept=".pdf">
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label mb-0 text-sm">Berkas BPJS (PDF)</label>
+                                        <input type="file" name="bpjs" class="form-control border px-2" accept=".pdf">
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label mb-0 text-sm">Berkas KTM (PDF)</label>
+                                        <input type="file" name="ktm" class="form-control border px-2" accept=".pdf">
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label mb-0 text-sm">Surat Balasan Magang (PDF)</label>
+                                        <input type="file" name="surat_balasan" class="form-control border px-2" accept=".pdf">
+                                    </div>
+                                <?php endif ?>
+                                <div class="col-12 mb-3">
+                                    <div class="input-group input-group-outline">
+                                        <input type="file" name="foto" id="foto" class="form-control" accept="image/*">
+                                    </div>
+                                    <small class="text-xs text-secondary">Biarkan kosong jika tidak ingin mengubah foto profil.</small>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-sm bg-gradient-secondary shadow m-0" data-bs-dismiss="modal">Tutup</button>
+                                <button type="submit" class="btn btn-sm bg-gradient-dark m-0">SIMPAN</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal View Photo -->
+<div class="modal fade" id="viewPhoto" tabindex="-1" aria-labelledby="viewPhotoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-transparent shadow-none border-0">
+            <div class="modal-body p-0 text-center">
+                <img src="<?= !empty($data->foto) ? (in_groups('siswa') ? base_url('assets/img/foto_siswa/') : base_url('assets/img/foto_pembimbing/')) . $data->foto : base_url('assets/img/default-avatar.svg') ?>" class="img-fluid border-radius-lg shadow-lg" alt="Full profile photo">
+                <div class="mt-3">
+                    <button type="button" class="btn btn-sm btn-white" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?= $this->endSection(); ?>
+
+
+<?= $this->section('bottomsc'); ?>
+<script src="/assets/js/plugins/sweetalert.min.js"></script>
+<?php if (session('success')) : ?>
+    <script>
+        Swal.fire({
+            title: 'Sukses!',
+            icon: 'success',
+            text: '<?= session("success") ?>',
+            buttons: false,
+        });
+    </script>
+<?php endif ?>
+
+<script>
+    $(document).ready(function() {
+        $("#fedetail").submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: "<?= in_groups('admin') || in_groups('pembimbing') || in_groups('dosen_pembimbing') ? '/user/profile/update' : (in_groups('siswa') ? '/siswa/profile/update' : '') ?>",
+                type: "POST",
+                data: new FormData(this),
+                processData: false,
+                contentType: false,
+                cache: false,
+                async: false,
+                dataType: "json",
+                success: function(s) {
+                    s.success ? Swal.fire({
+                        title: 'Sukses!',
+                        icon: 'success',
+                        text: s.message,
+                        showConfirmButton: false,
+                        timer: 1500,
+                    }).then(() => {
+                        location.reload();
+                    }) : Swal.fire({
+                        title: 'Gagal!',
+                        icon: 'error',
+                        text: s.message,
+                    });
+                },
+                error: function(data) {
+                    Swal.fire({
+                        title: 'Gagal!',
+                        icon: 'error',
+                        text: 'Terjadi kesalahan, silahkan coba lagi',
+                    });
+                }
+            });
+        });
+
+        // if nama not empty
+        if ($('#kelas').val() != '') {
+            $('#kelas').parent().addClass('is-filled');
+        }
+
+        // kelas on change
+        $('#kelas').on('change', function() {
+            if ($(this).val() != '') {
+                $(this).parent().addClass('is-filled');
+            } else {
+                $(this).parent().removeClass('is-filled');
+            }
+        });
+
+        // if alamat not empty
+        if ($('#alamat').val() != '') {
+            $('#alamat').parent().addClass('is-filled');
+        }
+
+        // alamat on change
+        $('#alamat').on('change', function() {
+            if ($(this).val() != '') {
+                $(this).parent().addClass('is-filled');
+            } else {
+                $(this).parent().removeClass('is-filled');
+            }
+        });
+
+        // if jurusan not empty
+        if ($('#jurusan').val() != '') {
+            $('#jurusan').parent().addClass('is-filled');
+        }
+
+        // if instansi not empty
+        if ($('#instansi').val() != '') {
+            $('#instansi').parent().addClass('is-filled');
+        }
+    });
+</script>
+<?= $this->endSection(); ?>

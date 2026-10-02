@@ -1,0 +1,66 @@
+@startuml sequence_03_evaluasi
+title Sequence Diagram - Evaluasi, Laporan & Sertifikat
+
+actor "Peserta" as Peserta
+boundary "Halaman Web" as UI
+control "SiswaController / SertifikatController" as Ctrl
+entity "Database" as DB
+actor "Pembimbing Lapangan" as PL
+actor Admin as Admin
+
+alt Jika Peserta adalah Mahasiswa
+    Peserta -> UI : Upload Laporan Akhir (PDF)
+    UI -> Ctrl : POST /siswa/upload/laporan
+    activate Ctrl
+    Ctrl -> DB : Simpan path file laporan
+    activate DB
+    DB --> Ctrl : Success
+    deactivate DB
+    Ctrl --> UI : Redirect
+    deactivate Ctrl
+end
+
+PL -> UI : Input Nilai Evaluasi (Disiplin, dll)
+UI -> Ctrl : POST /nilai/save
+activate Ctrl
+Ctrl -> DB : Simpan data nilai akhir
+activate DB
+DB --> Ctrl : Success
+deactivate DB
+Ctrl --> UI : Redirect
+deactivate Ctrl
+
+PL -> UI : Klik "Setujui Laporan Akhir" (Jika ada)
+UI -> Ctrl : POST /logbook/approve-laporan
+activate Ctrl
+Ctrl -> DB : Update is_laporan_approved = 1
+activate DB
+DB --> Ctrl : Success
+deactivate DB
+Ctrl --> UI : Success Message
+deactivate Ctrl
+
+Admin -> UI : Klik "Selesaikan Magang"
+UI -> Ctrl : POST /application/finish
+activate Ctrl
+Ctrl -> DB : Update status = 'selesai'
+activate DB
+DB --> Ctrl : Success
+deactivate DB
+Ctrl --> UI : Status Berubah Selesai
+deactivate Ctrl
+
+== Generate Sertifikat ==
+Peserta -> UI : Buka menu Sertifikat
+UI -> Ctrl : GET /sertifikat/{id}
+activate Ctrl
+Ctrl -> DB : Verifikasi nilai & laporan
+activate DB
+DB --> Ctrl : Data valid
+deactivate DB
+Ctrl -> Ctrl : Generate view Sertifikat HTML ke PDF/Print
+Ctrl --> UI : Tampilkan / Unduh Sertifikat
+deactivate Ctrl
+UI --> Peserta : File Sertifikat Magang
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml flowchart_sistem_3_evaluasi
+title Flowchart SIAMAM (Bagian 3: Evaluasi & Akhir Magang)
+
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor #E3F2FD
+  BorderColor #1976D2
+  ArrowColor #0D47A1
+}
+
+start
+
+partition "Evaluasi & Akhir Magang" {
+  if (Status = SMK?) then (Ya)
+    :Tidak Wajib Laporan Akhir;
+  else (Mahasiswa)
+    :Peserta mengunggah Laporan Akhir Magang;
+  endif
+  
+  :Pembimbing Lapangan memberikan Nilai;
+  :Admin memverifikasi laporan (jika ada) dan nilai;
+  :Admin / Pembimbing menyelesaikan status magang ("Selesai");
+}
+
+:Sistem men-generate Sertifikat Magang secara digital;
+:Peserta dapat mengunduh Sertifikat dan Nilai;
+
+stop
+@enduml

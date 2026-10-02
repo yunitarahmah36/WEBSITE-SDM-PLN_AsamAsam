@@ -1,0 +1,47 @@
+@startuml UC-03 Pembimbing Lapangan
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam usecase {
+    BackgroundColor #EBF5FB
+    BorderColor #2E86C1
+    ArrowColor #1A5276
+    ActorBorderColor #1A5276
+    ActorBackgroundColor #D6EAF8
+    ActorFontColor #1A5276
+    ActorFontSize 13
+}
+skinparam package {
+    BackgroundColor #EBF5FB
+    BorderColor #2E86C1
+    FontColor #1A5276
+    FontStyle bold
+}
+
+title Use Case Diagram - Pembimbing Lapangan\nSIAMAM - Sistem Informasi Administrasi Praktek Magang
+
+actor "Pembimbing\nLapangan" as pb
+
+rectangle "Fitur Pembimbing Lapangan" {
+    usecase "Lihat Daftar Siswa Binaan"     as UC1
+    usecase "Lihat Logbook Siswa"           as UC2
+    usecase "Input Nilai Siswa"             as UC3
+    usecase "Setujui Laporan Akhir"         as UC4
+    usecase "Kirim Pesan (Pembimbing)"      as UC5
+    usecase "Lihat Pengumuman (Pembimbing)" as UC6
+    usecase "Kelola Sertifikat Siswa"       as UC7
+    usecase "Approve / Reject Logbook" as UC_approve #line.dashed
+}
+
+pb --> UC1
+pb --> UC2
+pb --> UC3
+pb --> UC4
+pb --> UC5
+pb --> UC6
+pb --> UC7
+
+UC2 .> UC_approve : <<includes>>
+
+@enduml

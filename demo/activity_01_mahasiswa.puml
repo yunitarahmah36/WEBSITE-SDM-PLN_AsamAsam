@@ -1,0 +1,51 @@
+@startuml AD-01 Pendaftaran Magang - Bagian Mahasiswa
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam activity {
+    BackgroundColor #EBF5FB
+    BorderColor #2E86C1
+    ArrowColor #1A5276
+    StartColor #1A5276
+    EndColor #1A5276
+    BarColor #2E86C1
+    FontSize 12
+}
+skinparam note {
+    BackgroundColor #FEF9E7
+    BorderColor #D4AC0D
+}
+
+title Activity Diagram - Pendaftaran & Verifikasi Magang\nBagian 1: Alur Mahasiswa\nSIAMAM - Sistem Informasi Administrasi Praktek Magang
+
+|Mahasiswa|
+
+start
+
+:Masuk ke Menu Daftar Magang;
+
+:Memilih Tempat Magang;
+
+:Mengunggah Berkas Persyaratan\n(CV, KTP, BPJS, Surat Permohonan, dll.);
+
+:Klik Tombol Kirim Lamaran;
+
+note right
+  Data lamaran dikirim
+  ke sistem untuk diproses
+end note
+
+|Sistem|
+
+:Menyimpan data lamaran\ndengan status 'Pending';
+
+:Mengirim Notifikasi ke Admin;
+
+|Mahasiswa|
+
+:Melihat Status Lamaran Terbaru;
+
+stop
+
+@enduml

@@ -1,0 +1,53 @@
+@startuml UC-02 Admin
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam usecase {
+    BackgroundColor #EBF5FB
+    BorderColor #2E86C1
+    ArrowColor #1A5276
+    ActorBorderColor #1A5276
+    ActorBackgroundColor #D6EAF8
+    ActorFontColor #1A5276
+    ActorFontSize 13
+}
+skinparam package {
+    BackgroundColor #EBF5FB
+    BorderColor #2E86C1
+    FontColor #1A5276
+    FontStyle bold
+}
+
+title Use Case Diagram - Admin\nSIAMAM - Sistem Informasi Administrasi Praktek Magang
+
+actor Admin as adm
+
+rectangle "Fitur Admin" {
+    usecase "Kelola Dosen Pembimbing"   as UC1
+    usecase "Buat Pengumuman"           as UC2
+    usecase "Kelola Pengaturan Sistem"  as UC3
+    usecase "Lihat Semua Pesan"         as UC4
+    usecase "Lihat Semua Pengumuman"    as UC5
+    usecase "Kelola Data Mahasiswa/Siswa" as UC6
+    usecase "Kelola Divisi Magang"      as UC7
+    usecase "Kelola Pembimbing Lapangan" as UC8
+    usecase "Kelola Materi K3"          as UC9
+    usecase "Kelola Sertifikat Siswa"   as UC10
+    usecase "Verifikasi Pendaftaran Mahasiswa/Siswa" as UC_verif #line.dashed
+}
+
+adm --> UC1
+adm --> UC2
+adm --> UC3
+adm --> UC4
+adm --> UC5
+adm --> UC6
+adm --> UC7
+adm --> UC8
+adm --> UC9
+adm --> UC10
+
+UC6 .> UC_verif : <<includes>>
+
+@enduml

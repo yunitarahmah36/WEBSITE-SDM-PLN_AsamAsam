@@ -1,0 +1,62 @@
+@startuml UC-01 Mahasiswa
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam usecase {
+    BackgroundColor #EBF5FB
+    BorderColor #2E86C1
+    ArrowColor #1A5276
+    ActorBorderColor #1A5276
+    ActorBackgroundColor #D6EAF8
+    ActorFontColor #1A5276
+    ActorFontSize 13
+}
+skinparam package {
+    BackgroundColor #EBF5FB
+    BorderColor #2E86C1
+    FontColor #1A5276
+    FontStyle bold
+}
+
+title Use Case Diagram - Mahasiswa\nSIAMAM - Sistem Informasi Administrasi Praktek Magang
+
+actor Mahasiswa as mhs
+
+rectangle "Fitur Mahasiswa" {
+    usecase "Daftar Magang"         as UC1
+    usecase "Isi Logbook Harian"    as UC2
+    usecase "Upload Laporan Akhir"  as UC3
+    usecase "Lihat Status Lamaran"  as UC4
+    usecase "Lihat Nilai"           as UC5
+    usecase "Lihat Pengumuman"      as UC6
+    usecase "Kirim Pesan"           as UC7
+    usecase "Edit Profil"           as UC8
+    usecase "Materi K3 & Safety"    as UC12
+    usecase "Unduh Sertifikat"      as UC13
+    usecase "Lihat Divisi Magang" as UC_divisi #line.dashed
+}
+
+rectangle "Autentikasi" {
+    usecase "Daftar Akun"   as UC9
+    usecase "Login"         as UC10
+    usecase "Ubah Password" as UC11
+}
+
+mhs --> UC1
+mhs --> UC2
+mhs --> UC3
+mhs --> UC4
+mhs --> UC5
+mhs --> UC6
+mhs --> UC7
+mhs --> UC8
+mhs --> UC9
+mhs --> UC10
+mhs --> UC11
+mhs --> UC12
+mhs --> UC13
+
+UC1 .> UC_divisi : <<includes>>
+
+@enduml

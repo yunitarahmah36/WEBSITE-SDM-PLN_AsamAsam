@@ -1,0 +1,26 @@
+@startuml flowchart_sistem_2_kegiatan
+title Flowchart SIAMAM (Bagian 2: Kegiatan Magang)
+
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor #E3F2FD
+  BorderColor #1976D2
+  ArrowColor #0D47A1
+}
+
+start
+
+:Peserta memulai kegiatan Magang;
+:Peserta wajib membaca & menyetujui Materi K3;
+
+repeat
+  partition "Kegiatan Harian" {
+    :Peserta mengisi Daftar Hadir harian;
+    :Peserta mengisi Logbook Kegiatan Harian beserta bukti;
+    :Pembimbing Lapangan / Dosen memvalidasi Logbook;
+  }
+repeat while (Masa Magang Berakhir?) is (Belum)
+->Sudah;
+
+stop
+@enduml
