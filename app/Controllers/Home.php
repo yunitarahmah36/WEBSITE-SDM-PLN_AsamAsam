@@ -19,21 +19,21 @@ class Home extends BaseController
     protected $logbooks;
     protected $pengumuman;
     protected $nilai;
-    protected $dosen_pembimbing;
+    protected $instansi; // <-- DIUBAH dari dosen_pembimbing
 
     public function __construct()
     {
-        $this->angkatan     = new \App\Models\AngkatanModel();
-        $this->jurusan      = new \App\Models\JurusanModel();
-        $this->user         = new \App\Models\UserModel();
-        $this->siswa        = new \App\Models\SiswaModel();
-        $this->tempat       = new \App\Models\TempatModel();
-        $this->application  = new \App\Models\ApplicationModel();
-        $this->pembimbing   = new \App\Models\PembimbingModel();
-        $this->logbooks     = new \App\Models\LogBookModel();
-        $this->pengumuman   = new \App\Models\PengumumanModel();
-        $this->nilai        = new \App\Models\NilaiModel();
-        $this->dosen_pembimbing = new \App\Models\DosenPembimbingModel();
+        $this->angkatan         = new \App\Models\AngkatanModel();
+        $this->jurusan          = new \App\Models\JurusanModel();
+        $this->user             = new \App\Models\UserModel();
+        $this->siswa            = new \App\Models\SiswaModel();
+        $this->tempat           = new \App\Models\TempatModel();
+        $this->application      = new \App\Models\ApplicationModel();
+        $this->pembimbing       = new \App\Models\PembimbingModel();
+        $this->logbooks         = new \App\Models\LogBookModel();
+        $this->pengumuman       = new \App\Models\PengumumanModel();
+        $this->nilai            = new \App\Models\NilaiModel();
+        $this->instansi         = new \App\Models\DosenPembimbingModel(); // <-- Model tetap sama, tabel berubah
     }
 
     public function index()
@@ -58,16 +58,15 @@ class Home extends BaseController
             ]);
         }
 
-        $dbPengumuman = $this->pengumuman->select("pengumuman.*, CASE WHEN auth_groups.name = 'admin' THEN 'Admin' ELSE COALESCE(pembimbing.nama, dosen_pembimbing.nama, users.username) END as pembimbing")
+        $dbPengumuman = $this->pengumuman->select("pengumuman.*, CASE WHEN auth_groups.name = 'admin' THEN 'Admin' ELSE COALESCE(pembimbing.nama, instansi.nama_instansi, users.username) END as pembimbing")
             ->join('users', 'users.id = pengumuman.oleh')
             ->join('pembimbing', 'pembimbing.user_id = users.id', 'left')
-            ->join('dosen_pembimbing', 'dosen_pembimbing.user_id = users.id', 'left')
+            ->join('instansi', 'instansi.user_id = users.id', 'left') // <-- DIUBAH
             ->join('auth_groups_users', 'auth_groups_users.user_id = users.id', 'left')
             ->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id', 'left')
             ->orderBy('pengumuman.created_at', "DESC")
             ->groupBy('pengumuman.id');
 
-        // Filter by target_role — admin sees all, others see only their group or 'semua'
         if (!in_groups('admin')) {
             if (in_groups('pembimbing')) {
                 $dbPengumuman->groupStart()
@@ -76,15 +75,14 @@ class Home extends BaseController
                    ->orWhere('pengumuman.target_role', null)
                    ->orWhere('pengumuman.target_role', '')
                    ->groupEnd();
-            } elseif (in_groups('dosen_pembimbing')) {
+            } elseif (in_groups('instansi')) { // <-- DIUBAH
                 $dbPengumuman->groupStart()
                    ->where('pengumuman.target_role', 'semua')
-                   ->orWhere('pengumuman.target_role', 'dosen_pembimbing')
+                   ->orWhere('pengumuman.target_role', 'instansi') // <-- DIUBAH
                    ->orWhere('pengumuman.target_role', null)
                    ->orWhere('pengumuman.target_role', '')
                    ->groupEnd();
             } else {
-                // siswa
                 $dbPengumuman->groupStart()
                    ->where('pengumuman.target_role', 'semua')
                    ->orWhere('pengumuman.target_role', 'siswa')
@@ -100,7 +98,7 @@ class Home extends BaseController
         $my_application = null;
         $catatan_dosen = 0;
         $is_profile_incomplete = false;
-        
+
         if (in_groups('siswa')) {
             $sid = getSidByUid(user_id());
             if ($sid) {
@@ -114,12 +112,11 @@ class Home extends BaseController
             $siswa_data = $this->siswa->where('user_id', user_id())->first();
             if ($siswa_data) {
                 $is_safety_ready = (bool)$siswa_data->is_safety_ready;
-                
+
                 if (empty($siswa_data->nik) || empty($siswa_data->tempat_lahir) || empty($siswa_data->tanggal_lahir) || empty($siswa_data->jenis_kelamin) || empty($siswa_data->no_hp_emergency)) {
                     $is_profile_incomplete = true;
                 }
-                
-                // Get personal application status - prioritize accepted/selesai, fallback to latest
+
                 $my_application = $this->application->select('lamaran.*, tempat_magang.nama as instansi, tempat_magang.alamat')
                     ->join('tempat_magang', 'tempat_magang.id = lamaran.id_tempat')
                     ->where('lamaran.id_siswa', $siswa_data->id)
@@ -140,9 +137,9 @@ class Home extends BaseController
 
         return view('dashboard', [
             "title"         => "Magang | Dashboard",
-            "page_title"    => in_groups('admin') ? 'Dashboard Admin' : (in_groups('pembimbing') ? 'Dashboard Pembimbing' : (in_groups('dosen_pembimbing') ? 'Dashboard Dosen Pembimbing' : 'Dashboard Siswa')),
+            "page_title"    => in_groups('admin') ? 'Dashboard Admin' : (in_groups('pembimbing') ? 'Dashboard Pembimbing' : (in_groups('instansi') ? 'Dashboard Instansi' : 'Dashboard Siswa')), // <-- DIUBAH
             "segment"       => $this->request->getUri()->getSegments(),
-            "breadcrumb"    => in_groups('admin') ? ['Dashboard', 'Admin'] : (in_groups('pembimbing') ? ['Dashboard', 'Pembimbing'] : (in_groups('dosen_pembimbing') ? ['Dashboard', 'Dosen Pembimbing'] : ['Dashboard', user()->username])),
+            "breadcrumb"    => in_groups('admin') ? ['Dashboard', 'Admin'] : (in_groups('pembimbing') ? ['Dashboard', 'Pembimbing'] : (in_groups('instansi') ? ['Dashboard', 'Instansi Pendidikan'] : ['Dashboard', user()->username])), // <-- DIUBAH
             "total_siswa"   => (function() {
                 $db = \Config\Database::connect();
                 $builder = $db->table('lamaran')
@@ -179,9 +176,9 @@ class Home extends BaseController
     {
         return view('profile', [
             "title"         => "Magang | Profile",
-            "page_title"    => in_groups('admin') ? 'Profile Admin' : (in_groups('pembimbing') ? 'Profile Pembimbing' : (in_groups('dosen_pembimbing') ? 'Profile Dosen Pembimbing' : 'Profile Siswa')),
+            "page_title"    => in_groups('admin') ? 'Profile Admin' : (in_groups('pembimbing') ? 'Profile Pembimbing' : (in_groups('instansi') ? 'Profile Instansi Pendidikan' : 'Profile Siswa')), // <-- DIUBAH
             "segment"       => $this->request->getUri()->getSegments(),
-            "breadcrumb"    => in_groups('admin') ? ['Profile', 'Admin'] : (in_groups('pembimbing') ? ['Profile', 'Pembimbing'] : (in_groups('dosen_pembimbing') ? ['Profile', 'Dosen Pembimbing'] : ['Profile', user()->username])),
+            "breadcrumb"    => in_groups('admin') ? ['Profile', 'Admin'] : (in_groups('pembimbing') ? ['Profile', 'Pembimbing'] : (in_groups('instansi') ? ['Profile', 'Instansi Pendidikan'] : ['Profile', user()->username])), // <-- DIUBAH
             "jurusan"       => $this->jurusan->findAll(),
             "angkatan"      => $this->angkatan->findAll(),
         ]);
@@ -189,7 +186,6 @@ class Home extends BaseController
 
     public function tempat()
     {
-        // Server-Side Auto Sync: Paksa sinkronisasi sekali per sesi login mahasiswa
         $syncKey = 'synced_' . (user_id() ?? 'guest');
         if (in_groups('siswa') && !session()->get($syncKey)) {
             session()->set($syncKey, true);
@@ -212,7 +208,6 @@ class Home extends BaseController
 
     public function nilai()
     {
-        // siswa and angkatan
         $dataSiswa = $this->siswa->select('siswa.*, angkatan.nama as angkatan, angkatan.tahun, angkatan.tgl_selesai')
             ->join('angkatan', 'angkatan.id = siswa.angkatan', 'left')
             ->where('siswa.id', getSidByUid(user_id()))
@@ -296,12 +291,10 @@ class Home extends BaseController
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Judul
         $sheet->setCellValue('A1', 'LAPORAN KEGIATAN MAGANG / LOGBOOK');
         $sheet->setCellValue('A2', 'Nama: ' . $siswa->nama);
         $sheet->setCellValue('A3', 'NIM: ' . $siswa->nim);
 
-        // Header Tabel
         $sheet->setCellValue('A5', 'No');
         $sheet->setCellValue('B5', 'Tanggal');
         $sheet->setCellValue('C5', 'Keterangan');
@@ -311,7 +304,6 @@ class Home extends BaseController
         $sheet->setCellValue('G5', 'Status');
         $sheet->setCellValue('H5', 'Bukti Kegiatan');
 
-        // Styling header
         $styleArray = [
             'font' => ['bold' => true],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
@@ -329,32 +321,23 @@ class Home extends BaseController
             $sheet->setCellValue('E' . $row, $log->jam_keluar);
             $sheet->setCellValue('F' . $row, $log->kegiatan);
             $sheet->setCellValue('G' . $row, strtoupper($log->status));
-            
-            // Set border
+
             $sheet->getStyle('A'.$row.':H'.$row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-            
-            // Alignment
             $sheet->getStyle('A'.$row.':E'.$row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('G'.$row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('A'.$row.':H'.$row)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
             $sheet->getStyle('F'.$row)->getAlignment()->setWrapText(true);
 
-            // Tambahkan gambar
             if ($log->bukti && file_exists(FCPATH . 'assets/img/logbook/' . $log->bukti)) {
                 $drawing = new Drawing();
                 $drawing->setName('Bukti');
                 $drawing->setDescription('Bukti Kegiatan');
                 $drawing->setPath(FCPATH . 'assets/img/logbook/' . $log->bukti);
                 $drawing->setCoordinates('H' . $row);
-                $drawing->setHeight(90); // Tinggi gambar dalam pixel
-                
-                // Set offset supaya gambar tidak menempel di garis
+                $drawing->setHeight(90);
                 $drawing->setOffsetX(5);
                 $drawing->setOffsetY(5);
-                
                 $drawing->setWorksheet($sheet);
-                
-                // Sesuaikan tinggi baris
                 $sheet->getRowDimension($row)->setRowHeight(80);
             } else {
                 $sheet->getRowDimension($row)->setRowHeight(40);
@@ -364,7 +347,6 @@ class Home extends BaseController
             $no++;
         }
 
-        // Set Lebar Kolom
         $sheet->getColumnDimension('A')->setWidth(5);
         $sheet->getColumnDimension('B')->setWidth(15);
         $sheet->getColumnDimension('C')->setWidth(15);
@@ -375,11 +357,11 @@ class Home extends BaseController
         $sheet->getColumnDimension('H')->setWidth(25);
 
         $filename = 'Logbook_' . str_replace(' ', '_', $siswa->nama) . '_' . date('Ymd');
-        
+
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '.xlsx"');
         header('Cache-Control: max-age=0');
-        
+
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
@@ -395,10 +377,10 @@ class Home extends BaseController
         ];
 
         if (in_groups('admin') || in_groups('pembimbing')) {
-            $query = $this->application->select('lamaran.*, siswa.surat_pernyataan, siswa.nama, siswa.nim, siswa.kelas, siswa.jurusan, siswa.foto, siswa.no_hp, siswa.laporan, siswa.alamat, siswa.instansi, siswa.tgl_masuk, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.surat_permohonan, siswa.cv, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.surat_balasan, angkatan.tahun, angkatan.nama as angkatan, COALESCE(siswa.tgl_selesai, angkatan.tgl_selesai) as tgl_selesai, dosen_pembimbing.nama as nama_dosen')
+            $query = $this->application->select('lamaran.*, siswa.surat_pernyataan, siswa.nama, siswa.nim, siswa.kelas, siswa.jurusan, siswa.foto, siswa.no_hp, siswa.laporan, siswa.alamat, siswa.instansi, siswa.tgl_masuk, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.surat_permohonan, siswa.cv, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.takaful, siswa.surat_balasan, angkatan.tahun, angkatan.nama as angkatan, COALESCE(siswa.tgl_selesai, angkatan.tgl_selesai) as tgl_selesai, instansi.nama_instansi as nama_dosen') // <-- DIUBAH
                 ->join('siswa', 'siswa.id = lamaran.id_siswa')
                 ->join('angkatan', 'angkatan.id = siswa.angkatan', 'left')
-                ->join('dosen_pembimbing', 'dosen_pembimbing.id = lamaran.id_dosen_pembimbing', 'left')
+                ->join('instansi', 'instansi.id = COALESCE(lamaran.id_dosen_pembimbing, siswa.dosen_id)', 'left') // <-- DIUBAH
                 ->where('lamaran.status', 'pending');
 
             if (in_groups('pembimbing')) {
@@ -409,7 +391,7 @@ class Home extends BaseController
                     ->where('pid', $pid)
                     ->get()
                     ->getResultArray();
-                
+
                 $tempat_ids = array_column($tempat_ids_query, 'id');
                 if (!empty($tempat_ids)) {
                     $query->whereIn('lamaran.id_tempat', $tempat_ids);
@@ -420,10 +402,13 @@ class Home extends BaseController
 
             $data['applications'] = $query->orderBy('lamaran.created_at', "DESC")
                 ->findAll();
-            
+
             $data['kelas'] = $this->siswa->select('kelas')->groupBy('kelas')->orderBy('kelas', 'ASC')->findAll();
             $data['angkatan'] = $this->angkatan->findAll();
-            $data['dosen'] = $this->dosen_pembimbing->findAll();
+            $data['dosen'] = $this->instansi->findAll(); // <-- DIUBAH
+
+            $data['tempats'] = $this->tempat->orderBy('nama', 'ASC')->findAll();
+
         } elseif (in_groups('siswa')) {
             $data['siswa_data'] = $this->siswa->find(getSidByUid(user_id()));
         } else {
@@ -443,12 +428,12 @@ class Home extends BaseController
         ];
 
         if (in_groups('siswa')) {
-            $data['applications'] = $this->application->select('lamaran.*, siswa.surat_pernyataan, siswa.nama, siswa.nim, siswa.laporan, angkatan.tahun, angkatan.nama as angkatan, COALESCE(siswa.tgl_selesai, angkatan.tgl_selesai) as tgl_selesai, tempat_magang.nama as instansi, tempat_magang.alamat, pembimbing.nama as nama_pembimbing, pembimbing.no_hp as hp_pembimbing, pembimbing.email as email_pembimbing, dosen_pembimbing.nama as nama_dosen, dosen_pembimbing.no_hp as hp_dosen, dosen_pembimbing.email as email_dosen')
+            $data['applications'] = $this->application->select('lamaran.*, siswa.surat_pernyataan, siswa.nama, siswa.nim, siswa.laporan, angkatan.tahun, angkatan.nama as angkatan, COALESCE(siswa.tgl_selesai, angkatan.tgl_selesai) as tgl_selesai, tempat_magang.nama as instansi, tempat_magang.alamat, pembimbing.nama as nama_pembimbing, pembimbing.no_hp as hp_pembimbing, pembimbing.email as email_pembimbing, instansi.nama_instansi as nama_dosen, instansi.no_hp as hp_dosen, instansi.email as email_dosen') // <-- DIUBAH
                 ->join('siswa', 'siswa.id = lamaran.id_siswa')
                 ->join('angkatan', 'angkatan.id = siswa.angkatan', 'left')
                 ->join('tempat_magang', 'tempat_magang.id = lamaran.id_tempat')
                 ->join('pembimbing', 'pembimbing.id = tempat_magang.pid')
-                ->join('dosen_pembimbing', 'dosen_pembimbing.id = lamaran.id_dosen_pembimbing', 'left')
+                ->join('instansi', 'instansi.id = COALESCE(lamaran.id_dosen_pembimbing, siswa.dosen_id)', 'left') // <-- DIUBAH
                 ->where('lamaran.id_siswa', getSidByUid(user_id()))
                 ->orderBy('lamaran.created_at', "DESC")
                 ->findAll();
@@ -575,42 +560,44 @@ class Home extends BaseController
         return $this->man_user('pembimbing');
     }
 
-    public function man_dosen()
+    public function man_instansi() // <-- DIUBAH dari man_dosen
     {
-        return $this->man_user('dosen_pembimbing');
+        return $this->man_user('instansi'); // <-- DIUBAH
     }
 
     public function man_user($type = 'pembimbing')
     {
-        $duser = $this->user
+        $db = \Config\Database::connect();
+
+        $builder = $db->table('users')
             ->select('users.id, users.username, users.email')
             ->select('pembimbing.id as pid, pembimbing.nama as p_nama, pembimbing.no_hp as p_hp, pembimbing.foto as p_foto')
-            ->select('dosen_pembimbing.id as did, dosen_pembimbing.nama as d_nama, dosen_pembimbing.no_hp as d_hp, dosen_pembimbing.nidn, dosen_pembimbing.foto as d_foto')
+            ->select('instansi.id as iid, instansi.nama_instansi, instansi.jenis_instansi, instansi.alamat, instansi.provinsi, instansi.kabupaten_kota, instansi.kecamatan, instansi.no_hp as i_hp, instansi.email as i_email') // <-- DIUBAH
+            ->select('(SELECT COUNT(*) FROM siswa WHERE siswa.dosen_id = instansi.id) as jumlah_mahasiswa')
             ->join('pembimbing', 'pembimbing.user_id = users.id', 'left')
-            ->join('dosen_pembimbing', 'dosen_pembimbing.user_id = users.id', 'left')
-            ->groupStart();
+            ->join('instansi', 'instansi.user_id = users.id', 'left'); // <-- DIUBAH
 
-        if ($type === 'dosen_pembimbing') {
-            $duser = $duser->where('dosen_pembimbing.id IS NOT NULL');
-            $title = "Magang | Manajemen Dosen";
-            $page_title = "Manajemen Data Dosen Pembimbing";
-            $breadcrumb = ['Manajemen', 'Dosen Pembimbing'];
-            $role_filter = 'dosen_pembimbing';
+        if ($type === 'instansi') { // <-- DIUBAH
+            $builder->where('instansi.id IS NOT NULL'); // <-- DIUBAH
+            $title = "Magang | Manajemen Instansi Pendidikan"; // <-- DIUBAH
+            $page_title = "Manajemen Data Instansi Pendidikan"; // <-- DIUBAH
+            $breadcrumb = ['Manajemen', 'Instansi Pendidikan']; // <-- DIUBAH
+            $role_filter = 'instansi'; // <-- DIUBAH
         } else {
-            $duser = $duser->where('pembimbing.id IS NOT NULL');
+            $builder->where('pembimbing.id IS NOT NULL');
             $title = "Magang | Manajemen Pembimbing";
             $page_title = "Manajemen Data Pembimbing Lapangan & Admin";
             $breadcrumb = ['Manajemen', 'Pembimbing Lapangan'];
             $role_filter = 'pembimbing';
         }
-            
-        $duser = $duser->groupEnd()->findAll();
 
-        foreach($duser as $u) {
-            $u->nama = $u->p_nama ?? $u->d_nama;
-            $u->no_hp = $u->p_hp ?? $u->d_hp;
-            $u->nidn = $u->nidn ?? '';
-            $u->foto = $u->p_foto ?? $u->d_foto;
+        $duser = $builder->orderBy('users.id', 'DESC')->get()->getResult();
+
+        foreach ($duser as $u) {
+            $u->nama  = $u->p_nama ?? $u->nama_instansi; // <-- DIUBAH
+            $u->no_hp = $u->p_hp ?? $u->i_hp; // <-- DIUBAH
+            $u->foto  = $u->p_foto;
+            $u->jumlah_mahasiswa = isset($u->jumlah_mahasiswa) ? (int)$u->jumlah_mahasiswa : 0;
         }
 
         return view('man_user', [
@@ -626,11 +613,12 @@ class Home extends BaseController
     public function man_siswa()
     {
         $query = $this->user
-            ->select('users.id, users.username, users.email, users.active, siswa.id as id_siswa_real, siswa.nim, siswa.nama, siswa.kelas, siswa.jurusan, siswa.instansi, siswa.no_hp, siswa.alamat, siswa.foto, siswa.surat_permohonan, siswa.surat_pernyataan, siswa.cv, siswa.laporan, siswa.sertifikat_mode, siswa.sertifikat_file, siswa.is_safety_ready, siswa.is_laporan_approved, siswa.tgl_masuk, siswa.tgl_selesai, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.surat_balasan, siswa.created_at as tgl_daftar, angkatan.nama as angkatan, angkatan.tahun, COALESCE((SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id AND status IN (\'accepted\', \'selesai\') LIMIT 1), (SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id ORDER BY created_at DESC LIMIT 1)) as lamaran_status')
+            ->select('users.id, users.username, users.email, users.active, siswa.id as id_siswa_real, siswa.nim, siswa.nama, siswa.kelas, siswa.jurusan, siswa.instansi, siswa.no_hp, siswa.alamat, siswa.foto, siswa.surat_permohonan, siswa.surat_pernyataan, siswa.cv, siswa.laporan, siswa.sertifikat_mode, siswa.sertifikat_file, siswa.is_safety_ready, siswa.is_laporan_approved, siswa.tgl_masuk, siswa.tgl_selesai, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.takaful, siswa.surat_balasan, siswa.created_at as tgl_daftar, angkatan.nama as angkatan, angkatan.tahun, instansi.nama_instansi as nama_dosen, COALESCE((SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id AND status IN (\'accepted\', \'selesai\') LIMIT 1), (SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id ORDER BY created_at DESC LIMIT 1)) as lamaran_status') // <-- DIUBAH
             ->join('auth_groups_users', 'auth_groups_users.user_id = users.id')
             ->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id')
             ->join('siswa', 'siswa.user_id = users.id', 'left')
             ->join('angkatan', 'angkatan.id = siswa.angkatan', 'left')
+            ->join('instansi', 'instansi.id = siswa.dosen_id', 'left') // <-- DIUBAH
             ->where('auth_groups.name', 'siswa');
 
         if (in_groups('pembimbing')) {
@@ -650,7 +638,7 @@ class Home extends BaseController
                     ->get()
                     ->getResultArray();
                 $siswa_ids = array_column($siswa_ids_query, 'id_siswa');
-                
+
                 if (!empty($siswa_ids)) {
                     $query->whereIn('siswa.id', $siswa_ids);
                 } else {
@@ -717,14 +705,13 @@ class Home extends BaseController
             "siswa"         => $dsiswa,
             "angkatan"      => $this->angkatan->findAll(),
             "jurusan"       => $this->jurusan->findAll(),
-            "dosen"         => $this->dosen_pembimbing->findAll(),
+            "dosen"         => $this->instansi->findAll(), // <-- DIUBAH
             "angkatan_json" => json_encode($angkatan_jeson)
         ]);
     }
 
     public function laporan()
     {
-        // Ambil data jurusan unik langsung dari tabel siswa agar admin tidak perlu input master data jurusan lagi
         $jurusan = $this->siswa->select('jurusan')
             ->where('jurusan !=', null)
             ->where('jurusan !=', '')
@@ -747,13 +734,13 @@ class Home extends BaseController
     {
         $uid = user_id();
         $sid = getSidByUid($uid);
-        
+
         $db = \Config\Database::connect();
         $application = $db->table('lamaran')
-            ->select('lamaran.*, tempat_magang.nama as instansi, pembimbing.nama as nama_pembimbing, dosen_pembimbing.nama as nama_dosen')
+            ->select('lamaran.*, tempat_magang.nama as instansi, pembimbing.nama as nama_pembimbing, instansi.nama_instansi as nama_dosen') // <-- DIUBAH
             ->join('tempat_magang', 'tempat_magang.id = lamaran.id_tempat', 'left')
             ->join('pembimbing', 'pembimbing.id = tempat_magang.pid', 'left')
-            ->join('dosen_pembimbing', 'dosen_pembimbing.id = lamaran.id_dosen_pembimbing', 'left')
+            ->join('instansi', 'instansi.id = COALESCE(lamaran.id_dosen_pembimbing, (SELECT dosen_id FROM siswa WHERE id = lamaran.id_siswa))', 'left') // <-- DIUBAH
             ->where('lamaran.id_siswa', $sid)
             ->whereIn('lamaran.status', ['pending', 'accepted', 'selesai'])
             ->orderBy('lamaran.id', 'DESC')
@@ -792,32 +779,31 @@ class Home extends BaseController
         ]);
     }
 
-    public function bimbingan_dosen()
+    public function bimbingan_instansi() // <-- DIUBAH dari bimbingan_dosen
     {
-        // Mengambil data dosen pembimbing berdasarkan user yang sedang login
-        $dosen = $this->dosen_pembimbing->where('user_id', user_id())->first();
+        $instansi = $this->instansi->where('user_id', user_id())->first(); // <-- DIUBAH
 
-        if (!$dosen) {
-            return redirect()->back()->with('error', 'Data Dosen Pembimbing tidak ditemukan.');
+        if (!$instansi) {
+            return redirect()->back()->with('error', 'Data Instansi Pendidikan tidak ditemukan.'); // <-- DIUBAH
         }
 
         $applications = $this->application->select('lamaran.*, siswa.nama, siswa.nim, siswa.kelas, siswa.no_hp, siswa.laporan, siswa.id as sid, siswa.is_laporan_approved, tempat_magang.nama as instansi')
             ->join('siswa', 'siswa.id = lamaran.id_siswa')
             ->join('tempat_magang', 'tempat_magang.id = lamaran.id_tempat', 'left')
-            ->where('lamaran.id_dosen_pembimbing', $dosen->id)
+            ->where('lamaran.id_dosen_pembimbing', $instansi->id) // <-- DIUBAH
             ->orderBy('lamaran.created_at', 'DESC')
             ->findAll();
 
-        return view('bimbingan_dosen', [
+        return view('bimbingan_instansi', [ // <-- DIUBAH nama view
             "title"         => "Magang | Mahasiswa Bimbingan",
             "page_title"    => "Daftar Mahasiswa Bimbingan",
             "segment"       => $this->request->getUri()->getSegments(),
-            "breadcrumb"    => ['Bimbingan', 'Dosen Pembimbing'],
+            "breadcrumb"    => ['Bimbingan', 'Instansi Pendidikan'], // <-- DIUBAH
             "applications"  => $applications
         ]);
     }
 
-    public function logbook_bimbingan_dosen($nim)
+    public function logbook_bimbingan_instansi($nim) // <-- DIUBAH dari logbook_bimbingan_dosen
     {
         $siswa = $this->siswa
             ->select('siswa.*, angkatan.nama as angkatan, angkatan.tahun, COALESCE(siswa.tgl_selesai, angkatan.tgl_selesai) as tgl_selesai')
@@ -831,11 +817,11 @@ class Home extends BaseController
 
         $log = $this->logbooks->select("*")->select("IF(DATE(created_at) > tanggal, true, false) as telat", false)->where(['id_siswa' => $siswa->id])->findAll();
 
-        return view('logbook_dosen_siswa', [
+        return view('logbook_instansi_siswa', [ // <-- DIUBAH nama view
             "title"         => "Magang | Logbook Siswa",
             "page_title"    => "Logbook Siswa Magang",
             "segment"       => $this->request->getUri()->getSegments(),
-            "breadcrumb"    => ['Bimbingan', 'Dosen Pembimbing', $nim],
+            "breadcrumb"    => ['Bimbingan', 'Instansi Pendidikan', $nim], // <-- DIUBAH
             "siswa"         => $siswa,
             "logbooks"      => $log
         ]);

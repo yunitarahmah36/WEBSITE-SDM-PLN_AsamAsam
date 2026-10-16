@@ -13,11 +13,10 @@
 								<div class="text-center">
 									<img src="/assets/logo-pln.png" class="navbar-brand-img" style="width: 100px;" alt="main_logo">
 								</div>
-								<h4 class="text-white font-weight-bolder text-center mt-2 mb-0"><?= lang('Auth.loginTitle') ?></h4>
 								<div class="row mt-0">
 									<div class="col-12 text-center px-1">
 										<a class="btn btn-link px-5" href="javascript:;">
-											<span class="text-white font-weight-bold" style="font-style: normal;">Sistem Informasi<br>Pendaftaran Magang</span>
+											<span class="text-white font-weight-bold" style="font-style: normal;">Sistem Informasi<br>Pendaftaran Peserta Magang</span>
 										</a>
 									</div>
 								</div>

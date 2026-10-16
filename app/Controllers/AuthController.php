@@ -143,29 +143,42 @@ class AuthController extends BaseController
             return redirect()->back()->withInput()->with('error', lang('Auth.registerDisabled'));
         }
 
-        $users = model(UserModel::class);
-        $siswa = new \App\Models\SiswaModel();
-        $angkatan = new \App\Models\AngkatanModel();
+        $users      = model(UserModel::class);
+        $siswa      = new \App\Models\SiswaModel();
+        $angkatan   = new \App\Models\AngkatanModel();
+        $dosenModel = new \App\Models\DosenPembimbingModel(); // MODEL DOSEN BARU
 
         // Validate basics first since some password rules rely on these fields
         $rules = [
-            'username' => 'required|alpha_numeric_space|min_length[3]|max_length[30]|is_unique[users.username]',
-            'email'    => 'required|valid_email|is_unique[users.email]',
-            'nim'      => 'required|alpha_numeric|min_length[5]|max_length[15]|is_unique[siswa.nim]',
-            'nama'     => 'required|min_length[3]|max_length[100]',
-            'kelas'    => 'required|min_length[2]|max_length[50]',
-            'no_hp'    => 'required|min_length[10]|max_length[15]',
-            'alamat'   => 'required|min_length[5]|max_length[255]',
-            'jurusan'  => 'required|min_length[2]|max_length[100]',
-            'instansi' => 'required|min_length[2]|max_length[100]',
-            'tgl_masuk'=> 'required|valid_date',
-            'tgl_selesai'=> 'required|valid_date',
+            'username'  => 'required|alpha_numeric_space|min_length[3]|max_length[30]|is_unique[users.username]',
+            'email'     => 'required|valid_email|is_unique[users.email]',
+            'nim'       => 'required|alpha_numeric|min_length[5]|max_length[15]|is_unique[siswa.nim]',
+            'nama'      => 'required|min_length[3]|max_length[100]',
+            'kelas'     => 'required|min_length[2]|max_length[50]',
+            'no_hp'     => 'required|min_length[10]|max_length[15]',
+            'alamat'    => 'required|min_length[5]|max_length[255]',
+            'jurusan'   => 'required|min_length[2]|max_length[100]',
+            'instansi'  => 'required|min_length[2]|max_length[100]',
+            'tgl_masuk' => 'required|valid_date',
+            'tgl_selesai' => 'required|valid_date',
+            // VALIDASI DOSEN PEMBIMBING BARU
+            'dosen_nama' => 'required|min_length[3]|max_length[150]',
+            // File uploads
             'surat_permohonan' => 'uploaded[surat_permohonan]|max_size[surat_permohonan,2048]|ext_in[surat_permohonan,pdf]',
-            'cv'       => 'uploaded[cv]|max_size[cv,2048]|ext_in[cv,pdf]',
+            'cv'        => 'uploaded[cv]|max_size[cv,2048]|ext_in[cv,pdf]',
         ];
 
         if (! $this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        // VALIDASI TAMBAHAN: Minimal salah satu NIP atau NIDN harus diisi
+        $dosenNip  = trim($this->request->getPost('dosen_nip') ?? '');
+        $dosenNidn = trim($this->request->getPost('dosen_nidn') ?? '');
+        if (empty($dosenNip) && empty($dosenNidn)) {
+            return redirect()->back()->withInput()->with('errors', [
+                'dosen_nip' => 'Minimal isi NIP atau NIDN dosen pembimbing.'
+            ]);
         }
 
         // Validate passwords since they can only be validated properly here
@@ -207,23 +220,38 @@ class AuthController extends BaseController
         $fileSurat->move('assets/berkas/', $suratName);
         $fileCv->move('assets/berkas/', $cvName);
 
+        // =====================================================
+        // SIMPAN DATA DOSEN PEMBIMBING (findOrCreate)
+        // Jika NIP/NIDN sudah ada di database, pakai yang lama.
+        // Jika belum, buat baru.
+        // =====================================================
+        $dosenId = $dosenModel->findOrCreate([
+            'nama'  => $this->request->getPost('dosen_nama'),
+            'nip'   => $dosenNip,
+            'nidn'  => $dosenNidn,
+            'no_hp' => $this->request->getPost('dosen_hp'),
+            'email' => $this->request->getPost('dosen_email'),
+        ]);
+
+        // Insert siswa dengan dosen_id
         if (!$siswa->insert([
-            'nim'      => $nim,
-            'user_id'  => $users->getInsertID(),
-            'nama'     => $this->request->getPost('nama'),
-            'kelas'    => $this->request->getPost('kelas'),
-            'no_hp'    => $this->request->getPost('no_hp'),
-            'alamat'   => $this->request->getPost('alamat'),
-            'jurusan'  => $this->request->getPost('jurusan'),
-            'instansi' => $this->request->getPost('instansi'),
-            'tgl_masuk'        => $this->request->getPost('tgl_masuk'),
-            'tgl_selesai'      => $this->request->getPost('tgl_selesai'),
+            'nim'        => $nim,
+            'user_id'    => $users->getInsertID(),
+            'dosen_id'   => $dosenId, // <-- RELASI KE DOSEN
+            'nama'       => $this->request->getPost('nama'),
+            'kelas'      => $this->request->getPost('kelas'),
+            'no_hp'      => $this->request->getPost('no_hp'),
+            'alamat'     => $this->request->getPost('alamat'),
+            'jurusan'    => $this->request->getPost('jurusan'),
+            'instansi'   => $this->request->getPost('instansi'),
+            'tgl_masuk'  => $this->request->getPost('tgl_masuk'),
+            'tgl_selesai'=> $this->request->getPost('tgl_selesai'),
             'surat_permohonan' => $suratName,
-            'cv'               => $cvName,
+            'cv'         => $cvName,
         ])) {
             return redirect()->back()->withInput()->with('errors', $siswa->errors());
         }
-        
+
         if ($this->config->requireActivation !== null) {
             $activator = service('activator');
             $sent      = $activator->send($user);
@@ -236,7 +264,9 @@ class AuthController extends BaseController
             return redirect()->route('login')->with('message', lang('Auth.activationSuccess'));
         }
 
-        // Send email to all admins
+        // =====================================================
+        // Send email to all admins (dengan info dosen pembimbing)
+        // =====================================================
         try {
             $db = \Config\Database::connect();
             $admins = $db->table('users')
@@ -247,27 +277,31 @@ class AuthController extends BaseController
                          ->where('users.active', 1)
                          ->get()
                          ->getResultArray();
-            
+
             if (!empty($admins)) {
                 $email = \Config\Services::email();
                 $email->setFrom('admin@' . $this->request->getServer('HTTP_HOST'), 'Sistem SIAMAM');
-                
+
                 $adminEmails = array_column($admins, 'email');
                 $email->setTo($adminEmails);
-                
+
                 $email->setSubject('Notifikasi: Pendaftaran Mahasiswa Baru');
-                
-                $msg = 'Halo Admin,<br><br>';
+
+                $msg  = 'Halo Admin,<br><br>';
                 $msg .= 'Ada pendaftar mahasiswa/siswa baru di Sistem Magang dengan rincian:<br>';
                 $msg .= '<ul>';
                 $msg .= '<li><b>Nama:</b> ' . esc($this->request->getPost('nama')) . '</li>';
                 $msg .= '<li><b>NIM:</b> ' . esc($nim) . '</li>';
                 $msg .= '<li><b>Institusi:</b> ' . esc($this->request->getPost('instansi')) . '</li>';
                 $msg .= '<li><b>Jurusan:</b> ' . esc($this->request->getPost('jurusan')) . '</li>';
+                // INFO DOSEN BARU
+                $msg .= '<li><b>Dosen Pembimbing:</b> ' . esc($this->request->getPost('dosen_nama')) . '</li>';
+                $msg .= '<li><b>NIP Dosen:</b> ' . esc($dosenNip ?: '-') . '</li>';
+                $msg .= '<li><b>NIDN Dosen:</b> ' . esc($dosenNidn ?: '-') . '</li>';
                 $msg .= '</ul>';
                 $msg .= 'Akun ini telah otomatis aktif. Silakan login ke sistem pada menu <b>Manajemen Data -> Manajemen Siswa</b> untuk meninjau berkas pendaftaran jika diperlukan.<br><br>';
                 $msg .= 'Terima kasih.';
-                
+
                 $email->setMessage($msg);
                 $email->send();
             }

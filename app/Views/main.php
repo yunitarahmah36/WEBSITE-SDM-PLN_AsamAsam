@@ -91,7 +91,7 @@
                 margin-right: 0.5rem !important;
                 padding: 0.75rem 1rem !important;
                 display: flex !important;
-                align-items: center !important;
+                align-items: flex-start !important;
             }
             .sidenav .nav-link div {
                 width: 32px !important;
@@ -104,9 +104,12 @@
             }
             .sidenav .nav-link-text {
                 margin-left: 0.25rem !important;
-                font-size: 0.85rem !important;
+                font-size: 0.8rem !important;
                 white-space: normal !important;
-                line-height: 1.2 !important;
+                line-height: 1.3 !important;
+                word-break: break-word !important;
+                flex: 1 !important;
+                min-width: 0 !important;
             }
             .sidenav-header {
                 height: auto !important;
@@ -146,31 +149,66 @@
 
     <!-- Performance & Scroll Optimizations -->
     <style>
-        /* Menggunakan GPU acceleration untuk animasi dan scrolling */
         html {
             scroll-behavior: smooth;
         }
         
         .main-content, .sidenav {
-            -webkit-overflow-scrolling: touch; /* untuk iOS */
-            
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* Mengurangi beban render pada elemen kaca (glassmorphism) yang berat saat scroll */
         .navbar-blur {
             backdrop-filter: blur(5px) saturate(150%) !important;
             -webkit-backdrop-filter: blur(5px) saturate(150%) !important;
         }
 
-        /* Mencegah lag akibat box-shadow pada kartu besar */
-        .card {
-            
-            
-        }
-
-        /* Optimasi smooth-scrollbar jika diinisialisasi */
         [data-scrollbar] {
             overscroll-behavior: contain;
+        }
+    </style>
+
+    <!-- ============================================= -->
+    <!-- PERBAIKAN SIDEBAR: TEKS PANJANG TIDAK TERPOTONG -->
+    <!-- ============================================= -->
+    <style>
+        .sidenav .nav-link {
+            align-items: flex-start !important;
+            padding-top: 0.6rem !important;
+            padding-bottom: 0.6rem !important;
+        }
+
+        .sidenav .nav-link-text {
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            line-height: 1.3 !important;
+            flex: 1 !important;
+            min-width: 0 !important;
+        }
+
+        .sidenav .nav-link-text.text-wrap {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+        }
+
+        @media (min-width: 1200px) {
+            .sidenav {
+                width: 260px !important;
+            }
+            .sidenav .nav-link-text {
+                font-size: 0.85rem !important;
+            }
+        }
+
+        @media (min-width: 576px) and (max-width: 1199.98px) {
+            .sidenav {
+                width: 260px !important;
+            }
+            .sidenav .nav-link-text {
+                font-size: 0.85rem !important;
+                line-height: 1.3 !important;
+            }
         }
     </style>
 </head>
@@ -184,6 +222,8 @@
             $bgColor = 'bg-info';
         } elseif (in_groups('admin')) {
             $bgColor = 'bg-dark';
+        } elseif (in_groups('instansi')) { // <-- DIUBAH
+            $bgColor = 'bg-primary'; // <-- DIUBAH (warna biru untuk instansi)
         }
     }
 ?>
@@ -320,7 +360,7 @@
                             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
                                 <i class="material-icons opacity-10">note_add</i>
                             </div>
-                            <span class="nav-link-text ms-1">Pendaftaran Siswa</span>
+                            <span class="nav-link-text ms-1">Pendaftaran Peserta</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -330,7 +370,7 @@
                             </div>
                             <?php $needNilai = countNeedsNilai(); ?>
                             <span class="nav-link-text ms-1">
-                                Manajemen Siswa
+                                Manajemen Peserta
                                 <?= $needNilai > 0 ? '<span class="badge bg-danger badge-sm ms-2">'.$needNilai.'</span>' : '' ?>
                             </span>
                         </a>
@@ -421,7 +461,7 @@
                     <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8">
                         <?php if (in_groups('admin')) : ?>
                             Manajemen Data
-                        <?php elseif (in_groups('pembimbing') || in_groups('dosen_pembimbing')) : ?>
+                        <?php elseif (in_groups('pembimbing') || in_groups('instansi')) : ?> <!-- DIUBAH -->
                             Bimbingan Siswa
                         <?php endif ?>
                     </h6>
@@ -445,11 +485,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="/man/dosen">
+                        <a class="nav-link text-white <?= (isset($segment[0]) && isset($segment[1]) && $segment[0] === 'man' && $segment[1] === 'instansi') ? 'active bg-gradient-primary' : '' ?>" href="/man/instansi"> <!-- DIUBAH: dari 'dosen' ke 'instansi' dan href dari /man/dosen ke /man/instansi -->
                             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
                                 <i class="material-icons opacity-10">school</i>
                             </div>
-                            <span class="nav-link-text ms-1">Manajemen Dosen Pemb.</span>
+                            <span class="nav-link-text ms-1 text-wrap">Manajemen Instansi Pendidikan</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -486,9 +526,9 @@
                     <?php endif ?>
                 <?php endif ?>
 
-                <?php if (in_groups('dosen_pembimbing')) : ?>
+                <?php if (in_groups('instansi')) : ?> <!-- DIUBAH: dari dosen_pembimbing ke instansi -->
                     <li class="nav-item">
-                        <a class="nav-link text-white <?= (isset($segment[0]) && $segment[0] === 'bimbingan-dosen') ? 'active bg-gradient-primary' : '' ?>" href="<?= base_url('/bimbingan-dosen') ?>">
+                        <a class="nav-link text-white <?= (isset($segment[0]) && $segment[0] === 'bimbingan-instansi') ? 'active bg-gradient-primary' : '' ?>" href="<?= base_url('/bimbingan-instansi') ?>"> <!-- DIUBAH: dari bimbingan-dosen ke bimbingan-instansi -->
                             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
                                 <i class="material-icons opacity-10">group</i>
                             </div>

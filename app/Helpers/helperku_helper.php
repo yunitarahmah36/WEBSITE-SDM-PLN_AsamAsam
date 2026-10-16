@@ -134,13 +134,26 @@ if (!function_exists("checkNowAndPeroid")) {
 }
 
 if (!function_exists('getSiswaData')) {
+    /**
+     * Ambil data siswa + data dosen pembimbing (JOIN)
+     * Data dosen diambil via relasi siswa.dosen_id -> dosen_pembimbing.id
+     */
     function getSiswaData($id)
     {
-        $siswa = new \App\Models\SiswaModel();
-        $data = $siswa->where('user_id', $id)->select('siswa.*, users.username, users.email as uemail, users.created_at')
-            ->join('users', 'users.id = siswa.user_id')
-            ->where('siswa.user_id', $id)->first();
-        return $data;
+        $db = \Config\Database::connect();
+
+        return $db->table('siswa')
+            ->select('siswa.*, users.username, users.email as uemail, users.created_at,
+                      dosen_pembimbing.nama AS nama_dosen,
+                      dosen_pembimbing.nip AS nip_dosen,
+                      dosen_pembimbing.nidn AS nidn_dosen,
+                      dosen_pembimbing.no_hp AS hp_dosen,
+                      dosen_pembimbing.email AS email_dosen')
+            ->join('users', 'users.id = siswa.user_id', 'left')
+            ->join('dosen_pembimbing', 'dosen_pembimbing.id = siswa.dosen_id', 'left')
+            ->where('siswa.user_id', $id)
+            ->get()
+            ->getRow();
     }
 }
 

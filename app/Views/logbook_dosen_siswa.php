@@ -119,18 +119,23 @@
                             </div>
                             <div id="la<?= $log->id ?>" class="accordion-collapse collapse" aria-labelledby="hla<?= $log->id ?>" data-bs-parent="#logAccordion" style="">
                                 <?php $i++ ?>
-                                <div class="accordion-body card card-body py-3 bg-gray-200 shadow-none rounded px-3 text-sm opacity-8 <?= $i == $clog ? 'mb-3' : '' ?>">
-                                    <div class="mb-3">
-                                        <strong>Kegiatan:</strong><br>
-                                        <?= $log->kegiatan ?>
-                                    </div>
+                                <div class="accordion-body card card-body py-3 bg-gray-200 shadow-none rounded px-3 text-sm opacity-8 <?= $i == $clog ? 'mb-3' : '' ?>" style="text-align: left !important;">
                                     
-                                    <div class="mb-3 p-3 bg-white rounded border">
-                                        <strong>Catatan Dosen Pembimbing:</strong><br>
-                                        <div id="text-catatan-<?= $log->id ?>">
+                                    <!-- PERBAIKAN TAMPILAN KEGIATAN -->
+                                    <div class="mb-3 p-3 bg-white rounded border" style="text-align: left !important;">
+                                        <strong style="text-align: left !important; display: block !important;">Kegiatan:</strong>
+                                        <div style="text-align: left !important; display: block !important; width: 100%; margin-top: 8px;">
+                                            <?= nl2br(htmlspecialchars($log->kegiatan ?? '-')) ?>
+                                        </div>
+                                    </div>
+                                    <!-- END PERBAIKAN -->
+                                    
+                                    <div class="mb-3 p-3 bg-white rounded border" style="text-align: left !important;">
+                                        <strong style="text-align: left !important; display: block !important;">Catatan Dosen Pembimbing:</strong>
+                                        <div id="text-catatan-<?= $log->id ?>" style="text-align: left !important; display: block !important; width: 100%;">
                                             <?= $log->catatan_dosen ? nl2br(htmlspecialchars($log->catatan_dosen)) : '<em class="text-muted">Belum ada catatan</em>' ?>
                                         </div>
-                                        <div class="mt-2">
+                                        <div class="mt-2" style="text-align: left !important;">
                                             <button type="button" class="badge badge-primary border border-primary shadow mb-0 btn-edit-catatan" data-id="<?= $log->id ?>" data-catatan="<?= htmlspecialchars($log->catatan_dosen ?? '') ?>">
                                                 <i class="fa fa-edit"></i> <?= $log->catatan_dosen ? 'Edit Catatan' : 'Tambah Catatan' ?>
                                             </button>

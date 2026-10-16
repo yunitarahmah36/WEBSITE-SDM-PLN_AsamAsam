@@ -22,7 +22,6 @@
                 </div>
                 <?php endif ?>
             </div>
-            <!-- option fron $angkatan_json -->
             <div class="row mt-3">
                 <div class="col-12">
                     <div class="input-group input-group-outline mb-3">
@@ -41,6 +40,7 @@
                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Jumlah</th>
                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Jurusan</th>
                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Instansi</th>
+                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Dosen Pembimbing</th>
                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tgl Daftar</th>
                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Berkas</th>
@@ -60,6 +60,20 @@
                                     <td class="text-xs ps-4 font-weight-bold"><?= $s->kelas; ?></td>
                                     <td class="text-xs ps-4 font-weight-bold"><?= $s->jurusan; ?></td>
                                     <td class="text-xs ps-4 font-weight-bold"><?= $s->instansi; ?></td>
+                                    
+                                    <!-- ==================== KOLOM DOSEN PEMBIMBING (BARU) ==================== -->
+                                    <td class="text-xs ps-4 font-weight-bold">
+                                        <?php if (!empty($s->nama_dosen)) : ?>
+                                            <div class="text-dark font-weight-bold"><?= $s->nama_dosen ?></div>
+                                            <?php if (!empty($s->nip_dosen)) : ?>
+                                                <div class="text-xxs text-secondary">NIP: <?= $s->nip_dosen ?></div>
+                                            <?php endif; ?>
+                                        <?php else : ?>
+                                            <span class="badge badge-secondary border border-secondary">Belum ada</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <!-- ==================== END KOLOM DOSEN ==================== -->
+                                    
                                     <td class="text-xs ps-4 font-weight-bold">
                                         <?php if ($s->lamaran_status == 'selesai') : ?>
                                             <span class="badge badge-info border border-info">Selesai</span>
@@ -120,6 +134,7 @@
                                             data-ktp="<?= $s->ktp ?? '' ?>"
                                             data-bpjs="<?= $s->bpjs ?? '' ?>"
                                             data-ktm="<?= $s->ktm ?? '' ?>"
+                                            data-takaful="<?= $s->takaful ?? '' ?>"
                                             data-surat-balasan="<?= $s->surat_balasan ?? '' ?>"
                                             data-id-real="<?= $s->id_siswa_real ?? '' ?>"
                                             data-surat-permohonan="<?= $s->surat_permohonan ?? '' ?>"
@@ -364,6 +379,10 @@
                             <tr>
                                 <td class="text-sm font-weight-bold">File KTM</td>
                                 <td class="text-sm">: <span id="v-ktm"></span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-sm font-weight-bold">Takaful</td>
+                                <td class="text-sm">: <span id="v-takaful"></span></td>
                             </tr>
                             <tr>
                                 <td class="text-sm font-weight-bold">Surat Permohonan</td>
@@ -698,6 +717,9 @@
 
             if (d.ktm) $("#v-ktm").html(`<a href="${baseUrl}${d.ktm}" target="_blank" class="badge bg-gradient-info text-xxs">Lihat File</a>`);
             else $("#v-ktm").html(`<span class="text-secondary text-xs">Belum diunggah</span>`);
+
+            if (d.takaful) $("#v-takaful").html(`<a href="${baseUrl}${d.takaful}" target="_blank" class="badge bg-gradient-info text-xxs">Lihat File</a>`);
+            else $("#v-takaful").html(`<span class="text-secondary text-xs">Belum diunggah</span>`);
 
             if (d.suratPermohonan) $("#v-surat-permohonan").html(`<a href="${baseUrl}${d.suratPermohonan}" target="_blank" class="badge bg-gradient-info text-xxs">Lihat File</a>`);
             else $("#v-surat-permohonan").html(`<span class="text-secondary text-xs">Belum diunggah</span>`);

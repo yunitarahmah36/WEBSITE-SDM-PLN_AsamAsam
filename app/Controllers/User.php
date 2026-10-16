@@ -29,12 +29,14 @@ class User extends BaseController
             "active" => 1,
         ]);
 
+        // Data dasar pembimbing
         $user_detail = [
             "nama"  => $this->request->getPost("nama"),
             "no_hp" => $this->request->getPost("hp"),
             "email" => $this->request->getPost("email"),
         ];
 
+        // Upload foto
         $fileFoto = $this->request->getFile('foto');
         if ($fileFoto && $fileFoto->isValid() && !$fileFoto->hasMoved()) {
             $namaFoto = $fileFoto->getRandomName();
@@ -48,9 +50,8 @@ class User extends BaseController
         $this->user->db->transStart();
 
         try {
-            // Explicit validation for common fields
+            // Validasi
             if (!$this->validate([
-                'nama'     => 'required|min_length[3]',
                 'username' => 'required|min_length[3]|max_length[30]|is_unique[users.username]',
                 'email'    => 'required|valid_email|is_unique[users.email]',
                 'hp'       => 'required|numeric|min_length[10]',
@@ -59,17 +60,49 @@ class User extends BaseController
                 throw new \Exception(implode(", ", $this->validator->getErrors()));
             }
 
-            if($this->user->withGroup($role)->save($user)) {
+            // Validasi khusus untuk role instansi
+            if ($role === 'instansi') {
+                if (!$this->validate([
+                    'nama_instansi'  => 'required|min_length[3]|max_length[150]',
+                    'jenis_instansi' => 'required|in_list[Perguruan tinggi,Sekolah,Lainnya]',
+                    'alamat'         => 'required',
+                    'provinsi'       => 'required|max_length[100]',
+                    'kabupaten_kota' => 'required|max_length[100]',
+                    'kecamatan'      => 'required|max_length[100]',
+                ])) {
+                    throw new \Exception(implode(", ", $this->validator->getErrors()));
+                }
+            } else {
+                // Validasi khusus role pembimbing
+                if (!$this->validate([
+                    'nama' => 'required|min_length[3]',
+                ])) {
+                    throw new \Exception(implode(", ", $this->validator->getErrors()));
+                }
+            }
+
+            if ($this->user->withGroup($role)->save($user)) {
                 $user_detail['user_id'] = $this->user->getInsertID();
 
-                if ($role === 'dosen_pembimbing') {
-                    $user_detail['nidn'] = $this->request->getPost('nidn') ?? '';
+                if ($role === 'instansi') {
+                    // Field khusus instansi
+                    $user_detail['nama_instansi']  = trim((string) $this->request->getPost('nama_instansi'));
+                    $user_detail['jenis_instansi'] = $this->request->getPost('jenis_instansi');
+                    $user_detail['alamat']         = trim((string) $this->request->getPost('alamat'));
+                    $user_detail['provinsi']       = trim((string) $this->request->getPost('provinsi'));
+                    $user_detail['kabupaten_kota'] = trim((string) $this->request->getPost('kabupaten_kota'));
+                    $user_detail['kecamatan']      = trim((string) $this->request->getPost('kecamatan'));
+                    $user_detail['no_hp']          = $this->request->getPost('hp');
+
+                    // Hapus field yang tidak dipakai di tabel instansi
+                    unset($user_detail['nama'], $user_detail['foto']);
+
                     $model = new \App\Models\DosenPembimbingModel();
                 } else {
                     $model = $this->pembimbing;
                 }
 
-                if (!$model->save($user_detail)){
+                if (!$model->save($user_detail)) {
                     throw new \Exception("Gagal menyimpan detail profil: " . implode(", ", $model->errors()));
                 }
             } else {
@@ -97,18 +130,18 @@ class User extends BaseController
             ]);
         }
     }
-    
+
     public function update()
     {
         $old_email = $this->request->getPost("old_email");
         $user = [];
 
         $uid = $this->request->getPost("item");
-        
+
         $role = $this->request->getPost("role") ?? 'pembimbing';
 
+        // Data dasar
         $user_detail = [
-            "nama"  => $this->request->getPost("nama"),
             "no_hp" => $this->request->getPost("hp"),
         ];
 
@@ -121,31 +154,40 @@ class User extends BaseController
             $user['password'] = $this->request->getPost("password");
         }
 
-        if ($role === 'dosen_pembimbing') {
+        if ($role === 'instansi') {
             $model = new \App\Models\DosenPembimbingModel();
-            $pid = $model->select('id, foto')->where('user_id', $uid)->first();
-            $user_detail['nidn'] = $this->request->getPost('nidn') ?? '';
+            $pid = $model->select('id')->where('user_id', $uid)->first();
+
+            $user_detail['nama_instansi']  = trim((string) $this->request->getPost('nama_instansi'));
+            $user_detail['jenis_instansi'] = $this->request->getPost('jenis_instansi');
+            $user_detail['alamat']         = trim((string) $this->request->getPost('alamat'));
+            $user_detail['provinsi']       = trim((string) $this->request->getPost('provinsi'));
+            $user_detail['kabupaten_kota'] = trim((string) $this->request->getPost('kabupaten_kota'));
+            $user_detail['kecamatan']      = trim((string) $this->request->getPost('kecamatan'));
         } else {
             $model = $this->pembimbing;
             $pid = $model->select('id, foto')->where('user_id', $uid)->first();
+            $user_detail['nama'] = $this->request->getPost("nama");
         }
 
-        $fileFoto = $this->request->getFile('foto');
-        if ($fileFoto && $fileFoto->isValid() && !$fileFoto->hasMoved()) {
-            $namaFoto = $fileFoto->getRandomName();
-            $fileFoto->move(FCPATH . 'assets/img/foto_pembimbing/', $namaFoto);
-            $user_detail['foto'] = $namaFoto;
-            
-            // Delete old photo
-            if ($pid && $pid->foto && file_exists(FCPATH . 'assets/img/foto_pembimbing/' . $pid->foto)) {
-                @unlink(FCPATH . 'assets/img/foto_pembimbing/' . $pid->foto);
+        // Upload foto (hanya untuk pembimbing)
+        if ($role !== 'instansi') {
+            $fileFoto = $this->request->getFile('foto');
+            if ($fileFoto && $fileFoto->isValid() && !$fileFoto->hasMoved()) {
+                $namaFoto = $fileFoto->getRandomName();
+                $fileFoto->move(FCPATH . 'assets/img/foto_pembimbing/', $namaFoto);
+                $user_detail['foto'] = $namaFoto;
+
+                if ($pid && $pid->foto && file_exists(FCPATH . 'assets/img/foto_pembimbing/' . $pid->foto)) {
+                    @unlink(FCPATH . 'assets/img/foto_pembimbing/' . $pid->foto);
+                }
             }
         }
 
-        if(!empty($user)){
+        if (!empty($user)) {
             $user['id'] = $uid;
             $user = new UserEntity($user);
-            
+
             if ($this->user->save($user)) {
                 if ($pid && $model->update($pid->id, $user_detail)) {
                     return $this->response->setJSON([
@@ -168,7 +210,6 @@ class User extends BaseController
                     'message'   => "Gagal menyimpan user: " . implode(", ", $this->user->errors())
                 ]);
             }
-
         } else {
             if ($pid && $model->update($pid->id, $user_detail)) {
                 return $this->response->setJSON([
@@ -181,7 +222,7 @@ class User extends BaseController
                 return $this->response->setJSON([
                     'status'    => 500,
                     'success'   => false,
-                    'message'    => $errorMessage
+                    'message'   => $errorMessage
                 ]);
             }
         }
@@ -193,8 +234,6 @@ class User extends BaseController
         $data['id'] = user()->id;
 
         if (!$this->validate([
-            'nama' => 'required|min_length[3]',
-            'no_hp' => 'required|numeric|min_length[10]',
             'email' => 'required|valid_email',
         ])) {
             return $this->response->setJSON([
@@ -207,30 +246,46 @@ class User extends BaseController
         $user = new UserEntity($data);
 
         $db = \Config\Database::connect();
-        $is_dosen = $db->table('auth_groups_users')
+        $is_instansi = $db->table('auth_groups_users')
             ->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id')
-            ->where(['user_id' => user()->id, 'name' => 'dosen_pembimbing'])
+            ->where(['user_id' => user()->id, 'name' => 'instansi'])
             ->countAllResults() > 0;
 
-        if ($is_dosen) {
+        if ($is_instansi) {
             $model = new \App\Models\DosenPembimbingModel();
+            $profile = $model->where('user_id', user()->id)->first();
+            $data_pembimbing = [
+                'id'             => $profile ? $profile->id : null,
+                'user_id'        => user()->id,
+                'nama_instansi'  => $data['nama_instansi'] ?? ($profile->nama_instansi ?? ''),
+                'jenis_instansi' => $data['jenis_instansi'] ?? ($profile->jenis_instansi ?? ''),
+                'alamat'         => $data['alamat'] ?? ($profile->alamat ?? ''),
+                'provinsi'       => $data['provinsi'] ?? ($profile->provinsi ?? ''),
+                'kabupaten_kota' => $data['kabupaten_kota'] ?? ($profile->kabupaten_kota ?? ''),
+                'kecamatan'      => $data['kecamatan'] ?? ($profile->kecamatan ?? ''),
+                'email'          => $data['email'],
+                'no_hp'          => $data['no_hp'] ?? ($profile->no_hp ?? ''),
+            ];
         } else {
             $model = $this->pembimbing;
-        }
+            $profile = $model->where('user_id', user()->id)->first();
+            $data_pembimbing = [
+                'id'     => $profile ? $profile->id : null,
+                'user_id' => user()->id,
+                'nama'   => $data['nama'] ?? ($profile->nama ?? ''),
+                'no_hp'  => $data['no_hp'] ?? ($profile->no_hp ?? ''),
+                'email'  => $data['email'],
+            ];
 
-        $data_pembimbing = $data;
-        $profile = $model->where('user_id', user()->id)->first();
-        $data_pembimbing['id'] = $profile ? $profile->id : null;
+            $fileFoto = $this->request->getFile('foto');
+            if ($fileFoto && $fileFoto->isValid() && !$fileFoto->hasMoved()) {
+                $namaFoto = $fileFoto->getRandomName();
+                $fileFoto->move(FCPATH . 'assets/img/foto_pembimbing/', $namaFoto);
+                $data_pembimbing['foto'] = $namaFoto;
 
-        $fileFoto = $this->request->getFile('foto');
-        if ($fileFoto && $fileFoto->isValid() && !$fileFoto->hasMoved()) {
-            $namaFoto = $fileFoto->getRandomName();
-            $fileFoto->move(FCPATH . 'assets/img/foto_pembimbing/', $namaFoto);
-            $data_pembimbing['foto'] = $namaFoto;
-
-            // Delete old photo
-            if ($profile && $profile->foto && file_exists(FCPATH . 'assets/img/foto_pembimbing/' . $profile->foto)) {
-                @unlink(FCPATH . 'assets/img/foto_pembimbing/' . $profile->foto);
+                if ($profile && $profile->foto && file_exists(FCPATH . 'assets/img/foto_pembimbing/' . $profile->foto)) {
+                    @unlink(FCPATH . 'assets/img/foto_pembimbing/' . $profile->foto);
+                }
             }
         }
 
@@ -251,15 +306,11 @@ class User extends BaseController
 
     public function destroy($id)
     {
-        // Force delete from child tables manually to avoid any DB constraint lockups
         $this->db = \Config\Database::connect();
-        
-        // Remove from auth groups mapping
+
         $this->db->table('auth_groups_users')->where('user_id', $id)->delete();
-        
-        // Remove from profile tables
         $this->pembimbing->where('user_id', $id)->delete();
-        
+
         $dosenModel = new \App\Models\DosenPembimbingModel();
         $dosenModel->where('user_id', $id)->delete();
 
@@ -288,7 +339,6 @@ class User extends BaseController
             'pass_confirm' => 'required|matches[password]',
         ];
 
-        
         if (! $this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
@@ -301,8 +351,6 @@ class User extends BaseController
             return redirect()->back()->with('error', lang('Auth.forgotNoUser'));
         }
 
-        
-        // Success! Save the new password, and cleanup the reset hash.
         $user->password         = $this->request->getPost('password');
         $user->reset_hash       = null;
         $user->reset_at         = date('Y-m-d H:i:s');

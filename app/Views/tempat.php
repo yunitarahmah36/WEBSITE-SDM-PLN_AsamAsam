@@ -1,384 +1,1717 @@
 <?= $this->extend('main'); ?>
+
 <?= $this->section('content'); ?>
 
-<!-- filter -->
-<div class="mb-4 card card-body ">
-    <h6>Filter Divisi Magang</h6>
-    <div class="row">
-        <div class="col-12 col-sm-5 col-md-4">
-            <div class="nav-wrapper position-relative end-0">
-                <ul class="nav nav-pills nav-fill p-1" role="tablist" id="filterStatus">
-                    <li class="nav-item">
-                        <a class="nav-link mb-0 px-0 py-1 text-dark" data-bs-toggle="tab" href="javascript:void(0);" data-status="semua" role="tab" aria-controls="all" aria-selected="false">
-                            <span class="material-icons align-middle mb-1 me-1">
-                                list
-                            </span>
-                            Semua
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link mb-0 px-0 py-1 text-success active" data-bs-toggle="tab" href="javascript:void(0);" data-status="buka" role="tab" aria-controls="preview" aria-selected="true">
-                            <span class="material-icons align-middle mb-1 me-1">
-                                done
-                            </span>
-                            Buka
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link mb-0 px-0 py-1 text-danger" data-bs-toggle="tab" href="javascript:void(0);" data-status="tutup" role="tab" aria-controls="code" aria-selected="false">
-                            <span class="material-icons align-middle mb-1 me-1">
-                                close
-                            </span>
-                            Tutup
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
+<!-- =========================================================
+     FILTER DIVISI MAGANG
+     ========================================================= -->
 
-        <div class="col-12 col-sm-7 col-md-8">
-            <div class="input-group input-group-outline">
-                <input type="text" class="form-control" placeholder="Cari divisi magang" aria-label="Cari divisi magang" aria-describedby="button-addon2" id="search">
-            </div>
-        </div>
+<div class="filter-card">
+
+    <div class="filter-title">
+        Filter Divisi Magang
     </div>
-</div>
 
-<div class="row mb-5 row-instansi" data-masonry='{"percentPosition": true }'>
-    <?php foreach ($tempat as $t) : ?>
-        <?php
-        if (filter_var($t->foto, FILTER_VALIDATE_URL)) {
-            $foto = $t->foto;
-        } else {
-            $foto = '/assets/img/tempat_magang/' . $t->foto;
-        }
-        ?>
-<div class="col-12 col-sm-6 col-md-4 col-xxl-3 mb-2 cardInstansi <?= strtolower($t->status) ?>">
-            <div class="card mt-2 compact-card" data-animation="<?= initCheck(user_id(), $t->id) && $t->status == 'buka' ? 'true' : 'false' ?>">
-                <div class="d-flex align-items-stretch">
-                    <!-- Thumbnail kiri -->
-                    <div class="flex-shrink-0" style="width:120px; min-height:120px;">
-                        <img src="<?= $foto ?>" alt="<?= $t->nama ?>"
-                            style="width:120px; height:100%; min-height:120px; object-fit:cover; border-radius:0.5rem 0 0 0.5rem;">
-                    </div>
-                    <!-- Info kanan -->
-                    <div class="flex-grow-1 px-3 py-2 d-flex flex-column justify-content-between" style="min-width:0;">
-                        <div>
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="font-weight-bold text-dark" style="font-size:0.9rem; line-height:1.2;"><?= $t->nama ?></span>
-                                <span class="badge badge-sm ms-1 flex-shrink-0 <?= getSlotAvailable($t->id) == 0 ? 'badge-warning' : ($t->status == 'buka' ? 'badge-success' : 'badge-danger') ?>" style="font-size:0.65rem;"><?= getSlotAvailable($t->id) == 0 ? 'FULL' : strtoupper($t->status) ?></span>
-                            </div>
-                            <div class="full-desc mt-1 text-muted" style="border-bottom: 1px dashed #e2e8f0; padding-bottom: 6px; margin-bottom: 6px;">
-                                <?= $t->deskripsi ?>
-                            </div>
-                        </div>
+    <div class="row align-items-end">
 
-                        <!-- Detail collapsible -->
-                        <div class="detail-panel" id="detail-<?= $t->id ?>" style="display:none;">
-                            <?php if (!empty($t->email)) : ?>
-                            <div class="d-flex align-items-center gap-1 mt-2">
-                                <i class="fa fa-envelope text-primary" style="font-size:0.75rem; min-width:14px;"></i>
-                                <span style="font-size:0.75rem;"><?= $t->email ?></span>        
-                            </div>
-                            <?php endif; ?>
-                            <?php if (!empty($t->hp)) : ?>
-                            <div class="d-flex align-items-center gap-1 mt-1">
-                                <i class="fa fa-phone text-success" style="font-size:0.75rem; min-width:14px;"></i>
-                                <span style="font-size:0.75rem;"><?= $t->hp ?></span>
-                            </div>
-                            <?php endif; ?>
-                            <?php if (!empty($t->alamat)) : ?>
-                            <div class="d-flex align-items-center gap-1 mt-1">
-                                <i class="fa fa-map-marker-alt text-danger" style="font-size:0.75rem; min-width:14px;"></i>
-                                <span style="font-size:0.75rem;"><?= $t->alamat ?></span>
-                            </div>
-                            <?php endif; ?>
-                            <div class="d-flex align-items-center gap-1 mt-1">
-                                <i class="fa fa-users text-info" style="font-size:0.75rem; min-width:14px;"></i>
-                                <span style="font-size:0.75rem;">Kuota tersisa: <strong><?= getSlotAvailable($t->id) ?></strong></span>
-                            </div>
-                        </div>
+        <!-- FILTER STATUS -->
+        <div class="col-12 col-md-4 mb-3 mb-md-0">
 
-                        <!-- Footer: pembimbing + tombol -->
-                        <div class="d-flex align-items-center justify-content-between mt-2">
-                            <div style="min-width:0;">
-                                <span class="text-muted d-block text-truncate" style="font-size:0.75rem;" title="<?= $t->pembimbing ?>">
-                                    <i class="fa fa-user-tie me-1"></i><?= $t->pembimbing ?>
-                                </span>
-                                <button type="button" class="btn btn-link p-0 btn-toggle-detail" data-tid="<?= $t->id ?>"
-                                    style="font-size:0.75rem; color:#aaa; line-height:1; margin-top:2px;">
-                                    <i class="fa fa-chevron-down icon-toggle"></i> Detail
-                                </button>
-                            </div>
-                            <div class="flex-shrink-0 ms-1">
-                                <?php
-                                $sid = getSidByUid(user_id());
-                                $appModel = new \App\Models\ApplicationModel();
-                                $thisApp = $appModel->where(['id_siswa' => $sid, 'id_tempat' => $t->id])->first();
-                                
-                                $pendingApps = $appModel->where(['id_siswa' => $sid, 'status' => 'pending'])->findAll();
-                                $pendingCount = count($pendingApps);
-                                
-                                $acceptedAny = $appModel->where('id_siswa', $sid)->whereIn('status', ['accepted', 'selesai'])->countAllResults() > 0;
-                                ?>
-                                <?php if (!logged_in()) : ?>
-                                    <button type="button" class="btn bg-gradient-primary btn-sm py-1 px-3 mb-0 btn-login-first"
-                                        data-instansi="<?= $t->nama ?>"
-                                        style="font-size:0.75rem; line-height:1.2;"
-                                        <?= $t->status == 'tutup' || getSlotAvailable($t->id) == 0 ? 'disabled' : '' ?>>Daftar</button>
-                                <?php elseif (initCheck(user_id(), $t->id)) : ?>
-                                    <button type="button" class="btn bg-gradient-primary btn-sm py-1 px-3 mb-0 btn-daftar"
-                                        data-instansi="<?= $t->nama ?>" data-tid="<?= $t->id ?>"
-                                        style="font-size:0.75rem; line-height:1.2;"
-                                        <?= $t->status == 'tutup' || getSlotAvailable($t->id) == 0 ? 'disabled' : '' ?>>Daftar</button>
-                                <?php else : ?>
-                                    <?php if ($acceptedAny) : ?>
-                                        <span class="badge badge-success" style="font-size:0.65rem;">Terdaftar</span>
-                                    <?php elseif ($thisApp && $thisApp->status == 'pending') : ?>
-                                        <span class="badge bg-gradient-info" style="font-size:0.65rem;">Pending</span>
-                                    <?php elseif ($thisApp && in_array($thisApp->status, ['rejected', 'reject by system'])) : ?>
-                                        <span class="badge bg-gradient-danger" style="font-size:0.65rem;">Ditolak</span>
-                                    <?php elseif ($pendingCount >= 2) : ?>
-                                        <span class="badge badge-secondary" style="font-size:0.65rem;">Maks 2</span>
-                                    <?php elseif (getSlotAvailable($t->id) == 0) : ?>
-                                        <span class="badge badge-warning" style="font-size:0.65rem;">Penuh</span>
-                                    <?php elseif ($t->status != 'tutup' && getSlotAvailable($t->id) > 0) : ?>
-                                        <!-- Fallback: show Daftar button if nothing else matched and slot is available -->
-                                        <button type="button" class="btn bg-gradient-primary btn-sm py-1 px-3 mb-0 btn-daftar"
-                                            data-instansi="<?= $t->nama ?>" data-tid="<?= $t->id ?>"
-                                            style="font-size:0.75rem; line-height:1.2;">Daftar</button>
-                                    <?php endif ?>
-                                <?php endif ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <label for="filterStatus" class="filter-label">
+                Filter Status
+            </label>
+
+            <div class="filter-select-wrapper">
+
+                <span class="material-icons filter-icon">
+                    filter_list
+                </span>
+
+                <select id="filterStatus" class="filter-select">
+
+                    <option value="semua">
+                        Semua Divisi
+                    </option>
+
+                    <option value="buka">
+                        Divisi Buka
+                    </option>
+
+                    <option value="tutup">
+                        Divisi Tutup
+                    </option>
+
+                </select>
+
             </div>
+
         </div>
-    <?php endforeach ?>
+
+
+        <!-- SEARCH -->
+        <div class="col-12 col-md-8">
+
+            <label for="search" class="filter-label">
+                Cari Divisi
+            </label>
+
+            <div class="search-wrapper">
+
+                <span class="material-icons search-icon">
+                    search
+                </span>
+
+                <input
+                    type="text"
+                    id="search"
+                    class="search-input"
+                    placeholder="Cari divisi magang..."
+                    autocomplete="off">
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
+
+
+<!-- =========================================================
+     DAFTAR DIVISI
+     ========================================================= -->
+
+<div class="row row-instansi mb-5">
+
+    <?php foreach ($tempat as $t) : ?>
+
+        <?php
+
+        if (filter_var($t->foto, FILTER_VALIDATE_URL)) {
+
+            $foto = $t->foto;
+
+        } else {
+
+            $foto = '/assets/img/tempat_magang/' . $t->foto;
+
+        }
+
+        ?>
+
+        <div
+            class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-3 mb-4 cardInstansi <?= strtolower($t->status) ?>"
+            data-status="<?= strtolower($t->status) ?>"
+        >
+
+            <div
+                class="card compact-card"
+                data-animation="<?= initCheck(user_id(), $t->id) && $t->status == 'buka' ? 'true' : 'false' ?>"
+            >
+
+                <div class="d-flex align-items-stretch card-content">
+
+
+                    <!-- =================================================
+                         FOTO
+                         ================================================= -->
+
+                    <div class="card-image-wrapper">
+
+                        <img
+                            src="<?= $foto ?>"
+                            alt="<?= esc($t->nama) ?>"
+                            class="card-image"
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         INFORMASI
+                         ================================================= -->
+
+                    <div class="card-info">
+
+                        <div>
+
+                            <!-- NAMA + STATUS -->
+                            <div class="card-header-info">
+
+                                <span class="company-name">
+
+                                    <?= esc($t->nama) ?>
+
+                                </span>
+
+
+                                <span
+                                    class="status-badge
+                                    <?= getSlotAvailable($t->id) == 0
+                                        ? 'status-full'
+                                        : ($t->status == 'buka'
+                                            ? 'status-open'
+                                            : 'status-closed') ?>"
+                                >
+
+                                    <?= getSlotAvailable($t->id) == 0
+                                        ? 'FULL'
+                                        : strtoupper($t->status) ?>
+
+                                </span>
+
+                            </div>
+
+
+                            <!-- DESKRIPSI -->
+                            <div class="full-desc">
+
+                                <?= $t->deskripsi ?>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             DETAIL
+                             ================================================= -->
+
+                        <div
+                            class="detail-panel"
+                            id="detail-<?= $t->id ?>"
+                        >
+
+                            <?php if (!empty($t->email)) : ?>
+
+                                <div class="detail-item">
+
+                                    <i class="fa fa-envelope text-primary"></i>
+
+                                    <span>
+                                        <?= esc($t->email) ?>
+                                    </span>
+
+                                </div>
+
+                            <?php endif; ?>
+
+
+                            <?php if (!empty($t->hp)) : ?>
+
+                                <div class="detail-item">
+
+                                    <i class="fa fa-phone text-success"></i>
+
+                                    <span>
+                                        <?= esc($t->hp) ?>
+                                    </span>
+
+                                </div>
+
+                            <?php endif; ?>
+
+
+                            <?php if (!empty($t->alamat)) : ?>
+
+                                <div class="detail-item">
+
+                                    <i class="fa fa-map-marker-alt text-danger"></i>
+
+                                    <span>
+                                        <?= esc($t->alamat) ?>
+                                    </span>
+
+                                </div>
+
+                            <?php endif; ?>
+
+
+                            <div class="detail-item">
+
+                                <i class="fa fa-users text-info"></i>
+
+                                <span>
+
+                                    Kuota tersisa:
+                                    <strong>
+                                        <?= getSlotAvailable($t->id) ?>
+                                    </strong>
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             FOOTER CARD
+                             ================================================= -->
+
+                        <div class="card-footer-info">
+
+
+                            <!-- PEMBIMBING + DETAIL -->
+
+                            <div class="supervisor-wrapper">
+
+                                <span
+                                    class="supervisor-name"
+                                    title="<?= esc($t->pembimbing) ?>"
+                                >
+
+                                    <i class="fa fa-user-tie"></i>
+
+                                    <?= esc($t->pembimbing) ?>
+
+                                </span>
+
+
+                                <button
+                                    type="button"
+                                    class="btn-toggle-detail"
+                                    data-tid="<?= $t->id ?>"
+                                >
+
+                                    <i class="fa fa-chevron-down icon-toggle"></i>
+
+                                    Detail
+
+                                </button>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 STATUS PENDAFTARAN
+                                 ================================================= -->
+
+                            <div class="registration-wrapper">
+
+                                <?php
+
+                                $sid = getSidByUid(user_id());
+
+                                $appModel = new \App\Models\ApplicationModel();
+
+
+                                /*
+                                 * Ambil lamaran siswa untuk divisi
+                                 * yang sedang ditampilkan.
+                                 */
+
+                                $thisApp = $appModel
+                                    ->where([
+                                        'id_siswa' => $sid,
+                                        'id_tempat' => $t->id
+                                    ])
+                                    ->first();
+
+
+                                /*
+                                 * Hitung jumlah lamaran pending.
+                                 */
+
+                                $pendingApps = $appModel
+                                    ->where([
+                                        'id_siswa' => $sid,
+                                        'status' => 'pending'
+                                    ])
+                                    ->findAll();
+
+                                $pendingCount = count($pendingApps);
+
+
+                                /*
+                                 * Hanya divisi ini yang dianggap
+                                 * Terdaftar apabila status diterima.
+                                 */
+
+                                $acceptedThis = $thisApp
+                                    && in_array(
+                                        $thisApp->status,
+                                        ['accepted', 'selesai']
+                                    );
+
+                                ?>
+
+
+                                <?php if (!logged_in()) : ?>
+
+                                    <button
+                                        type="button"
+                                        class="btn-daftar btn-login-first"
+                                        data-instansi="<?= esc($t->nama) ?>"
+                                        <?= $t->status == 'tutup' || getSlotAvailable($t->id) == 0
+                                            ? 'disabled'
+                                            : '' ?>
+                                    >
+
+                                        Daftar
+
+                                    </button>
+
+
+                                <?php elseif (initCheck(user_id(), $t->id)) : ?>
+
+                                    <button
+                                        type="button"
+                                        class="btn-daftar"
+                                        data-instansi="<?= esc($t->nama) ?>"
+                                        data-tid="<?= $t->id ?>"
+                                        <?= $t->status == 'tutup' || getSlotAvailable($t->id) == 0
+                                            ? 'disabled'
+                                            : '' ?>
+                                    >
+
+                                        Daftar
+
+                                    </button>
+
+
+                                <?php else : ?>
+
+
+                                    <?php if ($acceptedThis) : ?>
+
+                                        <span class="registration-badge badge-accepted">
+                                            Terdaftar
+                                        </span>
+
+
+                                    <?php elseif ($thisApp && $thisApp->status == 'pending') : ?>
+
+                                        <span class="registration-badge badge-pending">
+                                            Pending
+                                        </span>
+
+
+                                    <?php elseif (
+                                        $thisApp &&
+                                        in_array(
+                                            $thisApp->status,
+                                            ['rejected', 'reject by system']
+                                        )
+                                    ) : ?>
+
+                                        <span class="registration-badge badge-rejected">
+                                            Ditolak
+                                        </span>
+
+
+                                    <?php elseif ($pendingCount >= 2) : ?>
+
+                                        <span class="registration-badge badge-limit">
+                                            Maks 2
+                                        </span>
+
+
+                                    <?php elseif (getSlotAvailable($t->id) == 0) : ?>
+
+                                        <span class="registration-badge badge-full">
+                                            Penuh
+                                        </span>
+
+
+                                    <?php elseif (
+                                        $t->status != 'tutup' &&
+                                        getSlotAvailable($t->id) > 0
+                                    ) : ?>
+
+                                        <button
+                                            type="button"
+                                            class="btn-daftar"
+                                            data-instansi="<?= esc($t->nama) ?>"
+                                            data-tid="<?= $t->id ?>"
+                                        >
+
+                                            Daftar
+
+                                        </button>
+
+                                    <?php endif; ?>
+
+
+                                <?php endif; ?>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    <?php endforeach; ?>
+
+</div>
+
+
 <?= $this->endSection(); ?>
 
-<?= $this->section('bottomsc'); ?>
-<style>
-    .compact-card {
-        border-radius: 0.5rem;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: box-shadow 0.2s, transform 0.2s;
-    }
-    .compact-card:hover {
-        box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-        transform: translateY(-2px);
-    }
-    .detail-panel {
-        overflow: hidden;
-        transition: max-height 0.35s ease, opacity 0.35s ease;
-        max-height: 0;
-        opacity: 0;
-    }
-    .detail-panel.open {
-        max-height: 2000px;
-        opacity: 1;
-    }
-    .btn-toggle-detail {
-        text-decoration: none !important;
-        transition: color 0.2s;
-    }
-    .btn-toggle-detail:hover { color: #344767 !important; }
-    .icon-toggle { transition: transform 0.3s ease; display: inline-block; }
-    .icon-toggle.rotated { transform: rotate(180deg); }
 
-    /* Rich text styling in collapsible card details */
-    .full-desc {
-        max-height: 110px;
-        overflow-y: auto;
-        padding-right: 6px;
-        font-size: 0.9rem !important;
+<?= $this->section('bottomsc'); ?>
+
+
+<style>
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.page-header-section {
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 28px;
+
+}
+
+.breadcrumb-custom {
+
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    font-size: 14px;
+
+    color: #9aa5b5;
+
+    margin-bottom: 5px;
+
+}
+
+.breadcrumb-custom .separator {
+
+    color: #b5bdc9;
+
+}
+
+.breadcrumb-custom .active {
+
+    color: #344767;
+
+    font-weight: 500;
+
+}
+
+.page-title {
+
+    margin: 0;
+
+    color: #344767;
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+}
+
+
+/* =========================================================
+   FILTER CARD
+   ========================================================= */
+
+.filter-card {
+
+    background: #ffffff;
+
+    border-radius: 16px;
+
+    padding: 24px 26px;
+
+    margin-bottom: 30px;
+
+    border: 1px solid #edf0f4;
+
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+
+}
+
+.filter-title {
+
+    color: #344767;
+
+    font-size: 17px;
+
+    font-weight: 700;
+
+    margin-bottom: 22px;
+
+}
+
+.filter-label {
+
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #344767;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================================
+   DROPDOWN
+   ========================================================= */
+
+.filter-select-wrapper {
+
+    position: relative;
+
+    width: 100%;
+
+}
+
+.filter-icon {
+
+    position: absolute;
+
+    left: 17px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    font-size: 19px;
+
+    color: #8795a8;
+
+    pointer-events: none;
+
+    z-index: 2;
+
+}
+
+.filter-select {
+
+    width: 100%;
+
+    height: 48px;
+
+    border: 1px solid #dce3eb;
+
+    border-radius: 10px;
+
+    background-color: #ffffff;
+
+    color: #344767;
+
+    font-size: 14px;
+
+    font-weight: 500;
+
+    padding: 0 42px 0 46px;
+
+    outline: none;
+
+    cursor: pointer;
+
+    appearance: auto;
+
+    transition: all 0.2s ease;
+
+}
+
+.filter-select:hover {
+
+    border-color: #c7d0dc;
+
+}
+
+.filter-select:focus {
+
+    border-color: #5e72e4;
+
+    box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.10);
+
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.search-wrapper {
+
+    position: relative;
+
+    width: 100%;
+
+}
+
+.search-icon {
+
+    position: absolute;
+
+    left: 17px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    font-size: 20px;
+
+    color: #8795a8;
+
+    pointer-events: none;
+
+    z-index: 2;
+
+}
+
+.search-input {
+
+    width: 100%;
+
+    height: 48px;
+
+    border: 1px solid #dce3eb;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #344767;
+
+    font-size: 14px;
+
+    padding: 0 16px 0 46px;
+
+    outline: none;
+
+    transition: all 0.2s ease;
+
+}
+
+.search-input::placeholder {
+
+    color: #9aa7b8;
+
+}
+
+.search-input:hover {
+
+    border-color: #c7d0dc;
+
+}
+
+.search-input:focus {
+
+    border-color: #5e72e4;
+
+    box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.10);
+
+}
+
+
+/* =========================================================
+   GRID DIVISI
+   ========================================================= */
+
+.row-instansi {
+
+    margin-left: -10px !important;
+
+    margin-right: -10px !important;
+
+}
+
+.cardInstansi {
+
+    padding-left: 10px !important;
+
+    padding-right: 10px !important;
+
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.compact-card {
+
+    width: 100%;
+
+    min-height: 235px;
+
+    margin: 0 !important;
+
+    border: 1px solid #edf0f4;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+}
+
+.compact-card:hover {
+
+    transform: translateY(-3px);
+
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.10);
+
+}
+
+.card-content {
+
+    width: 100%;
+
+    min-height: 235px;
+
+}
+
+
+/* =========================================================
+   IMAGE
+   ========================================================= */
+
+.card-image-wrapper {
+
+    width: 42%;
+
+    min-width: 42%;
+
+    min-height: 235px;
+
+    background: #f3f4f6;
+
+    overflow: hidden;
+
+}
+
+.card-image {
+
+    display: block;
+
+    width: 100%;
+
+    height: 100%;
+
+    min-height: 235px;
+
+    object-fit: cover;
+
+}
+
+
+/* =========================================================
+   CARD INFO
+   ========================================================= */
+
+.card-info {
+
+    width: 58%;
+
+    min-width: 0;
+
+    padding: 14px 12px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+}
+
+.card-header-info {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 6px;
+
+    margin-bottom: 7px;
+
+}
+
+.company-name {
+
+    display: block;
+
+    min-width: 0;
+
+    color: #344767;
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
+
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.status-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    min-height: 24px;
+
+    padding: 4px 8px;
+
+    border-radius: 7px;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+}
+
+.status-open {
+
+    color: #188038;
+
+    background: #d9f1df;
+
+}
+
+.status-closed {
+
+    color: #e53935;
+
+    background: #ffd9d7;
+
+}
+
+.status-full {
+
+    color: #9a6700;
+
+    background: #fff0c2;
+
+}
+
+
+/* =========================================================
+   DESKRIPSI
+   ========================================================= */
+
+.full-desc {
+
+    height: 92px;
+
+    overflow-y: auto;
+
+    padding-right: 5px;
+
+    color: #7783a0;
+
+    font-size: 13px;
+
+    line-height: 1.7;
+
+    border-bottom: 1px dashed #e2e8f0;
+
+}
+
+.full-desc::-webkit-scrollbar {
+
+    width: 4px;
+
+}
+
+.full-desc::-webkit-scrollbar-track {
+
+    background: transparent;
+
+}
+
+.full-desc::-webkit-scrollbar-thumb {
+
+    background: #cfd5dd;
+
+    border-radius: 5px;
+
+}
+
+
+/* =========================================================
+   DETAIL
+   ========================================================= */
+
+.detail-panel {
+
+    display: none;
+
+    margin-top: 8px;
+
+    padding-top: 7px;
+
+    border-top: 1px solid #edf0f4;
+
+}
+
+.detail-panel.open {
+
+    display: block;
+
+}
+
+.detail-item {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 7px;
+
+    margin-bottom: 5px;
+
+    color: #667085;
+
+    font-size: 11px;
+
+    line-height: 1.4;
+
+}
+
+.detail-item i {
+
+    width: 14px;
+
+    flex-shrink: 0;
+
+    margin-top: 2px;
+
+}
+
+
+/* =========================================================
+   FOOTER CARD
+   ========================================================= */
+
+.card-footer-info {
+
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+
+    gap: 5px;
+
+    margin-top: 9px;
+
+}
+
+.supervisor-wrapper {
+
+    min-width: 0;
+
+    flex: 1;
+
+}
+
+.supervisor-name {
+
+    display: block;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    color: #7b879d;
+
+    font-size: 11px;
+
+    margin-bottom: 4px;
+
+}
+
+.supervisor-name i {
+
+    margin-right: 4px;
+
+}
+
+.btn-toggle-detail {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 3px;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #9aa1aa;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+.btn-toggle-detail:hover {
+
+    color: #344767;
+
+}
+
+.icon-toggle {
+
+    transition: transform 0.2s ease;
+
+}
+
+.icon-toggle.rotated {
+
+    transform: rotate(180deg);
+
+}
+
+
+/* =========================================================
+   BUTTON DAFTAR
+   ========================================================= */
+
+.registration-wrapper {
+
+    flex-shrink: 0;
+
+}
+
+.btn-daftar {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 72px;
+
+    height: 30px;
+
+    padding: 0 12px;
+
+    border: 0;
+
+    border-radius: 8px;
+
+    background: #e91e63;
+
+    color: #ffffff;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow: 0 3px 7px rgba(233, 30, 99, 0.22);
+
+    transition: all 0.2s ease;
+
+}
+
+.btn-daftar:hover {
+
+    background: #d81b60;
+
+    transform: translateY(-1px);
+
+}
+
+.btn-daftar:disabled {
+
+    opacity: 0.55;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+}
+
+
+/* =========================================================
+   REGISTRATION BADGE
+   ========================================================= */
+
+.registration-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 62px;
+
+    height: 28px;
+
+    padding: 0 8px;
+
+    border-radius: 7px;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+}
+
+.badge-accepted {
+
+    color: #188038;
+
+    background: #d9f1df;
+
+}
+
+.badge-pending {
+
+    color: #0277bd;
+
+    background: #d9efff;
+
+}
+
+.badge-rejected {
+
+    color: #d93025;
+
+    background: #ffd9d7;
+
+}
+
+.badge-limit {
+
+    color: #667085;
+
+    background: #eaecf0;
+
+}
+
+.badge-full {
+
+    color: #9a6700;
+
+    background: #fff0c2;
+
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1199px) {
+
+    .card-image-wrapper {
+
+        width: 40%;
+
+        min-width: 40%;
+
     }
-    .full-desc::-webkit-scrollbar {
-        width: 4px;
+
+    .card-info {
+
+        width: 60%;
+
     }
-    .full-desc::-webkit-scrollbar-track {
-        background: rgba(0,0,0,0.03);
-        border-radius: 4px;
+
+}
+
+@media (max-width: 767px) {
+
+    .filter-card {
+
+        padding: 20px;
+
+        margin-bottom: 24px;
+
     }
-    .full-desc::-webkit-scrollbar-thumb {
-        background: rgba(0,0,0,0.15);
-        border-radius: 4px;
+
+    .filter-title {
+
+        margin-bottom: 18px;
+
     }
-    .full-desc::-webkit-scrollbar-thumb:hover {
-        background: rgba(0,0,0,0.3);
+
+    .cardInstansi {
+
+        padding-left: 8px !important;
+
+        padding-right: 8px !important;
+
     }
-    
-    .full-desc h1, .full-desc h2, .full-desc h3 {
-        font-size: 1.15rem !important;
-        font-weight: 700 !important;
-        margin-top: 10px !important;
-        margin-bottom: 5px !important;
-        color: #1a1a2e !important;
+
+    .row-instansi {
+
+        margin-left: -8px !important;
+
+        margin-right: -8px !important;
+
     }
-    .full-desc h4, .full-desc h5, .full-desc h6 {
-        font-size: 1.0rem !important;
-        font-weight: 600 !important;
-        margin-top: 8px !important;
-        margin-bottom: 4px !important;
-        color: #344767 !important;
+
+    .compact-card,
+    .card-content {
+
+        min-height: 220px;
+
     }
-    .full-desc p {
-        font-size: 0.9rem !important;
-        line-height: 1.5 !important;
-        margin-bottom: 6px !important;
-        color: #4a5568 !important;
+
+    .card-image-wrapper {
+
+        min-height: 220px;
+
     }
-    .full-desc ul, .full-desc ol {
-        padding-left: 1.2rem !important;
-        margin-bottom: 8px !important;
-        font-size: 0.9rem !important;
-        color: #4a5568 !important;
+
+    .card-image {
+
+        min-height: 220px;
+
     }
-    .full-desc li {
-        margin-bottom: 3px !important;
-        line-height: 1.5 !important;
-        font-size: 0.9rem !important;
+
+}
+
+@media (max-width: 575px) {
+
+    .page-header-section {
+
+        margin-bottom: 20px;
+
     }
+
+    .filter-card {
+
+        padding: 18px;
+
+    }
+
+    .compact-card,
+    .card-content {
+
+        min-height: 210px;
+
+    }
+
+    .card-image-wrapper {
+
+        min-height: 210px;
+
+    }
+
+    .card-image {
+
+        min-height: 210px;
+
+    }
+
+}
+
 </style>
-<!-- Load SweetAlert Early -->
+
+
+<!-- =========================================================
+     SWEET ALERT
+     ========================================================= -->
+
 <script src="/assets/js/plugins/sweetalert.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
+
 
 <script>
-    // Toggle detail panel
-    $(document).on('click', '.btn-toggle-detail', function() {
-        var tid = $(this).data('tid');
-        var panel = $('#detail-' + tid);
-        var icon = $(this).find('.icon-toggle');
-        var btn = $(this);
-        if (panel.hasClass('open')) {
-            panel.removeClass('open');
-            icon.removeClass('rotated');
-            btn.html('<i class="fa fa-chevron-down me-1 icon-toggle"></i>Lihat Detail');
-        } else {
-            panel.css('display', 'block').addClass('open');
-            icon.addClass('rotated');
-            btn.html('<i class="fa fa-chevron-up me-1 icon-toggle rotated"></i>Sembunyikan');
-        }
-        setTimeout(() => { $grid.masonry('layout'); }, 380);
+
+$(document).ready(function() {
+
+
+    /* =========================================================
+       FILTER STATUS
+       ========================================================= */
+
+    var status = 'semua';
+
+
+    $('#filterStatus').on('change', function() {
+
+        status = $(this).val();
+
+        filterCards();
+
     });
 
-    // Daftarkan event click sesegera mungkin menggunakan delegasi
-    $(document).on('click', '.btn-daftar', function() {
-        var instansi = $(this).data('instansi');
-        var tid = $(this).data('tid');
-        
-        // Ambil token CSRF terbaru langsung dari meta tag saat tombol diklik
-        var csrfName = '<?= csrf_token() ?>';
-        var csrfHeader = '<?= csrf_header() ?>';
-        var csrfHash = $('meta[name="' + csrfHeader + '"]').attr('content');
 
-        Swal.fire({
-            title: 'Daftar Magang',
-            text: "Apakah anda yakin ingin mendaftar magang di " + instansi + "?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Daftar',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: '/tempat/daftar',
-                    type: 'post',
-                    headers: { [csrfHeader]: csrfHash },
-                    data: { tid: tid },
-                    success: function(data) {
-                        if (data.success) {
+    /* =========================================================
+       SEARCH
+       ========================================================= */
+
+    $('#search').on('keyup', function() {
+
+        filterCards();
+
+    });
+
+
+    /* =========================================================
+       FILTER CARD
+       ========================================================= */
+
+    function filterCards() {
+
+        var keyword = $('#search')
+            .val()
+            .toLowerCase()
+            .trim();
+
+
+        $('.cardInstansi').each(function() {
+
+            var card = $(this);
+
+            var cardStatus = card
+                .data('status')
+                .toString()
+                .toLowerCase();
+
+
+            var cardText = card
+                .text()
+                .toLowerCase();
+
+
+            var statusMatch =
+                status === 'semua' ||
+                cardStatus === status;
+
+
+            var searchMatch =
+                keyword === '' ||
+                cardText.indexOf(keyword) !== -1;
+
+
+            if (statusMatch && searchMatch) {
+
+                card.removeClass('d-none');
+
+            } else {
+
+                card.addClass('d-none');
+
+            }
+
+        });
+
+    }
+
+
+    /* =========================================================
+       DETAIL
+       ========================================================= */
+
+    $(document).on(
+        'click',
+        '.btn-toggle-detail',
+        function() {
+
+            var tid = $(this).data('tid');
+
+            var panel = $('#detail-' + tid);
+
+            var icon = $(this).find('.icon-toggle');
+
+
+            if (panel.hasClass('open')) {
+
+                panel
+                    .removeClass('open')
+                    .hide();
+
+                icon.removeClass('rotated');
+
+                $(this).html(
+                    '<i class="fa fa-chevron-down icon-toggle"></i> Detail'
+                );
+
+            } else {
+
+                panel
+                    .addClass('open')
+                    .show();
+
+                icon.addClass('rotated');
+
+                $(this).html(
+                    '<i class="fa fa-chevron-up icon-toggle rotated"></i> Sembunyikan'
+                );
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+       TOMBOL DAFTAR
+       ========================================================= */
+
+    $(document).on(
+        'click',
+        '.btn-daftar:not(.btn-login-first)',
+        function() {
+
+            var instansi = $(this).data('instansi');
+
+            var tid = $(this).data('tid');
+
+
+            var csrfHeader =
+                '<?= csrf_header() ?>';
+
+            var csrfHash =
+                $('meta[name="' + csrfHeader + '"]')
+                .attr('content');
+
+
+            Swal.fire({
+
+                title: 'Daftar Magang',
+
+                text:
+                    'Apakah anda yakin ingin mendaftar magang di '
+                    + instansi
+                    + '?',
+
+                icon: 'question',
+
+                showCancelButton: true,
+
+                confirmButtonColor: '#3085d6',
+
+                cancelButtonColor: '#d33',
+
+                confirmButtonText: 'Daftar',
+
+                cancelButtonText: 'Batal'
+
+            }).then(function(result) {
+
+                if (result.isConfirmed) {
+
+                    $.ajax({
+
+                        url: '/tempat/daftar',
+
+                        type: 'post',
+
+                        headers: {
+
+                            [csrfHeader]:
+                                csrfHash
+
+                        },
+
+                        data: {
+
+                            tid: tid
+
+                        },
+
+                        success: function(data) {
+
+                            if (data.success) {
+
+                                Swal.fire({
+
+                                    title: 'Berhasil',
+
+                                    text:
+                                        data.message ||
+                                        'Anda berhasil mendaftar magang di '
+                                        + instansi,
+
+                                    icon: 'success'
+
+                                }).then(function() {
+
+                                    window.location.href =
+                                        '/status-lamaran';
+
+                                });
+
+                            } else {
+
+                                Swal.fire({
+
+                                    title: 'Gagal',
+
+                                    text:
+                                        data.message ||
+                                        'Terjadi kesalahan.',
+
+                                    icon: 'error'
+
+                                });
+
+                            }
+
+                        },
+
+                        error: function(xhr) {
+
+                            // ⭐ DEBUG: Tampilkan pesan asli dari server
+                            console.log('===== DEBUG ERROR DAFTAR =====');
+                            console.log('Status:', xhr.status);
+                            console.log('Response:', xhr.responseText);
+
+                            let title = 'Gagal Mendaftar';
+                            let msg   = 'Terjadi kesalahan. Buka Console (F12) untuk detail.';
+
+                            // Coba ambil pesan dari JSON response
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                msg = xhr.responseJSON.message;
+                            } 
+                            // Kalau bukan JSON, ambil dari HTML
+                            else if (xhr.responseText) {
+                                let stripped = xhr.responseText
+                                    .replace(/<[^>]*>/g, ' ')
+                                    .replace(/\s+/g, ' ')
+                                    .trim();
+                                msg = stripped.substring(0, 500);
+                            }
+
+                            // Pesan spesifik per status
+                            if (xhr.status === 401) {
+                                title = 'Belum Login';
+                            } else if (xhr.status === 403) {
+                                title = 'Akses Ditolak';
+                            } else if (xhr.status === 419) {
+                                title = 'CSRF Token Expired';
+                                msg = 'Sesi telah berakhir. Silakan reload halaman ini.';
+                            } else if (xhr.status === 500) {
+                                title = 'Server Error (500)';
+                            }
+
                             Swal.fire({
-                                title: 'Berhasil',
-                                text: data.message || ("Anda berhasil mendaftar magang di " + instansi),
-                                icon: 'success'
-                            }).then(() => { window.location.href = '/status-lamaran'; });
-                        } else {
-                            Swal.fire({ title: 'Gagal', text: data.message || "Terjadi kesalahan.", icon: 'error' });
+                                title: title,
+                                html: '<div style="text-align:left;font-size:13px;word-break:break-word;max-height:300px;overflow:auto;">' + msg + '</div>',
+                                icon: 'error',
+                                showCancelButton: true,
+                                confirmButtonText: 'Reload Halaman',
+                                cancelButtonText: 'Tutup'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    location.reload();
+                                }
+                            });
+
                         }
-                    },
-                    error: function(xhr) {
-                        Swal.fire({
-                            title: 'Sesi Berakhir',
-                            text: "Sesi Anda mungkin telah kedaluwarsa atau terjadi gangguan koneksi. Silakan reload halaman ini.",
-                            icon: 'warning'
-                        });
-                    }
-                })
-            }
-        })
-    });
 
-    $(document).on('click', '.btn-login-first', function() {
-        var instansi = $(this).data('instansi');
-        Swal.fire({
-            title: 'Harus Login',
-            text: "Untuk mendaftar magang di " + instansi + ", Anda harus login terlebih dahulu.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Login Sekarang',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = '/login';
-            }
-        });
-    });
+                    });
 
-    var $grid; // declare in outer scope so toggle handler can access it
-
-    $(document).ready(function() {
-        $grid = $('.row-instansi').masonry({
-            itemSelector: '.cardInstansi',
-            percentPosition: true
-        });
-
-        // Tunggu gambar dimuat sebelum memicu layouting
-        $grid.imagesLoaded().progress( function() {
-            $grid.masonry('layout');
-        });
-
-        var status = 'buka';
-        sh(status);
-
-        $('#search').on('keyup', function() {
-            var value = $(this).val().toLowerCase();
-            $('.cardInstansi').each(function() {
-                var text = $(this).text().toLowerCase();
-                if (text.indexOf(value) > -1 && ($(this).hasClass(status) || status == 'semua')) {
-                    $(this).show().removeClass('d-none');
-                } else {
-                    $(this).hide().addClass('d-none');
                 }
-            });
-            $grid.masonry('layout');
-        });
 
-        $('#filterStatus a').on('click', function(e) {
-            e.preventDefault();
-            status = $(this).data('status');
-            sh(status);
-        });
-
-        function sh(status) {
-            $('.cardInstansi').each(function() {
-                if ($(this).hasClass(status) || status == 'semua') {
-                    $(this).show().removeClass('d-none');
-                } else {
-                    $(this).hide().addClass('d-none');
-                }
             });
-            $grid.masonry('layout');
+
         }
-    })
+    );
+
+
+    /* =========================================================
+       LOGIN SEBELUM DAFTAR
+       ========================================================= */
+
+    $(document).on(
+        'click',
+        '.btn-login-first',
+        function() {
+
+            var instansi =
+                $(this).data('instansi');
+
+
+            Swal.fire({
+
+                title: 'Harus Login',
+
+                text:
+                    'Untuk mendaftar magang di '
+                    + instansi
+                    + ', Anda harus login terlebih dahulu.',
+
+                icon: 'warning',
+
+                showCancelButton: true,
+
+                confirmButtonColor: '#3085d6',
+
+                cancelButtonColor: '#d33',
+
+                confirmButtonText: 'Login Sekarang',
+
+                cancelButtonText: 'Batal'
+
+            }).then(function(result) {
+
+                if (result.isConfirmed) {
+
+                    window.location.href =
+                        '/login';
+
+                }
+
+            });
+
+        }
+    );
+
+
+    /* =========================================================
+       FILTER AWAL
+       ========================================================= */
+
+    filterCards();
+
+});
+
 </script>
-<script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+
+
 <?= $this->endSection(); ?>

@@ -14,8 +14,20 @@ class Application extends BaseController
         $this->app = new \App\Models\ApplicationModel();
     }
 
+    /* =========================================================
+       FUNGSI: DAFTAR MAGANG (OLEH SISWA)
+       ========================================================= */
     public function daftar()
     {
+        // Validasi login
+        if (!logged_in()) {
+            return $this->response->setJSON([
+                'status'    => 401,
+                'success'   => false,
+                'message'   => 'Anda harus login terlebih dahulu untuk mendaftar magang.'
+            ]);
+        }
+
         $id_siswa = getSidByUid(user_id());
         $id_tempat = $this->request->getPost('tid');
 
@@ -38,7 +50,7 @@ class Application extends BaseController
         }
 
         $data = [
-            'id_siswa' => $id_siswa,
+            'id_siswa'  => $id_siswa,
             'id_tempat' => $id_tempat
         ];
 
@@ -110,8 +122,20 @@ class Application extends BaseController
         }
     }
 
+    /* =========================================================
+       FUNGSI: HAPUS LAMARAN (HANYA ADMIN)
+       ========================================================= */
     public function destroy($id)
     {
+        // Validasi role: hanya admin
+        if (!in_groups('admin')) {
+            return $this->response->setJSON([
+                'status'    => 403,
+                'success'   => false,
+                'message'   => 'Hanya Admin yang berhak menghapus data pendaftaran.'
+            ]);
+        }
+
         if ($this->app->delete($id)) {
             return $this->response->setJSON([
                 'status'    => 200,
@@ -127,60 +151,206 @@ class Application extends BaseController
         }
     }
 
+    /* =========================================================
+       FUNGSI: UPDATE STATUS / PINDAH DIVISI (HANYA ADMIN)
+       ========================================================= */
     public function update()
     {
+        // Validasi role: hanya admin
+        if (!in_groups('admin')) {
+            return $this->response->setJSON([
+                'status'    => 403,
+                'success'   => false,
+                'message'   => 'Hanya Admin yang berhak mengubah status pendaftaran. Pembimbing hanya dapat melihat data.'
+            ]);
+        }
+
         $data = $this->request->getPost();
         $id = $data['item'];
         unset($data['item']);
 
-        if (isset($data['id_dosen_pembimbing']) && empty($data['id_dosen_pembimbing'])) {
+        // Deteksi apakah dosen berasal dari input mahasiswa (readonly)
+        $dosenDariMahasiswa = $this->request->getPost('dosen_dari_mahasiswa') ?? '0';
+        unset($data['dosen_dari_mahasiswa']);
+
+        // =====================================================
+        // Ambil data lamaran lama
+        // =====================================================
+        $lamaran = $this->app->find($id);
+        if (!$lamaran) {
+            return $this->response->setJSON([
+                'status'    => 500,
+                'success'   => false,
+                'message'   => 'Data pendaftaran tidak ditemukan'
+            ]);
+        }
+
+        $id_siswa       = $lamaran->id_siswa;
+        $id_tempat_lama = $lamaran->id_tempat;
+
+        // Ambil id_tempat BARU dari POST (jika ada). Kalau tidak ada, pakai yang lama.
+        $id_tempat_baru = (!empty($data['id_tempat'])) ? $data['id_tempat'] : $id_tempat_lama;
+
+        // =====================================================
+        // VALIDASI DIVISI (BERLAKU UNTUK PINDAH MAUPUN TIDAK)
+        // =====================================================
+        $pindahDivisi = ($id_tempat_baru != $id_tempat_lama);
+
+        // Ambil data divisi baru
+        $tempatModel = new \App\Models\TempatModel();
+        $tempatBaru  = $tempatModel->find($id_tempat_baru);
+
+        // 1. Divisi harus ada
+        if (!$tempatBaru) {
+            return $this->response->setJSON([
+                'status'    => 500,
+                'success'   => false,
+                'message'   => 'Divisi tujuan tidak ditemukan.'
+            ]);
+        }
+
+        // 2. Divisi HARUS BUKA (walau tidak pindah divisi)
+        if ($tempatBaru->status != 'buka') {
+            return $this->response->setJSON([
+                'status'    => 500,
+                'success'   => false,
+                'message'   => 'Divisi "' . esc($tempatBaru->nama) . '" sedang DITUTUP. Tidak bisa menerima mahasiswa di divisi ini. Silakan pindah ke divisi lain yang buka.'
+            ]);
+        }
+
+        // 3. Kalau pindah divisi, cek kuota & duplikat
+        if ($pindahDivisi) {
+            // Cek kuota divisi baru
+            if (getSlotAvailable($id_tempat_baru) <= 0) {
+                return $this->response->setJSON([
+                    'status'    => 500,
+                    'success'   => false,
+                    'message'   => 'Kuota di divisi tujuan sudah penuh.'
+                ]);
+            }
+
+            // Cek duplikat
+            $cekDuplikat = $this->app
+                ->where([
+                    'id_siswa'  => $id_siswa,
+                    'id_tempat' => $id_tempat_baru,
+                    'id !='     => $id
+                ])
+                ->first();
+
+            if ($cekDuplikat) {
+                return $this->response->setJSON([
+                    'status'    => 500,
+                    'success'   => false,
+                    'message'   => 'Siswa ini sudah pernah mendaftar di divisi tujuan. Silakan pilih divisi lain atau hapus dulu lamaran lamanya.'
+                ]);
+            }
+        }
+
+        // =====================================================
+        // Ambil data siswa
+        // =====================================================
+        $siswaModel = new \App\Models\SiswaModel();
+        $siswa      = $siswaModel->find($id_siswa);
+        $isSmk      = $siswa ? isSmkSiswa($siswa) : false;
+
+        // =====================================================
+        // LOGIKA DOSEN PEMBIMBING
+        // =====================================================
+        if ($isSmk) {
+            $data['id_dosen_pembimbing'] = null;
+        } 
+        elseif ($dosenDariMahasiswa == '1') {
+            if ($siswa && !empty($siswa->dosen_id)) {
+                $data['id_dosen_pembimbing'] = $siswa->dosen_id;
+            } else {
+                $data['id_dosen_pembimbing'] = $lamaran->id_dosen_pembimbing;
+            }
+        }
+        elseif (isset($data['id_dosen_pembimbing']) && empty($data['id_dosen_pembimbing'])) {
             $data['id_dosen_pembimbing'] = null;
         }
 
-        $id_siswa = $this->app->select('id_siswa')->where('id', $id)->first()->id_siswa;
-        $id_tempat = $this->app->select('id_tempat')->where('id', $id)->first()->id_tempat;
+        // =====================================================
+        // VALIDASI KAPASITAS TEMPAT (pakai divisi BARU)
+        // =====================================================
+        $accepted = $this->app
+            ->where('id_tempat', $id_tempat_baru)
+            ->where('status', 'accepted')
+            ->findAll();
 
-        $accepted = $this->app->where('id_tempat', $id_tempat)->where('status', 'accepted')->findAll();
-
+        // =====================================================
+        // UPDATE DATA LAMARAN
+        // =====================================================
         if ($this->app->update($id, $data)) {
-            
-            $this->sendEmailNotifPendaftaran($id_siswa, $data['status'], $id_tempat);
-            
-            // Sync main student active status
-            $this->syncUserActiveStatus($id_siswa, $data['status']);
 
-            if ($data['status'] == 'accepted') {
+            // Kirim email notifikasi status & sync user active
+            if (isset($data['status'])) {
+                $this->sendEmailNotifPendaftaran($id_siswa, $data['status'], $id_tempat_baru);
+                $this->syncUserActiveStatus($id_siswa, $data['status']);
+            }
+
+            // Log pindah divisi
+            if ($pindahDivisi) {
+                log_message('info', "Siswa ID {$id_siswa} dipindahkan dari divisi {$id_tempat_lama} ke divisi {$id_tempat_baru} oleh admin (User ID: " . user_id() . ")");
+            }
+
+            // =====================================================
+            // KALAU DITERIMA — Sinkronkan dosen & reject lamaran lain
+            // =====================================================
+            if (isset($data['status']) && $data['status'] == 'accepted') {
+
+                // Sinkronkan dosen_id dari lamaran ke siswa
+                if (!empty($data['id_dosen_pembimbing'])) {
+                    $siswaModel->update($id_siswa, ['dosen_id' => $data['id_dosen_pembimbing']]);
+                }
+
+                // Reject lamaran lain dari siswa yang sama
                 $other_lamaran = $this->app->where('id_siswa', $id_siswa)->where('id !=', $id)->findAll();
                 $this->app->where('id_siswa', $id_siswa)->where('id !=', $id)->set(['status' => 'reject by system'])->update();
-                foreach($other_lamaran as $ol) {
+                foreach ($other_lamaran as $ol) {
                     $this->sendEmailNotifPendaftaran($id_siswa, 'reject by system', $ol->id_tempat);
                     $this->syncUserActiveStatus($id_siswa, 'reject by system');
                 }
 
-                $tempat = new \App\Models\TempatModel();
-                $tempat = $tempat->find($id_tempat);
+                // Cek kuota di divisi BARU
+                $tempatModel = new \App\Models\TempatModel();
+                $tempat      = $tempatModel->find($id_tempat_baru);
 
-                // Add 1 to accepted count since we just accepted one
-                if ((count($accepted) + 1) >= $tempat->kuota) {
-                    $lam = $this->app->where('id_tempat', $id_tempat)->where('status', 'pending')->findAll();
+                if ($tempat && (count($accepted) + 1) >= $tempat->kuota) {
+                    // Auto-reject semua lamaran pending lainnya di divisi ini karena kuota penuh
+                    $lam = $this->app
+                        ->where('id_tempat', $id_tempat_baru)
+                        ->where('status', 'pending')
+                        ->where('id !=', $id)
+                        ->findAll();
+
                     foreach ($lam as $a) {
                         $this->app->update($a->id, ['status' => 'reject by system']);
-                        $this->sendEmailNotifPendaftaran($a->id_siswa, 'reject by system', $id_tempat);
+                        $this->sendEmailNotifPendaftaran($a->id_siswa, 'reject by system', $id_tempat_baru);
                         $this->syncUserActiveStatus($a->id_siswa, 'reject by system');
                     }
                 }
             }
-            
+
+            // Pesan sukses dengan info pindah divisi
+            $message = 'Data pendaftaran berhasil diubah';
+            if ($pindahDivisi) {
+                $tempatModel = new \App\Models\TempatModel();
+                $tempatBaru  = $tempatModel->find($id_tempat_baru);
+                $message = 'Siswa berhasil dipindahkan ke divisi <b>' . esc($tempatBaru->nama) . '</b>';
+            }
+
             return $this->response->setJSON([
                 'status'    => 200,
                 'success'   => true,
-                'message'   => 'Permintaan magang berhasil diubah'
+                'message'   => $message
             ]);
         } else {
             return $this->response->setJSON([
                 'status'    => 500,
                 'success'   => false,
-                'message'   => $this->app->errors()
+                'message'   => json_encode($this->app->errors())
             ]);
         }
     }
@@ -188,7 +358,7 @@ class Application extends BaseController
     private function syncUserActiveStatus($id_siswa, $status)
     {
         $siswaModel = new \App\Models\SiswaModel();
-        $siswa = $siswaModel->find($id_siswa);
+        $siswa      = $siswaModel->find($id_siswa);
         if ($siswa) {
             $userModel = new \Myth\Auth\Models\UserModel();
             if ($status == 'accepted' || $status == 'selesai') {
@@ -200,14 +370,14 @@ class Application extends BaseController
     private function sendEmailNotifPendaftaran($id_siswa, $status, $id_tempat)
     {
         try {
-            $db = \Config\Database::connect();
-            $siswa = $db->table('siswa')->where('id', $id_siswa)->get()->getRow();
+            $db     = \Config\Database::connect();
+            $siswa  = $db->table('siswa')->where('id', $id_siswa)->get()->getRow();
             if (!$siswa) return 'Data siswa tidak ditemukan';
 
             $user = $db->table('users')->where('id', $siswa->user_id)->get()->getRow();
             if (!$user || empty($user->email)) return 'Email siswa tidak valid/kosong';
 
-            $tempat = $db->table('tempat_magang')->where('id', $id_tempat)->get()->getRow();
+            $tempat      = $db->table('tempat_magang')->where('id', $id_tempat)->get()->getRow();
             $nama_tempat = $tempat && isset($tempat->nama) ? $tempat->nama : 'Instansi Tujuan';
 
             $email = \Config\Services::email();
@@ -217,7 +387,7 @@ class Application extends BaseController
                 'Sistem Informasi Magang'
             );
             $email->setTo($user->email);
-            
+
             if ($status == 'accepted') {
                 $email->setSubject('Selamat! Lamaran Magang Anda Diterima');
                 $email->setMessage("Halo {$siswa->nama},<br><br>Selamat! Pendaftaran magang Anda di <b>{$nama_tempat}</b> telah <b>DITERIMA</b>.<br>Silakan login ke sistem untuk memeriksa dan mengunduh Surat Pengantar Magang Anda.<br><br>Terima kasih.");
@@ -246,19 +416,16 @@ class Application extends BaseController
     {
         try {
             $db = \Config\Database::connect();
-            
-            // 1. Get Student details
+
             $siswa = $db->table('siswa')->where('id', $id_siswa)->get()->getRow();
             if (!$siswa) return false;
-            
-            // 2. Get Division details
+
             $tempat = $db->table('tempat_magang')->where('id', $id_tempat)->get()->getRow();
             if (!$tempat) return false;
-            
-            $nama_tempat = $tempat->nama ?? 'Instansi Tujuan';
+
+            $nama_tempat   = $tempat->nama ?? 'Instansi Tujuan';
             $pembimbing_id = $tempat->pid;
-            
-            // 3. Get Pembimbing Lapangan email
+
             $pembimbing_email = null;
             if ($pembimbing_id) {
                 $pembimbing = $db->table('pembimbing')->where('id', $pembimbing_id)->get()->getRow();
@@ -266,8 +433,7 @@ class Application extends BaseController
                     $pembimbing_email = $pembimbing->email;
                 }
             }
-            
-            // 4. Get Admin emails
+
             $admins = $db->table('users')
                 ->select('users.email')
                 ->join('auth_groups_users', 'auth_groups_users.user_id = users.id')
@@ -275,15 +441,13 @@ class Application extends BaseController
                 ->where('auth_groups.name', 'admin')
                 ->get()->getResultArray();
             $admin_emails = array_filter(array_column($admins, 'email'));
-            
-            // Collect all recipient emails
+
             $recipients = [];
-            
-            // Add division email
+
             if (!empty($tempat->email)) {
                 $recipients[] = $tempat->email;
             }
-            
+
             if ($pembimbing_email && !in_array($pembimbing_email, $recipients)) {
                 $recipients[] = $pembimbing_email;
             }
@@ -292,18 +456,16 @@ class Application extends BaseController
                     $recipients[] = $admin_email;
                 }
             }
-            
+
             if (empty($recipients)) {
                 return false;
             }
-            
-            // Format current date and time
+
             $tanggal = date('d-m-Y');
-            $jam = date('H:i:s');
-            
-            // 5. Send Email
+            $jam     = date('H:i:s');
+
             $email = \Config\Services::email();
-            
+
             foreach ($recipients as $recipient) {
                 $email->clear();
                 $email->setFrom(
@@ -312,7 +474,7 @@ class Application extends BaseController
                 );
                 $email->setTo($recipient);
                 $email->setSubject('Notifikasi Pendaftaran Magang Baru - ' . $siswa->nama);
-                
+
                 $message = "Halo Admin / Pembimbing / Divisi,<br><br>
                 Mahasiswa/siswa ini telah mendaftar ke divisi ini. Berikut rincian data pendaftaran:<br><br>
                 <table>
@@ -340,12 +502,12 @@ class Application extends BaseController
                 <br>
                 Silakan login ke sistem untuk memproses pendaftaran siswa tersebut.<br><br>
                 Terima kasih.";
-                
+
                 $email->setMessage($message);
                 $email->setMailType('html');
                 $email->send(false);
             }
-            
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -354,6 +516,11 @@ class Application extends BaseController
 
     public function upload_template()
     {
+        // Validasi role: hanya admin
+        if (!in_groups('admin')) {
+            return redirect()->back()->with('error', 'Hanya Admin yang dapat mengunggah template surat.');
+        }
+
         $file = $this->request->getFile('template_surat');
         if ($file && $file->isValid() && !$file->hasMoved()) {
             $dir = FCPATH . 'assets/berkas/';
@@ -370,13 +537,13 @@ class Application extends BaseController
             if (file_exists($dir . 'template_surat_magang.doc')) {
                 @unlink($dir . 'template_surat_magang.doc');
             }
-            
+
             $ext = $file->getClientExtension();
             $file->move($dir, 'template_surat_magang.' . $ext);
-            
+
             return redirect()->back()->with('success', 'Template Surat Magang berhasil diupload');
         }
-        
+
         return redirect()->back()->with('error', 'Gagal mengupload template. Silakan coba lagi.');
     }
 }

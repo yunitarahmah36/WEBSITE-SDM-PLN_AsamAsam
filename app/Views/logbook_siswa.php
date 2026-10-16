@@ -1,5 +1,283 @@
 <?= $this->extend('main'); ?>
 <?= $this->section('content'); ?>
+<style>
+    /* =========================================
+       LOGBOOK SISWA - TAMPILAN FINAL
+       ========================================= */
+    .logbook-item {
+        background: #fff;
+        border: 1px solid #e9edf3;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        transition: all 0.2s ease;
+        overflow: hidden;
+    }
+
+    .logbook-item:hover {
+        border-color: #c5cdd8;
+        box-shadow: 0 2px 8px rgba(52, 71, 103, 0.06);
+    }
+
+    .logbook-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 14px 16px;
+        cursor: pointer;
+        background: #fbfcfe;
+        border-bottom: 1px solid transparent;
+        transition: background 0.2s ease;
+    }
+
+    .logbook-header:hover {
+        background: #f5f7fa;
+    }
+
+    .logbook-item.open .logbook-header {
+        background: #f5f7fa;
+        border-bottom-color: #e9edf3;
+    }
+
+    .logbook-header-left {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .logbook-tanggal {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1a1a1a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .logbook-jam {
+        font-size: 12px;
+        color: #8392ab;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .logbook-header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .logbook-badges {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .badge-logbook {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border: 1px solid transparent;
+    }
+
+    .badge-hadir { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+    .badge-izin { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+    .badge-sakit { background: #fce4ec; color: #ad1457; border-color: #f48fb1; }
+    .badge-alfa { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+    .badge-pending { background: #fff8e1; color: #b28704; border-color: #ffe082; }
+    .badge-approved { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+    .badge-rejected { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+    .badge-telat { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+
+    .logbook-body {
+        padding: 16px;
+        display: none;
+        background: #fff;
+    }
+
+    .logbook-item.open .logbook-body {
+        display: block;
+    }
+
+    /* --- DESKRIPSI KEGIATAN --- */
+    .kegiatan-table {
+        width: 100%;
+        background: #f8fafc;
+        border: 1px solid #e9edf3;
+        border-radius: 8px;
+        margin-bottom: 14px;
+        padding: 14px 16px;
+        box-sizing: border-box;
+    }
+
+    .kegiatan-deskripsi {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        text-align: left !important;
+    }
+
+    .kegiatan-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #8392ab;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 8px;
+        text-align: left !important;
+        padding: 0 !important;
+        margin-left: 0 !important;
+    }
+
+    /* PERBAIKAN: GUNAKAN INLINE-BLOCK AGAR GARIS BIRU RATA DENGAN TEKS */
+    .kegiatan-deskripsi-text {
+        display: inline-block !important;
+        width: auto !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 0 0 12px !important;
+        border-left: 3px solid #3b82f6 !important;
+        box-sizing: border-box !important;
+        font-size: 13px !important;
+        line-height: 1.7 !important;
+        color: #344767 !important;
+        text-align: left !important;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+    }
+    /* --- END DESKRIPSI KEGIATAN --- */
+
+    .logbook-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding-top: 12px;
+        border-top: 1px dashed #e9edf3;
+    }
+
+    .btn-bukti {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background: #e3f2fd;
+        color: #1565c0;
+        border: 1px solid #90caf9;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-bukti:hover {
+        background: #1565c0;
+        color: #fff;
+        border-color: #1565c0;
+        text-decoration: none;
+    }
+
+    .btn-action-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-acc {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 18px;
+        background: #2e7d32;
+        color: #fff;
+        border: 1px solid #2e7d32;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .btn-acc:hover:not(:disabled) {
+        background: #1b5e20;
+        border-color: #1b5e20;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(46, 125, 50, 0.3);
+    }
+
+    .btn-acc:disabled {
+        background: #c5cdd8;
+        border-color: #c5cdd8;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    .btn-reject {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 18px;
+        background: #fff;
+        color: #c62828;
+        border: 1px solid #c62828;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .btn-reject:hover {
+        background: #c62828;
+        color: #fff;
+        border-color: #c62828;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(198, 40, 40, 0.3);
+    }
+
+    .logbook-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #8392ab;
+    }
+
+    .logbook-empty i {
+        font-size: 48px;
+        color: #c5cdd8;
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    @media (max-width: 575px) {
+        .logbook-header { padding: 12px; }
+        .logbook-actions { flex-direction: column; align-items: stretch; }
+        .btn-bukti, .btn-acc, .btn-reject { width: 100%; justify-content: center; }
+        .btn-action-group { width: 100%; }
+        .btn-action-group > * { flex: 1; }
+    }
+</style>
+
 <div class="row">
     <div class="col-12 col-md-4 mb-3">
         <div class="card card-body pb-1">
@@ -7,7 +285,6 @@
                 <i class="fa fa-arrow-left" style="margin-top: 4px;"></i>
                 <div><strong>Daftar Siswa Magang</strong></div>
             </a>
-
             <div class="mt-3">
                 <?php foreach ($siswas as $s) : ?>
                     <a href="<?= base_url('/logbook/' . $idt . '/' . $s->nim) ?>" <?= $s->status == 'selesai' ? 'data-bs-toggle="tooltip" title="selesai"' : '' ?>>
@@ -28,8 +305,8 @@
         </div>
     </div>
     <div class="col-12 col-md-8 mb-3">
-        <?php 
-        $status_siswa_terpilih = getStatusSiswa($siswa->id); 
+        <?php
+        $status_siswa_terpilih = getStatusSiswa($siswa->id);
         $isSmk = false;
         if (isset($siswa)) {
             $instansiLower = strtolower($siswa->instansi ?? '');
@@ -40,23 +317,39 @@
         }
         ?>
         <?php if ($status_siswa_terpilih == 'selesai' && ($isSmk || $siswa->laporan)) : ?>
+            <!-- ============================================== -->
+            <!-- LOGIKA BARU: NILAI HANYA BISA DIINPUT SETELAH LAPORAN DISETUJUI -->
+            <!-- ============================================== -->
             <div class="card card-body mb-3 bg-info text-white border-info">
-                Kegiatan magang siswa ini sudah selesai. diharapkan untuk segera memproses nilai.
-                <div class="mt-2 mb-0">
-                    <?php if (nilaiAvailable($siswa->id)) : ?>
-                        <button class="btn btn-sm bg-gradient-success mb-0" data-bs-toggle="modal" data-bs-target="#mdnilai">DETAIL NILAI</button>
-                    <?php else : ?>
-                        <button class="btn btn-sm bg-gradient-info mb-0 me-2" data-bs-toggle="modal" data-bs-target="#manilai">INPUT NILAI</button>
-                        <?php if ($siswa->laporan) : ?>
+                <?php if ($siswa->laporan && !$siswa->is_laporan_approved) : ?>
+                    <!-- KONDISI 1: Laporan sudah diunggah TAPI belum disetujui -->
+                    Kegiatan magang siswa ini sudah selesai. Silakan periksa laporan akhir terlebih dahulu, kemudian setujui laporan untuk dapat memberikan nilai.
+                    <div class="mt-2 mb-0">
+                        <a href="/assets/laporan/<?= $siswa->laporan ?>" target="_blank" class="btn btn-sm bg-gradient-success mb-0 me-2">
+                            <i class="fa fa-file-pdf"></i> LIHAT LAPORAN
+                        </a>
+                        <button class="btn btn-sm bg-gradient-info mb-0 btn-report-approve" data-approved="1" data-id="<?= $siswa->id ?>">
+                            <i class="fa fa-check-circle"></i> SETUJUI LAPORAN
+                        </button>
+                    </div>
+                    <div class="mt-2 text-sm">
+                        <i class="fa fa-info-circle"></i> Tombol <strong>INPUT NILAI</strong> akan muncul setelah laporan disetujui.
+                    </div>
+                <?php elseif ($siswa->is_laporan_approved) : ?>
+                    <!-- KONDISI 2: Laporan sudah disetujui -> boleh input nilai -->
+                    Kegiatan magang siswa ini sudah selesai dan laporan telah disetujui. Silakan input nilai.
+                    <div class="mt-2 mb-0">
+                        <?php if (nilaiAvailable($siswa->id)) : ?>
+                            <button class="btn btn-sm bg-gradient-success mb-0 me-2" data-bs-toggle="modal" data-bs-target="#mdnilai">DETAIL NILAI</button>
                             <a href="/assets/laporan/<?= $siswa->laporan ?>" target="_blank" class="btn btn-sm bg-gradient-success mb-0 me-2">LIHAT LAPORAN</a>
-                            <?php if ($siswa->is_laporan_approved) : ?>
-                                <button class="btn btn-sm btn-outline-info mb-0 btn-report-approve" data-approved="0" data-id="<?= $siswa->id ?>">BATALKAN PERSETUJUAN LAPORAN</button>
-                            <?php else : ?>
-                                <button class="btn btn-sm bg-gradient-info mb-0 btn-report-approve" data-approved="1" data-id="<?= $siswa->id ?>">SETUJUI LAPORAN</button>
-                            <?php endif; ?>
+                            <button class="btn btn-sm btn-outline-info mb-0 btn-report-approve" data-approved="0" data-id="<?= $siswa->id ?>">BATALKAN PERSETUJUAN LAPORAN</button>
+                        <?php else : ?>
+                            <button class="btn btn-sm bg-gradient-info mb-0 me-2" data-bs-toggle="modal" data-bs-target="#manilai">INPUT NILAI</button>
+                            <a href="/assets/laporan/<?= $siswa->laporan ?>" target="_blank" class="btn btn-sm bg-gradient-success mb-0 me-2">LIHAT LAPORAN</a>
+                            <button class="btn btn-sm btn-outline-info mb-0 btn-report-approve" data-approved="0" data-id="<?= $siswa->id ?>">BATALKAN PERSETUJUAN LAPORAN</button>
                         <?php endif ?>
-                    <?php endif ?>
-                </div>
+                    </div>
+                <?php endif ?>
             </div>
 
             <?php if (nilaiAvailable($siswa->id)) : ?>
@@ -104,9 +397,9 @@
                                         <h6 class="font-weight-normal text-sm mb-0 pb-0">Kerjasama</h6>
                                         <h6 class="mb-0 pb-0 text-sm"><?= $nilai->n_kerjasama ?></h6>
                                     </div>
-                                    <?php 
+                                    <?php
                                     $includeLaporan = !$isSmk || !empty($siswa->laporan);
-                                    if ($includeLaporan) : 
+                                    if ($includeLaporan) :
                                     ?>
                                     <hr class="dark horizontal my-1">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -127,17 +420,16 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h6 class="font-weight-bold text-lg mb-0 pb-0">Rata-rata</h6>
                                         <h6 class="mb-0 pb-0 text-lg">
-                                            <?php 
-                                                // rata-rata nilai: Normalisasi nilai pembimbing (skala 10) ke skala 100
+                                            <?php
                                                 $items_pembimbing = [
-                                                    $nilai->n_disiplin, $nilai->n_motivasi, $nilai->n_kehadiran, 
-                                                    $nilai->n_kreatifitas, $nilai->n_kejujuran, $nilai->n_kesopanan, 
+                                                    $nilai->n_disiplin, $nilai->n_motivasi, $nilai->n_kehadiran,
+                                                    $nilai->n_kreatifitas, $nilai->n_kejujuran, $nilai->n_kesopanan,
                                                     $nilai->n_kerjasama
                                                 ];
                                                 if ($includeLaporan) {
                                                     $items_pembimbing[] = $nilai->n_laporan;
                                                 }
-                                                
+
                                                 $total_pembimbing = 0;
                                                 foreach ($items_pembimbing as $ni) {
                                                     $total_pembimbing += ($ni <= 10) ? ($ni * 10) : $ni;
@@ -145,19 +437,18 @@
 
                                                 $total_nilai = $total_pembimbing;
                                                 $pembagi = $includeLaporan ? 8 : 7;
-                                                
+
                                                 if (isset($nilai->n_dosen) && $nilai->n_dosen !== null) {
                                                     $total_nilai += $nilai->n_dosen;
                                                     $pembagi++;
                                                 }
                                                 $rata = $total_nilai / $pembagi;
 
-                                                // echo nilai
                                                 echo round($rata, 2);
                                             ?>
                                         </h6>
                                     </div>
-                                    
+
                                     <div class="mt-4 d-flex gap-2 justify-content-between items-center">
                                         <div>
                                             <button class="badge badge-danger border border-danger btn-hapus-nilai" data-id="<?= $nilai->id ?>"><i class="fa fa-trash text-xxs"></i></button>
@@ -229,9 +520,9 @@
                                                         <input type="number" class="form-control" name="n_kerjasama" value="<?= $nilai->n_kerjasama ?>" id="n_kerjasama" min="0" max="100">
                                                     </div>
                                                 </div>
-                                                <?php 
+                                                <?php
                                                  $includeLaporan = !$isSmk || !empty($siswa->laporan);
-                                                 if ($includeLaporan) : 
+                                                 if ($includeLaporan) :
                                                  ?>
                                                  <div class="col-12 col-md-6">
                                                      <div class="input-group input-group-outline mb-3">
@@ -314,9 +605,9 @@
                                                         <input type="number" class="form-control" name="n_kerjasama" id="n_kerjasama" min="0" max="100">
                                                     </div>
                                                 </div>
-                                                <?php 
+                                                <?php
                                                 $includeLaporan = !$isSmk || !empty($siswa->laporan);
-                                                if ($includeLaporan) : 
+                                                if ($includeLaporan) :
                                                 ?>
                                                 <div class="col-12 col-md-6">
                                                     <div class="input-group input-group-outline mb-3">
@@ -349,59 +640,107 @@
                 </div>
             <?php endif ?>
         <?php endif ?>
+
         <div class="card card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="text-dark"><strong>Daftar Kegiatan Siswa</strong></div>
                 <button type="button" class="btn btn-sm btn-outline-info mb-0" data-bs-toggle="modal" data-bs-target="#mvsiswa">LIHAT PROFIL</button>
             </div>
             <div class="text-dark">
-                <?php $clog = count($logbooks);
-                $i = 1; ?>
-                <div class="accordion accLog" id="logAccordion">
+                <?php if (count($logbooks) > 0) : ?>
                     <?php foreach ($logbooks as $idx => $log) : ?>
-                        <div class="accordion-item mb-2 text-dark">
-                            <div class="accordion-header" id="hla<?= $log->id ?>">
-                                <div class="card card-body p-2 bg-gray-200 shadow-none rounded px-4 mb-2" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#la<?= $log->id ?>" aria-expanded="false" aria-controls="la<?= $log->id ?>">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="">
-                                            <div class="mb-0"><b><?= $log->tanggal ?></b></div>
-                                            <div class="text-xs"><?= genBadgeKehadiran($log->keterangan) ?></div>
-                                        </div>
-                                        <div class="d-flex flex-column align-items-end">
-                                            <div class="text-xs mb-1 d-flex gap-2 flex-row">
-                                                <?php if ($log->telat) : ?>
-                                                    <span class="badge badge-danger border border-danger">Telat diisi</span>
-                                                <?php endif ?>
-                                                <?php if ($log->status == 'approved') : ?>
-                                                    <span class="badge badge-info border border-info"><i class="fa fa-check-circle me-1"></i> Terverifikasi</span>
-                                                <?php endif ?>
-                                                <?= genBadgeStatusApplication($log->status) ?>
-                                            </div>
-                                            <div class="text-sm"><?= $log->jam_masuk ?> - <?= $log->jam_keluar ?></div>
-                                        </div>
+                        <?php
+                        // Tentukan class badge keterangan
+                        $keteranganClass = 'badge-hadir';
+                        $keteranganLower = strtolower($log->keterangan ?? '');
+                        if ($keteranganLower == 'izin') $keteranganClass = 'badge-izin';
+                        elseif ($keteranganLower == 'sakit') $keteranganClass = 'badge-sakit';
+                        elseif ($keteranganLower == 'alfa') $keteranganClass = 'badge-alfa';
+                        ?>
+                        <div class="logbook-item" data-id="<?= $log->id ?>">
+                            <!-- HEADER -->
+                            <div class="logbook-header" data-toggle-logbook="<?= $log->id ?>">
+                                <div class="logbook-header-left">
+                                    <div class="logbook-tanggal">
+                                        <i class="material-icons" style="font-size: 16px; color: #8392ab;">event</i>
+                                        <?= date('d M Y', strtotime($log->tanggal)) ?>
+                                        <?php if ($log->telat) : ?>
+                                            <span class="badge-logbook badge-telat"><i class="fa fa-clock"></i> Telat Diisi</span>
+                                        <?php endif ?>
+                                    </div>
+                                    <div class="logbook-jam">
+                                        <i class="material-icons" style="font-size: 14px;">schedule</i>
+                                        <?= $log->jam_masuk ?> - <?= $log->jam_keluar ?>
                                     </div>
                                 </div>
+
+                                <div class="logbook-header-right">
+                                    <div class="logbook-badges">
+                                        <span class="badge-logbook <?= $keteranganClass ?>"><?= strtoupper($log->keterangan) ?></span>
+                                        <?php if ($log->status == 'approved') : ?>
+                                            <span class="badge-logbook badge-approved"><i class="fa fa-check-circle"></i> Approved</span>
+                                        <?php elseif ($log->status == 'rejected') : ?>
+                                            <span class="badge-logbook badge-rejected"><i class="fa fa-times-circle"></i> Rejected</span>
+                                        <?php else : ?>
+                                            <span class="badge-logbook badge-pending"><i class="fa fa-hourglass-half"></i> Pending</span>
+                                        <?php endif ?>
+                                    </div>
+                                    <i class="material-icons expand-icon" style="color: #8392ab; transition: transform 0.2s;">expand_more</i>
+                                </div>
                             </div>
-                            <div id="la<?= $log->id ?>" class="accordion-collapse collapse" aria-labelledby="hla<?= $log->id ?>" data-bs-parent="#logAccordion" style="">
-                                <?php $i++ ?>
-                                <div class="accordion-body card card-body py-3 bg-gray-200 shadow-none rounded px-3 text-sm opacity-8 <?= $i == $clog ? 'mb-3' : '' ?>">
-                                    <?= $log->kegiatan ?>
-                                    <div class="d-flex justify-content-between align-items-center mt-3 gap-1">
-                                        <a target="_blank" href="<?= base_url('/assets/img/logbook/' . ($log->bukti ?? '')) ?>" class="badge badge-info border border-info" title="Lihat bukti kegiatan"><i class="fa fa-search m-0 p-0"></i></a>
-                                        <div>
-                                            <button class="badge badge-danger border border-danger btn-reject" data-id="<?= $log->id ?>" data-stts="rejected" title="Reject Log Book"><i class="fa fa-times m-0 p-0"></i></button>
-                                            <button <?= $log->status == "approved" ? 'disabled style="cursor: not-allowed; pointer-events: all !important;"' : '' ?> class="badge badge-success border border-success text-success btn-approve" data-id="<?= $log->id ?>" data-stts="approved" title="Approve Log Book"><i class="fa fa-check m-0 p-0"></i></button>
-                                        </div>
+
+                            <!-- BODY -->
+                            <div class="logbook-body">
+                                <!-- DESKRIPSI KEGIATAN -->
+                                <div class="kegiatan-table">
+                                    <div class="kegiatan-deskripsi">
+                                        <div class="kegiatan-label">DESKRIPSI KEGIATAN:</div>
+                                        <div class="kegiatan-deskripsi-text"><?= nl2br(htmlspecialchars($log->kegiatan ?? '-')) ?></div>
+                                    </div>
+                                </div>
+                                <!-- END DESKRIPSI KEGIATAN -->
+
+                                <div class="logbook-actions">
+                                    <!-- Lihat Bukti -->
+                                    <?php if (!empty($log->bukti)) : ?>
+                                        <a href="<?= base_url('/assets/img/logbook/' . $log->bukti) ?>" target="_blank" class="btn-bukti">
+                                            <i class="material-icons" style="font-size: 16px;">image</i>
+                                            Lihat Bukti Kegiatan
+                                        </a>
+                                    <?php else : ?>
+                                        <span style="font-size: 12px; color: #8392ab;">
+                                            <i class="material-icons" style="font-size: 14px; vertical-align: middle;">image_not_supported</i>
+                                            Tidak ada bukti
+                                        </span>
+                                    <?php endif ?>
+
+                                    <!-- Tombol ACC & Tolak -->
+                                    <div class="btn-action-group">
+                                        <button class="btn-reject btn-reject-logbook" data-id="<?= $log->id ?>">
+                                            <i class="material-icons" style="font-size: 16px;">close</i>
+                                            Tolak
+                                        </button>
+                                        <button class="btn-acc btn-approve-logbook"
+                                            data-id="<?= $log->id ?>"
+                                            <?= $log->status == 'approved' ? 'disabled' : '' ?>>
+                                            <i class="material-icons" style="font-size: 16px;">check</i>
+                                            <?= $log->status == 'approved' ? 'Terverifikasi' : 'ACC' ?>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach ?>
-                </div>
+                <?php else : ?>
+                    <div class="logbook-empty">
+                        <i class="material-icons">event_busy</i>
+                        <div style="font-weight: 600; margin-bottom: 4px;">Belum Ada Logbook</div>
+                        <div style="font-size: 13px;">Siswa ini belum mengisi logbook kegiatan apapun.</div>
+                    </div>
+                <?php endif ?>
             </div>
         </div>
     </div>
-</div>
 </div>
 
 <!-- Modal View Siswa -->
@@ -497,6 +836,10 @@
                                 <td class="text-sm">: <?= $siswa->ktm ? '<a href="'.base_url('assets/berkas/'.$siswa->ktm).'" target="_blank" class="badge bg-gradient-info text-xxs">Lihat File</a>' : '<span class="text-secondary text-xs">Belum diunggah</span>' ?></td>
                             </tr>
                             <tr>
+                                <td class="text-sm font-weight-bold">File Takaful</td>
+                                <td class="text-sm">: <?= $siswa->takaful ? '<a href="'.base_url('assets/berkas/'.$siswa->takaful).'" target="_blank" class="badge bg-gradient-info text-xxs">Lihat File</a>' : '<span class="text-secondary text-xs">Belum diunggah</span>' ?></td>
+                            </tr>
+                            <tr>
                                 <td class="text-sm font-weight-bold">Surat Permohonan</td>
                                 <td class="text-sm">: <?= $siswa->surat_permohonan ? '<a href="'.base_url('assets/berkas/'.$siswa->surat_permohonan).'" target="_blank" class="badge bg-gradient-info text-xxs">Lihat File</a>' : '<span class="text-secondary text-xs">Belum diunggah</span>' ?></td>
                             </tr>
@@ -531,7 +874,6 @@ $(document).ready(function() {
         }
     });
 
-    // Handle focus and blur for floating labels
     $('.form-control').on('focus', function() {
         $(this).parent().addClass('is-focused');
     }).on('blur', function() {
@@ -548,59 +890,169 @@ $(document).ready(function() {
             $(this).parent().removeClass('is-filled');
         }
     });
+
+    // =========================================
+    // BUKA/TUTUP LOGBOOK
+    // =========================================
+    $('.logbook-header').on('click', function() {
+        const item = $(this).closest('.logbook-item');
+        const isOpen = item.hasClass('open');
+
+        // Tutup semua
+        $('.logbook-item').removeClass('open');
+        $('.logbook-header .expand-icon').css('transform', 'rotate(0deg)');
+
+        // Buka yang diklik (kalau sebelumnya tertutup)
+        if (!isOpen) {
+            item.addClass('open');
+            $(this).find('.expand-icon').css('transform', 'rotate(180deg)');
+        }
+    });
+
+    // =========================================
+    // ACC LOGBOOK
+    // =========================================
+    $('.btn-approve-logbook').on('click', function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+
+        Swal.fire({
+            title: "Approve Log Book",
+            text: "Apakah anda yakin ingin menyetujui log book ini?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: '#2e7d32',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Setujui',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '<?= base_url("/logbook/status/update") ?>',
+                    type: 'POST',
+                    data: { id: id, status: 'approved' },
+                    dataType: 'JSON',
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                title: "Berhasil!",
+                                text: "Log Book berhasil disetujui",
+                                icon: "success",
+                                timer: 1500,
+                                showConfirmButton: false,
+                            }).then(() => { location.reload(); });
+                        } else {
+                            Swal.fire("Gagal!", res.message || "Log Book gagal disetujui", "error");
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error(xhr.responseText);
+                        Swal.fire("Gagal!", "Terjadi kesalahan server", "error");
+                    }
+                });
+            }
+        });
+    });
+
+    // =========================================
+    // TOLAK LOGBOOK
+    // =========================================
+    $('.btn-reject-logbook').on('click', function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+
+        Swal.fire({
+            title: "Reject Log Book",
+            text: "Apakah anda yakin ingin menolak log book ini?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: '#c62828',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Tolak',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '<?= base_url("/logbook/status/update") ?>',
+                    type: 'POST',
+                    data: { id: id, status: 'rejected' },
+                    dataType: 'JSON',
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                title: "Berhasil!",
+                                text: "Log Book berhasil ditolak",
+                                icon: "success",
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => { location.reload(); });
+                        } else {
+                            Swal.fire("Gagal!", res.message || "Log Book gagal ditolak", "error");
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error(xhr.responseText);
+                        Swal.fire("Gagal!", "Terjadi kesalahan server", "error");
+                    }
+                });
+            }
+        });
+    });
+
+    // =========================================
+    // APPROVE LAPORAN
+    // =========================================
+    $('.btn-report-approve').on('click', function() {
+        const id = $(this).data('id');
+        const approved = $(this).data('approved');
+        const title = approved == '1' ? 'Setujui Laporan?' : 'Batalkan Persetujuan?';
+        const text = approved == '1' ? 'Laporan ini akan ditandai sebagai disetujui.' : 'Status persetujuan laporan ini akan dihapus.';
+
+        Swal.fire({
+            title: title,
+            text: text,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Ya, Lanjutkan"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "/siswa/approve_laporan",
+                    type: "POST",
+                    data: { id: id, approved: approved },
+                    dataType: "JSON",
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire("Berhasil!", res.message, "success").then(() => location.reload());
+                        } else {
+                            Swal.fire("Gagal!", res.message, "error");
+                        }
+                    }
+                });
+            }
+        });
+    });
 });
 </script>
 
 <?php if ($status_siswa_terpilih == 'selesai') : ?>
     <script>
         $(document).ready(function() {
-            $('.btn-close-modal').on('click', function() {
-                $('#fejurusan').trigger('reset');
-            });
-
             $('.formaddnilai').submit(function(e) {
                 e.preventDefault();
-                var form = $(this);
                 var data = new FormData(this);
                 $.ajax({
-                    cache: false,
-                    processData: false,
-                    contentType: false,
-                    type: "POST",
-                    url: '/nilai/store',
-                    data: data,
-                    dataType: "JSON",
+                    cache: false, processData: false, contentType: false,
+                    type: "POST", url: '/nilai/store', data: data, dataType: "JSON",
                     success: function(response) {
                         if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil',
-                                text: response.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(function() {
-                                window.location.reload();
-                            });
+                            Swal.fire({ icon: 'success', title: 'Berhasil', text: response.message, showConfirmButton: false, timer: 1500 }).then(function() { window.location.reload(); });
                         } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal',
-                                text: response.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
+                            Swal.fire({ icon: 'error', title: 'Gagal', text: response.message, showConfirmButton: false, timer: 1500 });
                         }
                     },
-                    error: function(xhr, ajaxOptions, thrownError) {
-                        console.log(xhr.responseText);
-                        console.log(thrownError);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal',
-                            text: xhr.responseText,
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
+                    error: function(xhr) {
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: xhr.responseText, showConfirmButton: false, timer: 1500 });
                     }
                 });
             });
@@ -611,14 +1063,10 @@ $(document).ready(function() {
 <?php if (nilaiAvailable($siswa->id)) : ?>
     <script>
         $(document).ready(function() {
-            $(".btn-edit-nilai").click(function() {
-                $("#menilai").modal('show');
-            });
+            $(".btn-edit-nilai").click(function() { $("#menilai").modal('show'); });
 
-            // btn-hapus-nilai on click post data to 
             $('.btn-hapus-nilai').on('click', function() {
                 const id = $(this).data('id');
-
                 Swal.fire({
                     title: 'Apakah anda yakin?',
                     text: "Nilai akan dihapus secara permanen!",
@@ -631,40 +1079,13 @@ $(document).ready(function() {
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            type: "DELETE",
-                            url: "/nilai/destroy/" + id,
-                            dataType: "JSON",
+                            type: "DELETE", url: "/nilai/destroy/" + id, dataType: "JSON",
                             success: function(response) {
                                 if (response.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Berhasil',
-                                        text: response.message,
-                                        showConfirmButton: false,
-                                        timer: 1500
-                                    }).then(function() {
-                                        window.location.reload();
-                                    });
+                                    Swal.fire({ icon: 'success', title: 'Berhasil', text: response.message, showConfirmButton: false, timer: 1500 }).then(function() { window.location.reload(); });
                                 } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Gagal',
-                                        text: response.message,
-                                        showConfirmButton: false,
-                                        timer: 1500
-                                    });
+                                    Swal.fire({ icon: 'error', title: 'Gagal', text: response.message, showConfirmButton: false, timer: 1500 });
                                 }
-                            },
-                            error: function(xhr, ajaxOptions, thrownError) {
-                                console.log(xhr.responseText);
-                                console.log(thrownError);
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Gagal',
-                                    text: xhr.responseText,
-                                    showConfirmButton: false,
-                                    timer: 1500
-                                });
                             }
                         });
                     }
@@ -673,182 +1094,23 @@ $(document).ready(function() {
 
             $('.formeditnilai').submit(function(e) {
                 e.preventDefault();
-                var form = $(this);
                 var data = new FormData(this);
                 $.ajax({
-                    cache: false,
-                    processData: false,
-                    contentType: false,
-                    type: "POST",
-                    url: '/nilai/update',
-                    data: data,
-                    dataType: "JSON",
+                    cache: false, processData: false, contentType: false,
+                    type: "POST", url: '/nilai/update', data: data, dataType: "JSON",
                     success: function(response) {
                         if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil',
-                                text: response.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(function() {
-                                window.location.reload();
-                            });
+                            Swal.fire({ icon: 'success', title: 'Berhasil', text: response.message, showConfirmButton: false, timer: 1500 }).then(function() { window.location.reload(); });
                         } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal',
-                                text: response.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
+                            Swal.fire({ icon: 'error', title: 'Gagal', text: response.message, showConfirmButton: false, timer: 1500 });
                         }
                     },
-                    error: function(xhr, ajaxOptions, thrownError) {
-                        console.log(xhr.responseText);
-                        console.log(thrownError);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal',
-                            text: xhr.responseText,
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
+                    error: function(xhr) {
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: xhr.responseText, showConfirmButton: false, timer: 1500 });
                     }
                 });
             });
         });
     </script>
 <?php endif; ?>
-
-<script>
-    $(document).ready(function() {
-        $('.btn-approve').on('click', function() {
-            let id = $(this).data('id');
-            let stts = $(this).data('stts');
-            console.log('Approve clicked for ID:', id);
-            Swal.fire({
-                title: "Approve Log Book",
-                text: "Apakah anda yakin ingin menyetujui log book ini?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Setujui',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '<?= base_url("/logbook/status/update") ?>',
-                        type: 'POST',
-                        data: {
-                            id: id,
-                            status: stts
-                        },
-                        success: function(res) {
-                            console.log('Approve success:', res);
-                            if (res.success) {
-                                Swal.fire({
-                                    title: "Berhasil!",
-                                    text: "Log Book berhasil disetujui",
-                                    icon: "success",
-                                    timer: 2000,
-                                    showConfirmButton: false,
-                                }).then(() => {
-                                    location.reload();
-                                });
-                            } else {
-                                Swal.fire("Gagal!", res.message || "Log Book gagal disetujui", "error");
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('Approve error:', xhr.responseText);
-                            Swal.fire("Gagal!", "Terjadi kesalahan server: " + error, "error");
-                        }
-                    });
-                }
-            });
-        });
-
-        $('.btn-reject').on('click', function() {
-            let id = $(this).data('id');
-            let stts = $(this).data('stts');
-            console.log('Reject clicked for ID:', id);
-            Swal.fire({
-                title: "Reject Log Book",
-                text: "Apakah anda yakin ingin menolak log book ini?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Ya, Tolak',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '<?= base_url("/logbook/status/update") ?>',
-                        type: 'POST',
-                        data: {
-                            id: id,
-                            status: stts
-                        },
-                        success: function(res) {
-                            console.log('Reject success:', res);
-                            if (res.success) {
-                                Swal.fire({
-                                    title: "Berhasil!",
-                                    text: "Log Book berhasil ditolak",
-                                    icon: "success",
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                }).then(() => {
-                                    location.reload();
-                                });
-                            } else {
-                                Swal.fire("Gagal!", res.message || "Log Book gagal ditolak", "error");
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('Reject error:', xhr.responseText);
-                            Swal.fire("Gagal!", "Terjadi kesalahan server: " + error, "error");
-                        }
-                    });
-                }
-            });
-        });
-        $('.btn-report-approve').on('click', function() {
-            const id = $(this).data('id');
-            const approved = $(this).data('approved');
-            const title = approved == '1' ? 'Setujui Laporan?' : 'Batalkan Persetujuan?';
-            const text = approved == '1' ? 'Laporan ini akan ditandai sebagai disetujui.' : 'Status persetujuan laporan ini akan dihapus.';
-
-            Swal.fire({
-                title: title,
-                text: text,
-                icon: "question",
-                showCancelButton: true,
-                confirmButtonText: "Ya, Lanjutkan"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: "/siswa/approve_laporan",
-                        type: "POST",
-                        data: {
-                            id: id,
-                            approved: approved
-                        },
-                        dataType: "JSON",
-                        success: function(res) {
-                            if (res.success) {
-                                Swal.fire("Berhasil!", res.message, "success").then(() => location.reload());
-                            } else {
-                                Swal.fire("Gagal!", res.message, "error");
-                            }
-                        }
-                    });
-                }
-            });
-        });
-    });
-</script>
 <?= $this->endSection(); ?>

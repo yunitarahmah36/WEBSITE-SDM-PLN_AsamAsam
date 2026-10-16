@@ -62,19 +62,16 @@ class Siswa extends BaseController
             ]
         ];
 
-        // validate post data
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // get user by email
         $user = $this->user->where('email', $this->request->getPost('email'))->first();
 
         if (null === $user) {
             return redirect()->back()->with('error', lang('Auth.forgotNoUser'));
         }
 
-        // generae token reset password
         $user = $user->generateResetHash();
         $this->user->save($user);
 
@@ -90,7 +87,6 @@ class Siswa extends BaseController
             return redirect()->back()->withInput()->with('error', lang('Auth.resetTokenExpired'));
         }
 
-        // Success! Save the new password, and cleanup the reset hash.
         $user->password         = $this->request->getPost('password');
         $user->reset_hash       = null;
         $user->reset_at         = date('Y-m-d H:i:s');
@@ -105,7 +101,6 @@ class Siswa extends BaseController
     {
         $nis = $this->request->getPost("nis") ?: $this->request->getPost("nim");
         
-        // validate alphanumeric
         if (!preg_match('/^[a-zA-Z0-9]+$/', $nis)) {
             return $this->response->setJSON(['assigned' => false]);
         }
@@ -145,7 +140,6 @@ class Siswa extends BaseController
             "instansi" => $this->request->getPost("instansi")
         ];
 
-        // Start Transaction
         $this->user->db->transStart();
 
         try {
@@ -291,15 +285,6 @@ class Siswa extends BaseController
             $siswa_detail["instansi"] = $this->request->getPost("instansi");
         }
 
-        // Handle profile photo update if uploaded
-        $fileFoto = $this->request->getFile("foto");
-        if ($fileFoto && $fileFoto->isValid() && !$fileFoto->hasMoved()) {
-            $fotoName = $fileFoto->getRandomName();
-            $fileFoto->move("assets/img/", $fotoName);
-            $siswa_detail["foto"] = "/assets/img/" . $fotoName;
-        }
-
-        // Handle surat_balasan upload if uploaded
         $fileBalasan = $this->request->getFile("surat_balasan");
         $uploaded_balasan = false;
         if ($fileBalasan && $fileBalasan->isValid() && !$fileBalasan->hasMoved()) {
@@ -323,7 +308,6 @@ class Siswa extends BaseController
             $siswa_user["password"] = $this->request->getPost("password");
         }
 
-        // Handle Dosen Pembimbing update if provided
         $id_dosen = $this->request->getPost("id_dosen_pembimbing");
         if ($id_dosen !== null) {
             $siswa_rec = $this->siswa->where("nim", $nis)->first();
@@ -399,139 +383,166 @@ class Siswa extends BaseController
         }
     }
 
+    /**
+     * =========================================================
+     * PROFILE UPDATE
+     * =========================================================
+     */
     public function profile_update()
     {
-        $data = $this->request->getPost();
-        $data['id'] = getSidByUid(user()->id);
+        try {
+            $data = $this->request->getPost();
+            $data['id'] = getSidByUid(user()->id);
 
-        // validate
-        if (!$this->validate([
-            'email' => ['rules' => 'required|valid_email'],
-            'nama' => ['rules' => 'required'],
-            'kelas' => ['rules' => 'required'],
-            'no_hp' => ['rules' => 'required|numeric'],
-            'alamat' => ['rules' => 'required'],
-        ])) {
-            return $this->response->setJSON([
-                'status'    => 500,
-                'success'   => false,
-                'message'   => implode(", ", $this->validator->getErrors())
-            ]);
-        }
+            if (!$data['id']) {
+                return $this->response->setJSON([
+                    'status'    => 404,
+                    'success'   => false,
+                    'message'   => 'Data siswa tidak ditemukan untuk user ini (user_id: ' . user()->id . ')'
+                ]);
+            }
 
-        $siswa = $this->siswa->find($data['id']);
-        if (!$siswa) {
-            return $this->response->setJSON([
-                'status'    => 404,
-                'success'   => false,
-                'message'   => 'Siswa tidak ditemukan'
-            ]);
-        }
-
-        // Handle File KTP
-        $ktpFile = $this->request->getFile('ktp');
-        if ($ktpFile && $ktpFile->isValid() && !$ktpFile->hasMoved()) {
-            if (!in_array(strtolower($ktpFile->getClientExtension()), ['pdf'])) {
+            if (!$this->validate([
+                'email'   => ['rules' => 'required|valid_email'],
+                'nama'    => ['rules' => 'required'],
+                'kelas'   => ['rules' => 'required'],
+                'no_hp'   => ['rules' => 'required|numeric'],
+                'alamat'  => ['rules' => 'required'],
+            ])) {
                 return $this->response->setJSON([
                     'status'    => 500,
                     'success'   => false,
-                    'message'   => 'Berkas KTP harus berformat PDF'
+                    'message'   => implode(", ", $this->validator->getErrors())
                 ]);
             }
-            if (!empty($siswa->ktp) && file_exists('assets/berkas/' . $siswa->ktp)) {
-                @unlink('assets/berkas/' . $siswa->ktp);
-            }
-            $ktpName = $ktpFile->getRandomName();
-            $ktpFile->move('assets/berkas', $ktpName);
-            $data['ktp'] = $ktpName;
-        }
 
-        // Handle File BPJS
-        $bpjsFile = $this->request->getFile('bpjs');
-        if ($bpjsFile && $bpjsFile->isValid() && !$bpjsFile->hasMoved()) {
-            if (!in_array(strtolower($bpjsFile->getClientExtension()), ['pdf'])) {
+            $siswa = $this->siswa->find($data['id']);
+            if (!$siswa) {
                 return $this->response->setJSON([
-                    'status'    => 500,
+                    'status'    => 404,
                     'success'   => false,
-                    'message'   => 'Berkas BPJS harus berformat PDF'
+                    'message'   => 'Siswa tidak ditemukan dengan ID: ' . $data['id']
                 ]);
             }
-            if (!empty($siswa->bpjs) && file_exists('assets/berkas/' . $siswa->bpjs)) {
-                @unlink('assets/berkas/' . $siswa->bpjs);
-            }
-            $bpjsName = $bpjsFile->getRandomName();
-            $bpjsFile->move('assets/berkas', $bpjsName);
-            $data['bpjs'] = $bpjsName;
-        }
 
-        // Handle File KTM
-        $ktmFile = $this->request->getFile('ktm');
-        if ($ktmFile && $ktmFile->isValid() && !$ktmFile->hasMoved()) {
-            if (!in_array(strtolower($ktmFile->getClientExtension()), ['pdf'])) {
-                return $this->response->setJSON([
-                    'status'    => 500,
-                    'success'   => false,
-                    'message'   => 'Berkas KTM harus berformat PDF'
-                ]);
+            if (!is_dir('assets/berkas')) {
+                @mkdir('assets/berkas', 0755, true);
             }
-            if (!empty($siswa->ktm) && file_exists('assets/berkas/' . $siswa->ktm)) {
-                @unlink('assets/berkas/' . $siswa->ktm);
+            if (!is_dir('assets/img/foto_siswa')) {
+                @mkdir('assets/img/foto_siswa', 0755, true);
             }
-            $ktmName = $ktmFile->getRandomName();
-            $ktmFile->move('assets/berkas', $ktmName);
-            $data['ktm'] = $ktmName;
-        }
 
-        // Handle File Surat Balasan
-        $balasanFile = $this->request->getFile('surat_balasan');
-        if ($balasanFile && $balasanFile->isValid() && !$balasanFile->hasMoved()) {
-            if (!in_array(strtolower($balasanFile->getClientExtension()), ['pdf'])) {
-                return $this->response->setJSON([
-                    'status'    => 500,
-                    'success'   => false,
-                    'message'   => 'Berkas Surat Balasan harus berformat PDF'
-                ]);
+            // Handle File KTP
+            $ktpFile = $this->request->getFile('ktp');
+            if ($ktpFile && $ktpFile->isValid() && !$ktpFile->hasMoved()) {
+                if (!in_array(strtolower($ktpFile->getClientExtension()), ['pdf'])) {
+                    return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Berkas KTP harus berformat PDF. Extensi terdeteksi: ' . $ktpFile->getClientExtension()]);
+                }
+                if (!empty($siswa->ktp) && file_exists('assets/berkas/' . $siswa->ktp)) {
+                    @unlink('assets/berkas/' . $siswa->ktp);
+                }
+                $ktpName = $ktpFile->getRandomName();
+                if (!$ktpFile->move('assets/berkas', $ktpName)) {
+                    return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Gagal upload KTP: ' . $ktpFile->getErrorString()]);
+                }
+                $data['ktp'] = $ktpName;
             }
-            if (!empty($siswa->surat_balasan) && file_exists('assets/berkas/' . $siswa->surat_balasan)) {
-                @unlink('assets/berkas/' . $siswa->surat_balasan);
+
+            // Handle File BPJS
+            $bpjsFile = $this->request->getFile('bpjs');
+            if ($bpjsFile && $bpjsFile->isValid() && !$bpjsFile->hasMoved()) {
+                if (!in_array(strtolower($bpjsFile->getClientExtension()), ['pdf'])) {
+                    return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Berkas BPJS harus berformat PDF. Extensi terdeteksi: ' . $bpjsFile->getClientExtension()]);
+                }
+                if (!empty($siswa->bpjs) && file_exists('assets/berkas/' . $siswa->bpjs)) {
+                    @unlink('assets/berkas/' . $siswa->bpjs);
+                }
+                $bpjsName = $bpjsFile->getRandomName();
+                if (!$bpjsFile->move('assets/berkas', $bpjsName)) {
+                    return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Gagal upload BPJS: ' . $bpjsFile->getErrorString()]);
+                }
+                $data['bpjs'] = $bpjsName;
             }
-            $balasanName = $balasanFile->getRandomName();
-            $balasanFile->move('assets/berkas', $balasanName);
-            $data['surat_balasan'] = $balasanName;
-        }
 
-        // Handle Foto
-        $fotoFile = $this->request->getFile('foto');
-        if ($fotoFile && $fotoFile->isValid() && !$fotoFile->hasMoved()) {
-            if (!empty($siswa->foto) && $siswa->foto != 'default.jpg' && file_exists('assets/img/foto_siswa/' . $siswa->foto)) {
-                @unlink('assets/img/foto_siswa/' . $siswa->foto);
+            // Handle File KTM
+            $ktmFile = $this->request->getFile('ktm');
+            if ($ktmFile && $ktmFile->isValid() && !$ktmFile->hasMoved()) {
+                if (!in_array(strtolower($ktmFile->getClientExtension()), ['pdf'])) {
+                    return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Berkas KTM harus berformat PDF. Extensi terdeteksi: ' . $ktmFile->getClientExtension()]);
+                }
+                if (!empty($siswa->ktm) && file_exists('assets/berkas/' . $siswa->ktm)) {
+                    @unlink('assets/berkas/' . $siswa->ktm);
+                }
+                $ktmName = $ktmFile->getRandomName();
+                if (!$ktmFile->move('assets/berkas', $ktmName)) {
+                    return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Gagal upload KTM: ' . $ktmFile->getErrorString()]);
+                }
+                $data['ktm'] = $ktmName;
             }
-            $fotoName = $fotoFile->getRandomName();
-            $fotoFile->move('assets/img/foto_siswa', $fotoName);
-            $data['foto'] = $fotoName;
-        }
 
-        $siswa_data = [
-            'email' => $data['email'],
-            'id' => user()->id,
-        ];
+            // Handle File Takaful
+            $takafulFile = $this->request->getFile('takaful');
+            if ($takafulFile && $takafulFile->isValid() && !$takafulFile->hasMoved()) {
+                if (!in_array(strtolower($takafulFile->getClientExtension()), ['pdf'])) {
+                    return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Berkas Takaful harus berformat PDF. Extensi terdeteksi: ' . $takafulFile->getClientExtension()]);
+                }
+                if ($takafulFile->getSize() > 5 * 1024 * 1024) {
+                    return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Ukuran file Takaful terlalu besar (max 5MB). Ukuran: ' . round($takafulFile->getSize() / 1024 / 1024, 2) . 'MB']);
+                }
+                if (!empty($siswa->takaful) && file_exists('assets/berkas/' . $siswa->takaful)) {
+                    @unlink('assets/berkas/' . $siswa->takaful);
+                }
+                $takafulName = $takafulFile->getRandomName();
+                if (!$takafulFile->move('assets/berkas', $takafulName)) {
+                    return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Gagal memindahkan file Takaful. Error: ' . $takafulFile->getErrorString()]);
+                }
+                $data['takaful'] = $takafulName;
+            }
 
-        if (isset($data['username'])) {
-            $siswa_data['username'] = $data['username'];
-        }
+            // Handle Foto
+            $fotoFile = $this->request->getFile('foto');
+            if ($fotoFile && $fotoFile->isValid() && !$fotoFile->hasMoved()) {
+                if (!empty($siswa->foto) && $siswa->foto != 'default.jpg' && file_exists('assets/img/foto_siswa/' . $siswa->foto)) {
+                    @unlink('assets/img/foto_siswa/' . $siswa->foto);
+                }
+                $fotoName = $fotoFile->getRandomName();
+                if (!$fotoFile->move('assets/img/foto_siswa', $fotoName)) {
+                    return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Gagal upload Foto: ' . $fotoFile->getErrorString()]);
+                }
+                $data['foto'] = $fotoName;
+            }
 
-        if ($this->siswa->save($data) && $this->user->save($siswa_data)) {
+            $siswa_data = [
+                'email' => $data['email'],
+                'id'    => user()->id,
+            ];
+
+            if (isset($data['username'])) {
+                $siswa_data['username'] = $data['username'];
+            }
+
+            unset($data['username']);
+
+            if (!$this->siswa->save($data)) {
+                return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Gagal simpan siswa: ' . json_encode($this->siswa->errors())]);
+            }
+
+            if (!$this->user->save($siswa_data)) {
+                return $this->response->setJSON(['status' => 500, 'success' => false, 'message' => 'Gagal simpan user: ' . json_encode($this->user->errors())]);
+            }
+
             return $this->response->setJSON([
                 'status'    => 200,
                 'success'   => true,
                 'message'   => 'Profil berhasil diperbarui',
                 'data'      => $data
             ]);
-        } else {
+
+        } catch (\Exception $e) {
             return $this->response->setJSON([
                 'status'    => 500,
                 'success'   => false,
-                'message'   => implode(", ", $this->siswa->errors())
+                'message'   => 'Exception: ' . $e->getMessage() . ' di ' . $e->getFile() . ':' . $e->getLine()
             ]);
         }
     }
@@ -568,7 +579,6 @@ class Siswa extends BaseController
 
             $this->siswa->update($id, ['surat_balasan' => $balasanName]);
 
-            // Send Gmail notification to student
             $email_status = $this->sendEmailNotifSuratBalasan($id);
             $msg_append = ($email_status === true) ? '' : ' (Namun notifikasi email gagal: ' . $email_status . ')';
 
@@ -683,7 +693,6 @@ class Siswa extends BaseController
             $this->application->update($application->id, ['status' => 'selesai']);
         }
 
-        // Clear laporan fields to ensure they are empty/null
         $siswaModel->update($siswa->id, [
             'laporan' => null, 
             'is_laporan_approved' => 0
@@ -776,14 +785,22 @@ class Siswa extends BaseController
             return $e->getMessage();
         }
     }
+
+    /**
+     * =========================================================
+     * EXPORT EXCEL — SUDAH DITAMBAH KOLOM DOSEN PEMBIMBING
+     * =========================================================
+     */
     public function exportExcel()
     {
         $query = $this->user
-            ->select('users.id, users.username, users.email, users.active, siswa.id as id_siswa_real, siswa.nim, siswa.nama, siswa.kelas, siswa.jurusan, siswa.instansi, siswa.no_hp, siswa.alamat, siswa.foto, siswa.surat_permohonan, siswa.surat_pernyataan, siswa.cv, siswa.laporan, siswa.sertifikat_mode, siswa.sertifikat_file, siswa.is_safety_ready, siswa.is_laporan_approved, siswa.tgl_masuk, siswa.tgl_selesai, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.surat_balasan, siswa.created_at as tgl_daftar, angkatan.nama as angkatan, angkatan.tahun, COALESCE((SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id AND status IN (\'accepted\', \'selesai\') LIMIT 1), (SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id ORDER BY created_at DESC LIMIT 1)) as lamaran_status')
+            ->select('users.id, users.username, users.email, users.active, siswa.id as id_siswa_real, siswa.nim, siswa.nama, siswa.kelas, siswa.jurusan, siswa.instansi, siswa.no_hp, siswa.alamat, siswa.foto, siswa.surat_permohonan, siswa.surat_pernyataan, siswa.cv, siswa.laporan, siswa.sertifikat_mode, siswa.sertifikat_file, siswa.is_safety_ready, siswa.is_laporan_approved, siswa.tgl_masuk, siswa.tgl_selesai, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.takaful, siswa.surat_balasan, siswa.created_at as tgl_daftar, angkatan.nama as angkatan, angkatan.tahun, dosen_pembimbing.nama as nama_dosen, dosen_pembimbing.nip as nip_dosen, COALESCE((SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id AND status IN (\'accepted\', \'selesai\') LIMIT 1), (SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id ORDER BY created_at DESC LIMIT 1)) as lamaran_status')
             ->join('auth_groups_users', 'auth_groups_users.user_id = users.id')
             ->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id')
             ->join('siswa', 'siswa.user_id = users.id', 'left')
             ->join('angkatan', 'angkatan.id = siswa.angkatan', 'left')
+            // JOIN dosen_pembimbing via siswa.dosen_id
+            ->join('dosen_pembimbing', 'dosen_pembimbing.id = siswa.dosen_id', 'left')
             ->where('auth_groups.name', 'siswa');
 
         $query->groupStart()
@@ -803,9 +820,11 @@ class Siswa extends BaseController
         $sheet->setCellValue('E3', 'Jurusan');
         $sheet->setCellValue('F3', 'Instansi (Asal Sekolah/Kampus)');
         $sheet->setCellValue('G3', 'No HP');
-        $sheet->setCellValue('H3', 'Status Lamaran');
-        $sheet->setCellValue('I3', 'Tanggal Mulai');
-        $sheet->setCellValue('J3', 'Tanggal Selesai');
+        $sheet->setCellValue('H3', 'Dosen Pembimbing');
+        $sheet->setCellValue('I3', 'NIP Dosen');
+        $sheet->setCellValue('J3', 'Status Lamaran');
+        $sheet->setCellValue('K3', 'Tanggal Mulai');
+        $sheet->setCellValue('L3', 'Tanggal Selesai');
 
         $row = 4;
         $no = 1;
@@ -823,14 +842,16 @@ class Siswa extends BaseController
                 $sheet->setCellValue('E' . $row, $s->jurusan);
                 $sheet->setCellValue('F' . $row, $s->instansi);
                 $sheet->setCellValue('G' . $row, $s->no_hp);
-                $sheet->setCellValue('H' . $row, $status);
-                $sheet->setCellValue('I' . $row, $s->tgl_masuk ? date('d/m/Y', strtotime($s->tgl_masuk)) : '-');
-                $sheet->setCellValue('J' . $row, $s->tgl_selesai ? date('d/m/Y', strtotime($s->tgl_selesai)) : '-');
+                $sheet->setCellValue('H' . $row, $s->nama_dosen ?? '-');
+                $sheet->setCellValue('I' . $row, $s->nip_dosen ?? '-');
+                $sheet->setCellValue('J' . $row, $status);
+                $sheet->setCellValue('K' . $row, $s->tgl_masuk ? date('d/m/Y', strtotime($s->tgl_masuk)) : '-');
+                $sheet->setCellValue('L' . $row, $s->tgl_selesai ? date('d/m/Y', strtotime($s->tgl_selesai)) : '-');
                 $row++;
             }
         }
 
-        foreach (range('A', 'J') as $col) {
+        foreach (range('A', 'L') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -844,14 +865,21 @@ class Siswa extends BaseController
         exit;
     }
 
+    /**
+     * =========================================================
+     * EXPORT PDF — SUDAH DITAMBAH KOLOM DOSEN PEMBIMBING
+     * =========================================================
+     */
     public function exportPdf()
     {
         $query = $this->user
-            ->select('users.id, users.username, users.email, users.active, siswa.id as id_siswa_real, siswa.nim, siswa.nama, siswa.kelas, siswa.jurusan, siswa.instansi, siswa.no_hp, siswa.alamat, siswa.foto, siswa.surat_permohonan, siswa.surat_pernyataan, siswa.cv, siswa.laporan, siswa.sertifikat_mode, siswa.sertifikat_file, siswa.is_safety_ready, siswa.is_laporan_approved, siswa.tgl_masuk, siswa.tgl_selesai, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.surat_balasan, siswa.created_at as tgl_daftar, angkatan.nama as angkatan, angkatan.tahun, COALESCE((SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id AND status IN (\'accepted\', \'selesai\') LIMIT 1), (SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id ORDER BY created_at DESC LIMIT 1)) as lamaran_status')
+            ->select('users.id, users.username, users.email, users.active, siswa.id as id_siswa_real, siswa.nim, siswa.nama, siswa.kelas, siswa.jurusan, siswa.instansi, siswa.no_hp, siswa.alamat, siswa.foto, siswa.surat_permohonan, siswa.surat_pernyataan, siswa.cv, siswa.laporan, siswa.sertifikat_mode, siswa.sertifikat_file, siswa.is_safety_ready, siswa.is_laporan_approved, siswa.tgl_masuk, siswa.tgl_selesai, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.surat_balasan, siswa.created_at as tgl_daftar, angkatan.nama as angkatan, angkatan.tahun, dosen_pembimbing.nama as nama_dosen, COALESCE((SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id AND status IN (\'accepted\', \'selesai\') LIMIT 1), (SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id ORDER BY created_at DESC LIMIT 1)) as lamaran_status')
             ->join('auth_groups_users', 'auth_groups_users.user_id = users.id')
             ->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id')
             ->join('siswa', 'siswa.user_id = users.id', 'left')
             ->join('angkatan', 'angkatan.id = siswa.angkatan', 'left')
+            // JOIN dosen_pembimbing via siswa.dosen_id
+            ->join('dosen_pembimbing', 'dosen_pembimbing.id = siswa.dosen_id', 'left')
             ->where('auth_groups.name', 'siswa');
 
         $query->groupStart()
@@ -861,13 +889,14 @@ class Siswa extends BaseController
         $dsiswa = $query->findAll();
         
         $html = '<h2 style="text-align: center;">Data Siswa Magang</h2>';
-        $html .= '<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse; font-size: 11px;">';
+        $html .= '<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse; font-size: 10px;">';
         $html .= '<thead><tr>';
         $html .= '<th>No</th>';
         $html .= '<th>NIM/NIS</th>';
         $html .= '<th>Nama</th>';
         $html .= '<th>Jurusan</th>';
         $html .= '<th>Instansi</th>';
+        $html .= '<th>Dosen Pembimbing</th>';
         $html .= '<th>Status</th>';
         $html .= '<th>Masa Magang</th>';
         $html .= '</tr></thead><tbody>';
@@ -891,6 +920,7 @@ class Siswa extends BaseController
                 $html .= '<td>' . $s->nama . '</td>';
                 $html .= '<td>' . $s->jurusan . '</td>';
                 $html .= '<td>' . $s->instansi . '</td>';
+                $html .= '<td>' . ($s->nama_dosen ?? '-') . '</td>';
                 $html .= '<td>' . $status . '</td>';
                 $html .= '<td>' . $masa_magang . '</td>';
                 $html .= '</tr>';
