@@ -35,7 +35,7 @@ class Filters extends BaseConfig
             'honeypot',
             'login' => ['except' => ['/', 'login', 'register', 'forgot', 'reset-password', 'activate-account', 'resend-activate-account']],
             'invalidchars',
-            'csrf',
+            // 'csrf',  <--- KITA MATIKAN DULU UNTUK SEMENTARA
         ],
         'after' => [
             'toolbar',
@@ -47,22 +47,12 @@ class Filters extends BaseConfig
     /**
      * List of filter aliases that works on a
      * particular HTTP method (GET, POST, etc.).
-     *
-     * Example:
-     * 'post' => ['foo', 'bar']
-     *
-     * If you use this, you should disable auto-routing because auto-routing
-     * permits any HTTP method to access a controller. Accessing the controller
-     * with a method you don’t expect could bypass the filter.
      */
     public array $methods = [];
 
     /**
      * List of filter aliases that should run on any
      * before or after URI patterns.
-     *
-     * Example:
-     * 'isLoggedIn' => ['before' => ['account/*', 'profiles/*']]
      */
     public array $filters = [];
 }

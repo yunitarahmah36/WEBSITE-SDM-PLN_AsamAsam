@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Magang | Kelola Sertifikat</title>
+    <link id="pagestyle" href="/assets/css/material-dashboard.css?v=3.0.4" rel="stylesheet" />
+    <link href="/assets/fontawesome/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="/assets/js/core/jquery.min.js"></script>
+    <script src="/assets/js/core/bootstrap.bundle.min.js"></script>
+    <style>
+        body { font-family: 'Roboto', Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        .table td, .table th { vertical-align: middle; }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="card card-body p-3">
+        <div class="d-flex justify-content-between align-items-center px-2 mb-3 flex-wrap gap-2">
+            <div>
+                <h6 class="mb-0 font-weight-bolder text-dark">Daftar Sertifikat Siswa Magang</h6>
+                <small class="text-xxs text-muted">Kelola pengunggahan berkas sertifikat resmi untuk peserta magang</small>
+            </div>
+            <div class="w-100 w-sm-auto col-12 col-md-5 mt-2 mt-sm-0">
+                <div class="input-group input-group-outline">
+                    <input type="text" id="filsearch" class="form-control" placeholder="Cari Nama / NIM / Jurusan / Divisi...">
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-items-center mb-0" id="tb-sertifikat">
+                <thead>
+                    <tr>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-3">No</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Siswa</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Jurusan & Instansi</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Divisi</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Persyaratan</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status Berkas</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                                                                                        <tr class="siswa-row">
+                            <td class="text-xs ps-3 font-weight-bold">1</td>
+                            <td>
+                                <div class="d-flex flex-column justify-content-center">
+                                    <h6 class="mb-0 text-sm font-weight-bold student-name">VERA MELIANA SARI</h6>
+                                    <p class="text-xs text-secondary mb-0 student-nim">NIM: 2401301079</p>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="text-xs font-weight-bold text-dark student-jurusan">Teknologi Informasi</span>
+                                    <span class="text-xxs text-secondary">Politeknik Negeri Tanah Laut</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-xs font-weight-bold student-divisi text-dark">Fa Dongoran Siregar</span>
+                            </td>
+                            <td class="align-middle text-center text-sm">
+                                <div class="d-flex flex-wrap justify-content-center gap-1">
+                                    <!-- Safety Check -->
+                                    <span class="badge badge-sm bg-gradient-success" title="Safety & K3">
+                                        <i class="fa fa-check me-1"></i> Safety
+                                    </span>
+                                    <!-- Laporan Check -->
+                                    <span class="badge badge-sm bg-gradient-danger" title="Laporan Akhir Disetujui">
+                                        <i class="fa fa-times me-1"></i> Laporan                                     </span>
+                                    <!-- Nilai Check -->
+                                    <span class="badge badge-sm bg-gradient-danger" title="Nilai Selesai Diinput">
+                                        <i class="fa fa-times me-1"></i> Nilai
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="align-middle text-center">
+                                                                    <span class="badge bg-gradient-secondary text-xxs px-2 py-1 mb-1 d-inline-flex align-items-center">
+                                        <i class="fa fa-hourglass-half me-1"></i> Belum Lengkap
+                                    </span>
+                                    <small class="text-xxs text-muted d-block">Selesaikan syarat magang</small>
+                                                            </td>
+                            <td class="align-middle text-center">
+                                <div class="d-flex justify-content-center align-items-center gap-1 flex-wrap">
+                                                                            <!-- Tombol Upload Terkunci karena syarat belum lengkap -->
+                                        <button type="button" class="btn btn-secondary btn-sm mb-0 py-1 px-2 shadow-none opacity-6" disabled style="cursor: not-allowed;" 
+                                                title="Sertifikat belum dapat diunggah: Persyaratan (Safety, Laporan, Nilai) belum lengkap">
+                                            <i class="fa fa-lock"></i> Upload
+                                        </button>
+                                                                    </div>
+                            </td>
+                        </tr>
+                                                                    <tr class="siswa-row">
+                            <td class="text-xs ps-3 font-weight-bold">2</td>
+                            <td>
+                                <div class="d-flex flex-column justify-content-center">
+                                    <h6 class="mb-0 text-sm font-weight-bold student-name">Rizki Nadi Maulana</h6>
+                                    <p class="text-xs text-secondary mb-0 student-nim">NIM: 2301301080</p>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="text-xs font-weight-bold text-dark student-jurusan">Agroindustri</span>
+                                    <span class="text-xxs text-secondary">Politeknik Negeri Tanah Laut</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-xs font-weight-bold student-divisi text-dark">Fa Dongoran Siregar</span>
+                            </td>
+                            <td class="align-middle text-center text-sm">
+                                <div class="d-flex flex-wrap justify-content-center gap-1">
+                                    <!-- Safety Check -->
+                                    <span class="badge badge-sm bg-gradient-success" title="Safety & K3">
+                                        <i class="fa fa-check me-1"></i> Safety
+                                    </span>
+                                    <!-- Laporan Check -->
+                                    <span class="badge badge-sm bg-gradient-success" title="Laporan Akhir Disetujui">
+                                        <i class="fa fa-check me-1"></i> Laporan                                     </span>
+                                    <!-- Nilai Check -->
+                                    <span class="badge badge-sm bg-gradient-success" title="Nilai Selesai Diinput">
+                                        <i class="fa fa-check me-1"></i> Nilai
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="align-middle text-center">
+                                                                    <span class="badge bg-gradient-success text-xxs px-2 py-1 mb-1 d-inline-flex align-items-center">
+                                        <i class="fa fa-check-circle me-1"></i> Sudah Diupload
+                                    </span>
+                                    <div>
+                                        <a href="/assets/sertifikat/1792563797_1792563797_34dd2ca7d23ef34d2b0b.pdf" target="_blank" class="text-xxs text-info font-weight-bold text-decoration-none">
+                                            <i class="fa fa-file-pdf me-1"></i> Lihat Berkas
+                                        </a>
+                                    </div>
+                                                            </td>
+                            <td class="align-middle text-center">
+                                <div class="d-flex justify-content-center align-items-center gap-1 flex-wrap">
+                                                                            <!-- Tombol Unduh Sertifikat Resmi yang Sudah Diupload -->
+                                        <a href="/sertifikat/download/21" class="btn btn-success btn-sm mb-0 py-1 px-2 shadow-none d-inline-flex align-items-center gap-1" title="Unduh Sertifikat Resmi yang telah diunggah">
+                                            <i class="fa fa-download"></i> Unduh
+                                        </a>
+
+                                        <!-- Tombol Edit / Ganti Berkas Sertifikat (Ikon Edit di tengah) -->
+                                        <button type="button" class="btn btn-outline-primary btn-sm mb-0 py-1 px-2 btn-upload-modal shadow-none" 
+                                                data-id="21" 
+                                                data-nama="Rizki Nadi Maulana"
+                                                data-nim="2301301080"
+                                                data-hasfile="1"
+                                                title="Edit / Ganti Berkas Sertifikat">
+                                            <i class="fa fa-edit"></i>
+                                        </button>
+
+                                        <!-- Tombol Hapus Berkas -->
+                                        <button type="button" class="btn btn-outline-danger btn-sm mb-0 py-1 px-2 shadow-none btn-delete-cert" data-id="21" data-nama="Rizki Nadi Maulana" title="Hapus berkas sertifikat yang diunggah">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                                                    </div>
+                            </td>
+                        </tr>
+                                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

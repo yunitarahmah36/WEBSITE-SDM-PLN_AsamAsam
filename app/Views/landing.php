@@ -868,17 +868,11 @@
                 <?php $idx = 0; ?>
                 <?php foreach ($alumni as $alum): ?>
                     <?php 
-                        if (!empty($alum->alumni_foto)) {
-                            $fotoPath = FCPATH . 'assets/alumni/' . $alum->alumni_foto;
-                            $foto = base_url('assets/alumni/'.$alum->alumni_foto);
+                        if (!empty($alum->alumni_foto) && file_exists(FCPATH . 'assets/alumni/' . $alum->alumni_foto)) {
+                            $foto = base_url('assets/alumni/' . $alum->alumni_foto);
                         } else {
-                            $fotoPath = FCPATH . 'assets/img/foto_siswa/' . $alum->foto;
-                            if (!empty($alum->foto) && file_exists($fotoPath)) {
-                                $foto = base_url('assets/img/foto_siswa/'.$alum->foto);
-                            } else {
-                                $fallbacks = ['picture.jpeg', 'picture (1).jpeg', 'picture (2).jpeg', 'picture (3).jpeg'];
-                                $foto = base_url('assets/' . $fallbacks[$idx % 4]);
-                            }
+                            $fallbacks = ['picture.jpeg', 'picture (1).jpeg', 'picture (2).jpeg', 'picture (3).jpeg'];
+                            $foto = base_url('assets/' . $fallbacks[$idx % 4]);
                         }
                         $divisi = $alum->divisi ?? 'Divisi Magang';
                         $idx++;
@@ -889,6 +883,12 @@
                             <h4 style="margin: 0; font-size: 16px; color: white; font-weight: bold;"><?= esc($alum->nama) ?></h4>
                             <p style="margin: 4px 0 0; font-size: 13px; color: #ddd;"><?= esc($alum->instansi) ?></p>
                             <p style="margin: 2px 0 0; font-size: 12px; color: #aaa;"><i class="fa fa-map-marker-alt me-1"></i> <?= esc($divisi) ?></p>
+                            <?php
+                            $tglMulai = !empty($alum->tgl_masuk) ? $alum->tgl_masuk : ($alum->angkatan_tgl_mulai ?? null);
+                            $tglSelesai = !empty($alum->tgl_selesai) ? $alum->tgl_selesai : ($alum->angkatan_tgl_selesai ?? null);
+                            if ($tglMulai && $tglSelesai) : ?>
+                                <p style="margin: 2px 0 0; font-size: 11px; color: #90cdf4;"><i class="fa fa-calendar-alt me-1"></i> <?= date('d/m/Y', strtotime($tglMulai)) ?> s/d <?= date('d/m/Y', strtotime($tglSelesai)) ?></p>
+                            <?php endif; ?>
                             <?php if (!empty($alum->alumni_testimoni)): ?>
                                 <p style="margin: 8px 0 0; font-size: 12px; color: #fff; font-style: italic; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">
                                     "<?= esc($alum->alumni_testimoni) ?>"

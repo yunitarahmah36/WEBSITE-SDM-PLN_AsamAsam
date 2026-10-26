@@ -33,25 +33,16 @@ class DosenPembimbingModel extends Model
 
     /**
      * Cari instansi berdasarkan email atau nama_instansi.
-     * - Jika SUDAH ADA: update data pendukung.
-     * - Jika BELUM ADA: buat AKUN USERS baru + insert ke tabel instansi.
-     *
-     * @param array $data ['nama_instansi', 'jenis_instansi', 'alamat', 'provinsi', 'kabupaten_kota', 'kecamatan', 'email', 'no_hp']
-     * @return int|null  ID instansi
      */
     public function findOrCreate(array $data)
     {
         $email = trim($data['email'] ?? '');
         $nama_instansi = trim($data['nama_instansi'] ?? '');
 
-        // Minimal salah satu harus ada
         if (empty($email) && empty($nama_instansi)) {
             return null;
         }
 
-        // =====================================================
-        // 1. Cari instansi berdasarkan email atau nama
-        // =====================================================
         $existing = null;
 
         if (!empty($email)) {
@@ -61,9 +52,6 @@ class DosenPembimbingModel extends Model
             $existing = $this->where('nama_instansi', $nama_instansi)->first();
         }
 
-        // =====================================================
-        // 2. Jika SUDAH ADA -> update data pendukung saja
-        // =====================================================
         if ($existing) {
             $updateData = [];
 
@@ -80,16 +68,12 @@ class DosenPembimbingModel extends Model
             return $existing->id;
         }
 
-        // =====================================================
-        // 3. Jika BELUM ADA -> buat akun users + data instansi
-        // =====================================================
         $db = \Config\Database::connect();
         $db->transStart();
 
         try {
             $userModel = new \App\Models\UserModel();
 
-            // ⭐ Tentukan base username dari email atau nama instansi
             if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $baseUsername = strtolower(explode('@', $email)[0]);
                 $baseUsername = preg_replace('/[^a-z0-9]/', '', $baseUsername);
@@ -101,7 +85,6 @@ class DosenPembimbingModel extends Model
                 $baseUsername = substr($namaSlug, 0, 15) . rand(100, 999);
             }
 
-            // Cari username unik
             $username = $baseUsername;
             $counter  = 1;
             while ($userModel->where('username', $username)->first()) {
@@ -112,7 +95,6 @@ class DosenPembimbingModel extends Model
                 }
             }
 
-            // Tentukan email yang valid
             $emailFinal = (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL))
                           ? $email
                           : $username . '@instansi.local';
@@ -121,10 +103,8 @@ class DosenPembimbingModel extends Model
                 $emailFinal = $username . '.' . time() . '@instansi.local';
             }
 
-            // Password default
             $defaultPassword = ucfirst($username) . 'Instansi123!';
 
-            // Buat entity user
             $userEntity = new UserEntity([
                 'email'    => $emailFinal,
                 'username' => $username,
@@ -132,10 +112,8 @@ class DosenPembimbingModel extends Model
                 'active'   => 1,
             ]);
 
-            // Assign group instansi
             $userModel->withGroup('instansi');
 
-            // Simpan user
             if (!$userModel->save($userEntity)) {
                 throw new \Exception('Gagal buat akun user: ' . json_encode($userModel->errors()));
             }
@@ -145,7 +123,6 @@ class DosenPembimbingModel extends Model
                 throw new \Exception('User ID kosong setelah insert');
             }
 
-            // Insert ke instansi
             $insertData = [
                 'user_id'        => $userId,
                 'nama_instansi'  => !empty($nama_instansi) ? $nama_instansi : 'Instansi ' . $userId,
@@ -182,21 +159,22 @@ class DosenPembimbingModel extends Model
     }
 
     /**
-     * Ambil semua instansi + jumlah mahasiswa bimbingan
+     * Ambil semua instansi + jumlah mahasiswa bimbingan (via nama instansi).
+     * Karena kolom siswa.dosen_id sudah dihapus, penghitungan dilakukan
+     * dengan mencocokkan nama instansi.
      */
     public function getAllWithMahasiswaCount()
     {
         return $this->db->table('instansi')
-            ->select('instansi.*, COUNT(siswa.id) as jumlah_mahasiswa')
-            ->join('siswa', 'siswa.dosen_id = instansi.id', 'left')
-            ->groupBy('instansi.id')
+            ->select('instansi.*, 
+                      (SELECT COUNT(*) FROM siswa WHERE siswa.instansi = instansi.nama_instansi) AS jumlah_mahasiswa')
             ->orderBy('instansi.nama_instansi', 'ASC')
             ->get()
             ->getResult();
     }
 
     /**
-     * Ambil detail instansi + daftar mahasiswa bimbingan
+     * Ambil detail instansi + daftar mahasiswa bimbingan (via nama instansi).
      */
     public function getWithMahasiswa($instansiId)
     {
@@ -204,7 +182,9 @@ class DosenPembimbingModel extends Model
         if (!$instansi) return null;
 
         $siswaModel = new \App\Models\SiswaModel();
-        $instansi->mahasiswa = $siswaModel->where('dosen_id', $instansiId)->findAll();
+        $instansi->mahasiswa = $siswaModel
+            ->where('instansi', $instansi->nama_instansi)
+            ->findAll();
 
         return $instansi;
     }

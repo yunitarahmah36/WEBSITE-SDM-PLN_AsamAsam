@@ -1,4 +1,30 @@
 <?php
+if (!function_exists('isProfileComplete')) {
+    function isProfileComplete($uid_or_sid, $by_sid = false)
+    {
+        if (!$uid_or_sid) {
+            return false;
+        }
+        $siswaModel = new \App\Models\SiswaModel();
+        if ($by_sid) {
+            $siswa = $siswaModel->find($uid_or_sid);
+        } else {
+            $siswa = $siswaModel->where('user_id', $uid_or_sid)->first();
+        }
+
+        if (!$siswa) {
+            return false;
+        }
+
+        return !empty(trim((string)($siswa->nik ?? '')))
+            && !empty(trim((string)($siswa->tempat_lahir ?? '')))
+            && !empty($siswa->tanggal_lahir)
+            && $siswa->tanggal_lahir !== '0000-00-00'
+            && !empty(trim((string)($siswa->jenis_kelamin ?? '')))
+            && !empty(trim((string)($siswa->no_hp_emergency ?? '')));
+    }
+}
+
 if (!function_exists('initCheck')) {
     function initCheck($uid, $tid)
     {
@@ -12,10 +38,12 @@ if (!function_exists('initCheck')) {
         }
         
         if (!$sid) {
-            // User is logged in but has no siswa record yet.
-            // Allow showing the Daftar button — actual validation happens in Application::daftar()
-            // Only show if slot is available
-            return getSlotAvailable($tid) > 0;
+            return false;
+        }
+
+        // Profile must be complete before registration
+        if (!isProfileComplete($uid)) {
+            return false;
         }
 
         // Prevent registering to the same division if already rejected
@@ -135,22 +163,17 @@ if (!function_exists("checkNowAndPeroid")) {
 
 if (!function_exists('getSiswaData')) {
     /**
-     * Ambil data siswa + data dosen pembimbing (JOIN)
-     * Data dosen diambil via relasi siswa.dosen_id -> dosen_pembimbing.id
+     * Ambil data siswa + data akun user.
+     * Data dosen pembimbing sekarang disimpan langsung di kolom siswa.dosen_nama (string),
+     * jadi tidak perlu JOIN ke tabel dosen_pembimbing lagi.
      */
     function getSiswaData($id)
     {
         $db = \Config\Database::connect();
 
         return $db->table('siswa')
-            ->select('siswa.*, users.username, users.email as uemail, users.created_at,
-                      dosen_pembimbing.nama AS nama_dosen,
-                      dosen_pembimbing.nip AS nip_dosen,
-                      dosen_pembimbing.nidn AS nidn_dosen,
-                      dosen_pembimbing.no_hp AS hp_dosen,
-                      dosen_pembimbing.email AS email_dosen')
+            ->select('siswa.*, users.username, users.email as uemail, users.created_at')
             ->join('users', 'users.id = siswa.user_id', 'left')
-            ->join('dosen_pembimbing', 'dosen_pembimbing.id = siswa.dosen_id', 'left')
             ->where('siswa.user_id', $id)
             ->get()
             ->getRow();
@@ -167,17 +190,23 @@ if (!function_exists('getPembimbingData')) {
             ->countAllResults() > 0;
 
         if ($is_dosen) {
-            $model = new \App\Models\DosenPembimbingModel();
-            $table = 'dosen_pembimbing';
+            // Karena tabel dosen_pembimbing sudah tidak dipakai (field NIP/NIDN dihapus),
+            // kita fallback ke tabel users saja agar profil dosen tetap bisa dibuka.
+            $db = \Config\Database::connect();
+            return $db->table('users')
+                ->select('users.*, users.email as uemail, users.username')
+                ->where('users.id', $id)
+                ->get()
+                ->getRow();
         } else {
             $model = new \App\Models\PembimbingModel();
             $table = 'pembimbing';
-        }
 
-        $data = $model->select($table . '.*, users.username, users.email as uemail, users.created_at')
-            ->join('users', 'users.id = ' . $table . '.user_id')
-            ->where($table . '.user_id', $id)->first();
-        return $data;
+            return $model->select($table . '.*, users.username, users.email as uemail, users.created_at')
+                ->join('users', 'users.id = ' . $table . '.user_id')
+                ->where($table . '.user_id', $id)
+                ->first();
+        }
     }
 }
 
@@ -369,31 +398,68 @@ if (!function_exists('getSlotAvailable')) {
     }
 }
 
+if (!function_exists('syncStatusSelesai')) {
+    /**
+     * Otomatis sinkronisasi status lamaran siswa dari 'accepted' menjadi 'selesai'
+     * jika tanggal selesai magang sudah terlewati (date('Y-m-d') > tgl_selesai).
+     * Berlaku untuk semua siswa (baik SMK maupun Mahasiswa / Umum).
+     */
+    function syncStatusSelesai()
+    {
+        try {
+            $db = \Config\Database::connect();
+            $today = date('Y-m-d');
+
+            $db->query("
+                UPDATE lamaran 
+                JOIN siswa ON siswa.id = lamaran.id_siswa
+                LEFT JOIN angkatan ON angkatan.id = siswa.angkatan
+                SET lamaran.status = 'selesai'
+                WHERE lamaran.status = 'accepted'
+                  AND (
+                      (siswa.tgl_selesai IS NOT NULL AND siswa.tgl_selesai != '' AND ? > siswa.tgl_selesai)
+                      OR 
+                      ((siswa.tgl_selesai IS NULL OR siswa.tgl_selesai = '') AND angkatan.tgl_selesai IS NOT NULL AND ? > angkatan.tgl_selesai)
+                  )
+            ", [$today, $today]);
+        } catch (\Throwable $th) {
+            // Abaikan jika database belum siap
+        }
+    }
+}
+
 if (!function_exists('getStatusSiswa')) {
     function getStatusSiswa($sid)
     {
         if (!$sid) return 'not_applied';
         $app = new \App\Models\ApplicationModel();
-        $data = $app->where(['id_siswa' => $sid])->first();
+        $data = $app->where('id_siswa', $sid)
+            ->whereIn('status', ['accepted', 'selesai'])
+            ->orderBy('created_at', 'DESC')
+            ->first();
+
+        if (!$data) {
+            $data = $app->where('id_siswa', $sid)->orderBy('created_at', 'DESC')->first();
+        }
+
         if ($data && $data->status == 'accepted') {
             $siswaModel = new \App\Models\SiswaModel();
             $siswa = $siswaModel->find($sid);
             if ($siswa) {
-                $instansiLower = strtolower($siswa->instansi ?? '');
-                $kelasLower = strtolower($siswa->kelas ?? '');
-                $isSmk = (strpos($instansiLower, 'smk') !== false || strpos($instansiLower, 'sekolah') !== false || in_array($kelasLower, ['x', 'xi', 'xii', '10', '11', '12']));
-                if ($isSmk) {
-                    $tgl_selesai = $siswa->tgl_selesai;
-                    if (empty($tgl_selesai)) {
-                        $db = \Config\Database::connect();
-                        $angkatan = $db->table('angkatan')->where('id', $siswa->angkatan)->get()->getRow();
-                        if ($angkatan) {
-                            $tgl_selesai = $angkatan->tgl_selesai;
-                        }
+                $tgl_selesai = $siswa->tgl_selesai;
+                if (empty($tgl_selesai) && !empty($siswa->angkatan)) {
+                    $db = \Config\Database::connect();
+                    $angkatan = $db->table('angkatan')->where('id', $siswa->angkatan)->get()->getRow();
+                    if ($angkatan) {
+                        $tgl_selesai = $angkatan->tgl_selesai;
                     }
-                    if (!empty($tgl_selesai) && date('Y-m-d') > $tgl_selesai) {
-                        return 'selesai';
-                    }
+                }
+                if (!empty($tgl_selesai) && date('Y-m-d') > $tgl_selesai) {
+                    // Update ke database agar konsisten
+                    try {
+                        $app->update($data->id, ['status' => 'selesai']);
+                    } catch (\Throwable $th) {}
+                    return 'selesai';
                 }
             }
         }
@@ -494,25 +560,12 @@ if (!function_exists('isCertificateReady')) {
             return false;
         }
 
-        if (($s->sertifikat_mode ?? 'auto') === 'manual') {
-            if (!empty($s->sertifikat_file)) {
-                $filePath = FCPATH . 'assets/sertifikat/' . $s->sertifikat_file;
-                return file_exists($filePath);
-            }
-            return false;
-        } else {
-            // Auto mode: requires safety ready and (laporan approved OR is SMK without report)
-            $instansiLower = strtolower($s->instansi ?? '');
-            $kelasLower = strtolower($s->kelas ?? '');
-            $isSmk = (strpos($instansiLower, 'smk') !== false || strpos($instansiLower, 'sekolah') !== false || in_array($kelasLower, ['x', 'xi', 'xii', '10', '11', '12']));
-
-            if (!empty($s->is_safety_ready)) {
-                if (!empty($s->is_laporan_approved) || ($isSmk && empty($s->laporan))) {
-                    return true;
-                }
-            }
-            return false;
+        // Sertifikat hanya siap jika file berkas resmi sudah diunggah oleh admin/pembimbing
+        if (!empty($s->sertifikat_file)) {
+            $filePath = FCPATH . 'assets/sertifikat/' . $s->sertifikat_file;
+            return file_exists($filePath);
         }
+        return false;
     }
 }
 
@@ -574,15 +627,141 @@ if (!function_exists('countNeedsSertifikat')) {
         
         $results = $builder->get()->getResult();
         $count = 0;
+        $nilaiModel = new \App\Models\NilaiModel();
         foreach($results as $s) {
-            $tgl_selesai = !empty($s->tgl_selesai) ? $s->tgl_selesai : $s->angkatan_tgl_selesai;
-            if ($tgl_selesai && $tgl_selesai <= $now) {
-                // If mode is manual and file is empty, needs action
-                if ($s->sertifikat_mode === 'manual' && empty($s->sertifikat_file)) {
-                    $count++;
+            // Syarat sertifikat: syarat selesai & nilai sudah ada, tetapi file sertifikat belum diunggah
+            if (empty($s->sertifikat_file)) {
+                $nilai = $nilaiModel->where('ids', $s->id)->first();
+                if (!empty($nilai) && !empty($s->is_safety_ready)) {
+                    $instansiLower = strtolower($s->instansi ?? '');
+                    $kelasLower = strtolower($s->kelas ?? '');
+                    $isSmk = (strpos($instansiLower, 'smk') !== false || strpos($instansiLower, 'sekolah') !== false || in_array($kelasLower, ['x', 'xi', 'xii', '10', '11', '12']));
+                    if (!empty($s->is_laporan_approved) || ($isSmk && empty($s->laporan))) {
+                        $count++;
+                    }
                 }
             }
         }
         return $count;
     }
 }
+
+if (!function_exists('getInstansiDataBySiswa')) {
+    function getInstansiDataBySiswa($siswa)
+    {
+        if (!$siswa) return null;
+        $namaInstansi = is_object($siswa) ? ($siswa->instansi ?? '') : '';
+        if (empty($namaInstansi)) return null;
+
+        $db = \Config\Database::connect();
+        $trimmed = trim($namaInstansi);
+
+        // 1. Exact match
+        $instansi = $db->table('instansi')->where('nama_instansi', $trimmed)->get()->getRow();
+        if ($instansi) return $instansi;
+
+        // 2. Case-insensitive match
+        $instansi = $db->table('instansi')->where('LOWER(nama_instansi)', strtolower($trimmed))->get()->getRow();
+        if ($instansi) return $instansi;
+
+        // 3. Like match
+        $instansi = $db->table('instansi')->like('nama_instansi', $trimmed)->get()->getRow();
+        return $instansi;
+    }
+}
+
+if (!function_exists('getKonfigurasiPenilaianSiswa')) {
+    function getKonfigurasiPenilaianSiswa($siswa)
+    {
+        $instansi = getInstansiDataBySiswa($siswa);
+        if (!$instansi) return null;
+
+        $db = \Config\Database::connect();
+        $konfig = $db->table('penilaian_konfigurasi')
+            ->where('id_instansi', $instansi->id)
+            ->where('status', 'terkirim')
+            ->orderBy('id', 'DESC')
+            ->get()->getRow();
+
+        if (!$konfig) return null;
+
+        $atribut = $db->table('penilaian_atribut')
+            ->where('id_konfigurasi', $konfig->id)
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->get()->getResult();
+
+        if (empty($atribut) && empty($konfig->file_format)) return null;
+
+        $konfig->atribut = $atribut ?: [];
+        $konfig->instansi = $instansi;
+        return $konfig;
+    }
+}
+
+if (!function_exists('getDetailNilaiSiswa')) {
+    function getDetailNilaiSiswa($id_nilai)
+    {
+        if (!$id_nilai) return [];
+        $db = \Config\Database::connect();
+        if (!$db->tableExists('nilai_detail')) {
+            return [];
+        }
+        $query = $db->table('nilai_detail')
+            ->where('id_nilai', $id_nilai)
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->get();
+        return ($query && method_exists($query, 'getResult')) ? $query->getResult() : [];
+    }
+}
+
+if (!function_exists('countPendingApplications')) {
+    function countPendingApplications($uid = null)
+    {
+        if (!$uid && function_exists('user_id')) {
+            $uid = user_id();
+        }
+        $db = \Config\Database::connect();
+        $builder = $db->table('lamaran')->where('lamaran.status', 'pending');
+
+        if (function_exists('in_groups') && in_groups('pembimbing')) {
+            $pid = getPidByUid($uid);
+            if ($pid) {
+                $builder->where('lamaran.id_tempat IN (SELECT id FROM tempat_magang WHERE pid = ' . (int)$pid . ')');
+            } else {
+                return 0;
+            }
+        }
+
+        return $builder->countAllResults();
+    }
+}
+
+if (!function_exists('getPendingApplicationsList')) {
+    function getPendingApplicationsList($limit = 5, $uid = null)
+    {
+        if (!$uid && function_exists('user_id')) {
+            $uid = user_id();
+        }
+        $db = \Config\Database::connect();
+        $builder = $db->table('lamaran')
+            ->select('lamaran.*, siswa.nama as nama_siswa, siswa.nim, tempat_magang.nama as nama_tempat')
+            ->join('siswa', 'siswa.id = lamaran.id_siswa')
+            ->join('tempat_magang', 'tempat_magang.id = lamaran.id_tempat', 'left')
+            ->where('lamaran.status', 'pending')
+            ->orderBy('lamaran.created_at', 'DESC');
+
+        if (function_exists('in_groups') && in_groups('pembimbing')) {
+            $pid = getPidByUid($uid);
+            if ($pid) {
+                $builder->where('lamaran.id_tempat IN (SELECT id FROM tempat_magang WHERE pid = ' . (int)$pid . ')');
+            } else {
+                return [];
+            }
+        }
+
+        return $builder->limit($limit)->get()->getResult();
+    }
+}
+

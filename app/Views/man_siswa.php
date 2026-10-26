@@ -61,13 +61,10 @@
                                     <td class="text-xs ps-4 font-weight-bold"><?= $s->jurusan; ?></td>
                                     <td class="text-xs ps-4 font-weight-bold"><?= $s->instansi; ?></td>
                                     
-                                    <!-- ==================== KOLOM DOSEN PEMBIMBING (BARU) ==================== -->
+                                    <!-- ==================== KOLOM DOSEN PEMBIMBING (WARNA DISAMAKAN) ==================== -->
                                     <td class="text-xs ps-4 font-weight-bold">
-                                        <?php if (!empty($s->nama_dosen)) : ?>
-                                            <div class="text-dark font-weight-bold"><?= $s->nama_dosen ?></div>
-                                            <?php if (!empty($s->nip_dosen)) : ?>
-                                                <div class="text-xxs text-secondary">NIP: <?= $s->nip_dosen ?></div>
-                                            <?php endif; ?>
+                                        <?php if (!empty($s->dosen_nama)) : ?>
+                                            <div class="text-wrap"><?= $s->dosen_nama ?></div>
                                         <?php else : ?>
                                             <span class="badge badge-secondary border border-secondary">Belum ada</span>
                                         <?php endif; ?>
@@ -75,12 +72,18 @@
                                     <!-- ==================== END KOLOM DOSEN ==================== -->
                                     
                                     <td class="text-xs ps-4 font-weight-bold">
-                                        <?php if ($s->lamaran_status == 'selesai') : ?>
+                                        <?php 
+                                        $isPastTglSelesai = (!empty($s->tgl_selesai) && date('Y-m-d') > $s->tgl_selesai);
+                                        $hasLaporan = !empty($s->laporan);
+                                        $isSmk = isSmkSiswa($s);
+
+                                        if (($s->lamaran_status == 'selesai' || ($s->lamaran_status == 'accepted' && $isPastTglSelesai)) && ($hasLaporan || $isSmk)) : ?>
                                             <span class="badge badge-info border border-info">Selesai</span>
-                                        <?php elseif ($s->lamaran_status == 'accepted') : ?>
+                                        <?php elseif ($s->lamaran_status == 'accepted' && !$isPastTglSelesai) : ?>
                                             <span class="badge badge-success border border-success">Aktif</span>
                                         <?php else : ?>
                                             <span class="badge badge-secondary border border-secondary">Tidak Aktif</span>
+                                            <div class="text-xxs text-secondary mt-1 font-weight-normal" style="font-size: 10px; line-height: 1.2;">Tidak Menyelesaikan Magang</div>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-xs ps-4 font-weight-bold">

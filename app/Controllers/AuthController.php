@@ -130,7 +130,23 @@ class AuthController extends BaseController
             return redirect()->back()->withInput()->with('error', lang('Auth.registerDisabled'));
         }
 
-        return $this->_render($this->config->views['register'], ['config' => $this->config]);
+        // =====================================================
+        // AMBIL DATA INSTANSI UNTUK DROPDOWN
+        // =====================================================
+        $db = \Config\Database::connect();
+        
+        // Sesuaikan nama tabel 'instansi' dengan nama tabel asli Anda
+        // Jika tabel Anda bernama 'manajemen_instansi' atau lainnya, ubah di sini
+        $instansi = $db->table('instansi')
+                       ->select('id, nama_instansi') // Sesuaikan nama kolomnya
+                       ->orderBy('nama_instansi', 'ASC')
+                       ->get()
+                       ->getResultArray();
+
+        return $this->_render($this->config->views['register'], [
+            'config'   => $this->config,
+            'instansi' => $instansi,
+        ]);
     }
 
     /**
@@ -143,10 +159,9 @@ class AuthController extends BaseController
             return redirect()->back()->withInput()->with('error', lang('Auth.registerDisabled'));
         }
 
-        $users      = model(UserModel::class);
-        $siswa      = new \App\Models\SiswaModel();
-        $angkatan   = new \App\Models\AngkatanModel();
-        $dosenModel = new \App\Models\DosenPembimbingModel(); // MODEL DOSEN BARU
+        $users    = model(UserModel::class);
+        $siswa    = new \App\Models\SiswaModel();
+        $angkatan = new \App\Models\AngkatanModel();
 
         // Validate basics first since some password rules rely on these fields
         $rules = [
@@ -161,7 +176,7 @@ class AuthController extends BaseController
             'instansi'  => 'required|min_length[2]|max_length[100]',
             'tgl_masuk' => 'required|valid_date',
             'tgl_selesai' => 'required|valid_date',
-            // VALIDASI DOSEN PEMBIMBING BARU
+            // Hanya Nama Dosen yang wajib
             'dosen_nama' => 'required|min_length[3]|max_length[150]',
             // File uploads
             'surat_permohonan' => 'uploaded[surat_permohonan]|max_size[surat_permohonan,2048]|ext_in[surat_permohonan,pdf]',
@@ -170,15 +185,6 @@ class AuthController extends BaseController
 
         if (! $this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
-
-        // VALIDASI TAMBAHAN: Minimal salah satu NIP atau NIDN harus diisi
-        $dosenNip  = trim($this->request->getPost('dosen_nip') ?? '');
-        $dosenNidn = trim($this->request->getPost('dosen_nidn') ?? '');
-        if (empty($dosenNip) && empty($dosenNidn)) {
-            return redirect()->back()->withInput()->with('errors', [
-                'dosen_nip' => 'Minimal isi NIP atau NIDN dosen pembimbing.'
-            ]);
         }
 
         // Validate passwords since they can only be validated properly here
@@ -212,42 +218,32 @@ class AuthController extends BaseController
 
         // Handle File Uploads
         $fileSurat = $this->request->getFile('surat_permohonan');
-        $fileCv = $this->request->getFile('cv');
+        $fileCv    = $this->request->getFile('cv');
 
         $suratName = $fileSurat->getRandomName();
-        $cvName = $fileCv->getRandomName();
+        $cvName    = $fileCv->getRandomName();
 
         $fileSurat->move('assets/berkas/', $suratName);
         $fileCv->move('assets/berkas/', $cvName);
 
         // =====================================================
-        // SIMPAN DATA DOSEN PEMBIMBING (findOrCreate)
-        // Jika NIP/NIDN sudah ada di database, pakai yang lama.
-        // Jika belum, buat baru.
+        // SIMPAN DATA SISWA
+        // Dosen sekarang hanya berupa nama (string), tidak ada relasi
         // =====================================================
-        $dosenId = $dosenModel->findOrCreate([
-            'nama'  => $this->request->getPost('dosen_nama'),
-            'nip'   => $dosenNip,
-            'nidn'  => $dosenNidn,
-            'no_hp' => $this->request->getPost('dosen_hp'),
-            'email' => $this->request->getPost('dosen_email'),
-        ]);
-
-        // Insert siswa dengan dosen_id
-        if (!$siswa->insert([
-            'nim'        => $nim,
-            'user_id'    => $users->getInsertID(),
-            'dosen_id'   => $dosenId, // <-- RELASI KE DOSEN
-            'nama'       => $this->request->getPost('nama'),
-            'kelas'      => $this->request->getPost('kelas'),
-            'no_hp'      => $this->request->getPost('no_hp'),
-            'alamat'     => $this->request->getPost('alamat'),
-            'jurusan'    => $this->request->getPost('jurusan'),
-            'instansi'   => $this->request->getPost('instansi'),
-            'tgl_masuk'  => $this->request->getPost('tgl_masuk'),
-            'tgl_selesai'=> $this->request->getPost('tgl_selesai'),
+        if (! $siswa->insert([
+            'nim'          => $nim,
+            'user_id'      => $users->getInsertID(),
+            'nama'         => $this->request->getPost('nama'),
+            'kelas'        => $this->request->getPost('kelas'),
+            'no_hp'        => $this->request->getPost('no_hp'),
+            'alamat'       => $this->request->getPost('alamat'),
+            'jurusan'      => $this->request->getPost('jurusan'),
+            'instansi'     => $this->request->getPost('instansi'),
+            'dosen_nama'   => $this->request->getPost('dosen_nama'), // <-- Simpan nama dosen langsung
+            'tgl_masuk'    => $this->request->getPost('tgl_masuk'),
+            'tgl_selesai'  => $this->request->getPost('tgl_selesai'),
             'surat_permohonan' => $suratName,
-            'cv'         => $cvName,
+            'cv'           => $cvName,
         ])) {
             return redirect()->back()->withInput()->with('errors', $siswa->errors());
         }
@@ -265,7 +261,7 @@ class AuthController extends BaseController
         }
 
         // =====================================================
-        // Send email to all admins (dengan info dosen pembimbing)
+        // Send email to all admins
         // =====================================================
         try {
             $db = \Config\Database::connect();
@@ -294,10 +290,7 @@ class AuthController extends BaseController
                 $msg .= '<li><b>NIM:</b> ' . esc($nim) . '</li>';
                 $msg .= '<li><b>Institusi:</b> ' . esc($this->request->getPost('instansi')) . '</li>';
                 $msg .= '<li><b>Jurusan:</b> ' . esc($this->request->getPost('jurusan')) . '</li>';
-                // INFO DOSEN BARU
                 $msg .= '<li><b>Dosen Pembimbing:</b> ' . esc($this->request->getPost('dosen_nama')) . '</li>';
-                $msg .= '<li><b>NIP Dosen:</b> ' . esc($dosenNip ?: '-') . '</li>';
-                $msg .= '<li><b>NIDN Dosen:</b> ' . esc($dosenNidn ?: '-') . '</li>';
                 $msg .= '</ul>';
                 $msg .= 'Akun ini telah otomatis aktif. Silakan login ke sistem pada menu <b>Manajemen Data -> Manajemen Siswa</b> untuk meninjau berkas pendaftaran jika diperlukan.<br><br>';
                 $msg .= 'Terima kasih.';
@@ -318,9 +311,6 @@ class AuthController extends BaseController
     // Forgot Password
     //--------------------------------------------------------------------
 
-    /**
-     * Displays the forgot password form.
-     */
     public function forgotPassword()
     {
         if ($this->config->activeResetter === null) {
@@ -330,10 +320,6 @@ class AuthController extends BaseController
         return $this->_render($this->config->views['forgot'], ['config' => $this->config]);
     }
 
-    /**
-     * Attempts to find a user account with that password
-     * and send password reset instructions to them.
-     */
     public function attemptForgot()
     {
         if ($this->config->activeResetter === null) {
@@ -373,9 +359,6 @@ class AuthController extends BaseController
         return redirect()->route('reset-password')->with('message', lang('Auth.forgotEmailSent'));
     }
 
-    /**
-     * Displays the Reset Password form.
-     */
     public function resetPassword()
     {
         if ($this->config->activeResetter === null) {
@@ -390,12 +373,6 @@ class AuthController extends BaseController
         ]);
     }
 
-    /**
-     * Verifies the code with the email and saves the new password,
-     * if they all pass validation.
-     *
-     * @return mixed
-     */
     public function attemptReset()
     {
         if ($this->config->activeResetter === null) {
@@ -447,11 +424,6 @@ class AuthController extends BaseController
         return redirect()->route('login')->with('message', lang('Auth.resetSuccess'));
     }
 
-    /**
-     * Activate account.
-     *
-     * @return mixed
-     */
     public function activateAccount()
     {
         $users = model(UserModel::class);
@@ -484,11 +456,6 @@ class AuthController extends BaseController
         return redirect()->route('login')->with('message', lang('Auth.registerSuccess'));
     }
 
-    /**
-     * Resend activation account.
-     *
-     * @return mixed
-     */
     public function resendActivateAccount()
     {
         if ($this->config->requireActivation === null) {

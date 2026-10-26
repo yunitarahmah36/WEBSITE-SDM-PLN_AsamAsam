@@ -793,14 +793,13 @@ class Siswa extends BaseController
      */
     public function exportExcel()
     {
+        syncStatusSelesai();
         $query = $this->user
-            ->select('users.id, users.username, users.email, users.active, siswa.id as id_siswa_real, siswa.nim, siswa.nama, siswa.kelas, siswa.jurusan, siswa.instansi, siswa.no_hp, siswa.alamat, siswa.foto, siswa.surat_permohonan, siswa.surat_pernyataan, siswa.cv, siswa.laporan, siswa.sertifikat_mode, siswa.sertifikat_file, siswa.is_safety_ready, siswa.is_laporan_approved, siswa.tgl_masuk, siswa.tgl_selesai, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.takaful, siswa.surat_balasan, siswa.created_at as tgl_daftar, angkatan.nama as angkatan, angkatan.tahun, dosen_pembimbing.nama as nama_dosen, dosen_pembimbing.nip as nip_dosen, COALESCE((SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id AND status IN (\'accepted\', \'selesai\') LIMIT 1), (SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id ORDER BY created_at DESC LIMIT 1)) as lamaran_status')
+            ->select('users.id, users.username, users.email, users.active, siswa.id as id_siswa_real, siswa.nim, siswa.nama, siswa.kelas, siswa.jurusan, siswa.instansi, siswa.no_hp, siswa.alamat, siswa.foto, siswa.surat_permohonan, siswa.surat_pernyataan, siswa.cv, siswa.laporan, siswa.sertifikat_mode, siswa.sertifikat_file, siswa.is_safety_ready, siswa.is_laporan_approved, siswa.tgl_masuk, siswa.tgl_selesai, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.takaful, siswa.surat_balasan, siswa.created_at as tgl_daftar, angkatan.nama as angkatan, angkatan.tahun, siswa.dosen_nama as nama_dosen, \'\' as nip_dosen, COALESCE((SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id AND status IN (\'accepted\', \'selesai\', \'unfinish\') LIMIT 1), (SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id ORDER BY created_at DESC LIMIT 1)) as lamaran_status')
             ->join('auth_groups_users', 'auth_groups_users.user_id = users.id')
             ->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id')
             ->join('siswa', 'siswa.user_id = users.id', 'left')
             ->join('angkatan', 'angkatan.id = siswa.angkatan', 'left')
-            // JOIN dosen_pembimbing via siswa.dosen_id
-            ->join('dosen_pembimbing', 'dosen_pembimbing.id = siswa.dosen_id', 'left')
             ->where('auth_groups.name', 'siswa');
 
         $query->groupStart()
@@ -830,9 +829,12 @@ class Siswa extends BaseController
         $no = 1;
         foreach ($dsiswa as $s) {
             if (in_array('siswa', $s->getRoles())) {
+                $isPastTglSelesai = (!empty($s->tgl_selesai) && date('Y-m-d') > $s->tgl_selesai);
+                $hasLaporan = !empty($s->laporan);
+                $isSmk = isSmkSiswa($s);
                 $status = '';
-                if ($s->lamaran_status == 'selesai') $status = 'Selesai';
-                elseif ($s->lamaran_status == 'accepted') $status = 'Aktif';
+                if (($s->lamaran_status == 'selesai' || ($s->lamaran_status == 'accepted' && $isPastTglSelesai)) && ($hasLaporan || $isSmk)) $status = 'Selesai';
+                elseif ($s->lamaran_status == 'accepted' && !$isPastTglSelesai) $status = 'Aktif';
                 else $status = 'Tidak Aktif';
 
                 $sheet->setCellValue('A' . $row, $no++);
@@ -872,14 +874,13 @@ class Siswa extends BaseController
      */
     public function exportPdf()
     {
+        syncStatusSelesai();
         $query = $this->user
-            ->select('users.id, users.username, users.email, users.active, siswa.id as id_siswa_real, siswa.nim, siswa.nama, siswa.kelas, siswa.jurusan, siswa.instansi, siswa.no_hp, siswa.alamat, siswa.foto, siswa.surat_permohonan, siswa.surat_pernyataan, siswa.cv, siswa.laporan, siswa.sertifikat_mode, siswa.sertifikat_file, siswa.is_safety_ready, siswa.is_laporan_approved, siswa.tgl_masuk, siswa.tgl_selesai, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.surat_balasan, siswa.created_at as tgl_daftar, angkatan.nama as angkatan, angkatan.tahun, dosen_pembimbing.nama as nama_dosen, COALESCE((SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id AND status IN (\'accepted\', \'selesai\') LIMIT 1), (SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id ORDER BY created_at DESC LIMIT 1)) as lamaran_status')
+            ->select('users.id, users.username, users.email, users.active, siswa.id as id_siswa_real, siswa.nim, siswa.nama, siswa.kelas, siswa.jurusan, siswa.instansi, siswa.no_hp, siswa.alamat, siswa.foto, siswa.surat_permohonan, siswa.surat_pernyataan, siswa.cv, siswa.laporan, siswa.sertifikat_mode, siswa.sertifikat_file, siswa.is_safety_ready, siswa.is_laporan_approved, siswa.tgl_masuk, siswa.tgl_selesai, siswa.nik, siswa.tempat_lahir, siswa.tanggal_lahir, siswa.jenis_kelamin, siswa.no_hp_emergency, siswa.ktp, siswa.bpjs, siswa.ktm, siswa.surat_balasan, siswa.created_at as tgl_daftar, angkatan.nama as angkatan, angkatan.tahun, siswa.dosen_nama as nama_dosen, COALESCE((SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id AND status IN (\'accepted\', \'selesai\', \'unfinish\') LIMIT 1), (SELECT status FROM lamaran WHERE lamaran.id_siswa = siswa.id ORDER BY created_at DESC LIMIT 1)) as lamaran_status')
             ->join('auth_groups_users', 'auth_groups_users.user_id = users.id')
             ->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id')
             ->join('siswa', 'siswa.user_id = users.id', 'left')
             ->join('angkatan', 'angkatan.id = siswa.angkatan', 'left')
-            // JOIN dosen_pembimbing via siswa.dosen_id
-            ->join('dosen_pembimbing', 'dosen_pembimbing.id = siswa.dosen_id', 'left')
             ->where('auth_groups.name', 'siswa');
 
         $query->groupStart()
@@ -904,9 +905,12 @@ class Siswa extends BaseController
         $no = 1;
         foreach ($dsiswa as $s) {
             if (in_array('siswa', $s->getRoles())) {
+                $isPastTglSelesai = (!empty($s->tgl_selesai) && date('Y-m-d') > $s->tgl_selesai);
+                $hasLaporan = !empty($s->laporan);
+                $isSmk = isSmkSiswa($s);
                 $status = '';
-                if ($s->lamaran_status == 'selesai') $status = 'Selesai';
-                elseif ($s->lamaran_status == 'accepted') $status = 'Aktif';
+                if (($s->lamaran_status == 'selesai' || ($s->lamaran_status == 'accepted' && $isPastTglSelesai)) && ($hasLaporan || $isSmk)) $status = 'Selesai';
+                elseif ($s->lamaran_status == 'accepted' && !$isPastTglSelesai) $status = 'Aktif';
                 else $status = 'Tidak Aktif';
 
                 $masa_magang = '-';

@@ -72,6 +72,7 @@ $routes->get('/laporan-akhir', 'Home::laporan_akhir', ['filter' => 'role:siswa']
 
 $routes->get('/logbook/(:num)', 'Home::logbooks/$1', ['filter' => 'role:pembimbing,admin']);
 $routes->get('/logbook/(:num)/(:segment)', 'Home::logbook_siswa/$1/$2', ['filter' => 'role:pembimbing,admin']);
+$routes->get('/logbook/(:num)/(:segment)/nilai', 'Home::form_penilaian/$1/$2', ['filter' => 'role:pembimbing,admin']);
 $routes->post('/logbook/status/update', 'LogBook::status_update', ['filter' => 'role:pembimbing,admin']);
 
 // =========================================================
@@ -79,15 +80,30 @@ $routes->post('/logbook/status/update', 'LogBook::status_update', ['filter' => '
 // =========================================================
 $routes->get('/man/tempat', 'Home::man_tempat', ['filter' => 'role:admin']);
 $routes->get('/man/pembimbing', 'Home::man_pembimbing', ['filter' => 'role:admin']);
-$routes->get('/man/instansi', 'Home::man_instansi', ['filter' => 'role:admin']);  // <-- DIUBAH
+$routes->get('/man/instansi', 'Home::man_instansi', ['filter' => 'role:admin']);
 $routes->get('/man/siswa', 'Home::man_siswa', ['filter' => 'role:admin,pembimbing']);
 $routes->get('/settings', 'Home::settings', ['filter' => 'role:admin']);
 
 // =========================================================
-// BIMBINGAN INSTANSI (DULU DOSEN)  <-- DIUBAH
+// BIMBINGAN (DOSEN & INSTANSI)
 // =========================================================
+$routes->get('/bimbingan-dosen/logbook/(:segment)', 'Home::logbook_bimbingan_instansi/$1', ['filter' => 'role:instansi,admin']);
+$routes->get('/bimbingan-dosen', 'Home::bimbingan_instansi', ['filter' => 'role:instansi,admin']);
 $routes->get('/bimbingan-instansi/logbook/(:segment)', 'Home::logbook_bimbingan_instansi/$1', ['filter' => 'role:instansi,admin']);
 $routes->get('/bimbingan-instansi', 'Home::bimbingan_instansi', ['filter' => 'role:instansi,admin']);
+
+// Atribut Penilaian (Kriteria Penilaian Instansi)
+$routes->group('instansi/atribut-penilaian', ['filter' => 'role:instansi'], function ($r) {
+    $r->get('/', 'AtributPenilaian::index');
+    $r->post('simpan-metode', 'AtributPenilaian::simpanMetode');
+    $r->post('tambah-atribut', 'AtributPenilaian::tambahAtribut');
+    $r->post('update-atribut', 'AtributPenilaian::updateAtribut');
+    $r->delete('hapus-atribut/(:num)', 'AtributPenilaian::hapusAtribut/$1');
+    $r->post('upload-file', 'AtributPenilaian::uploadFileFormat');
+    $r->post('hapus-file', 'AtributPenilaian::hapusFileFormat');
+    $r->post('kirim', 'AtributPenilaian::kirimAtribut');
+    $r->post('batal-kirim', 'AtributPenilaian::batalKirim');
+});
 
 // Pengumuman
 $routes->group('pengumuman', function($p) {
@@ -130,7 +146,7 @@ $routes->group('siswa', function ($s) {
     $s->post('store', 'Siswa::store');
     $s->post('update', 'Siswa::update');
     $s->post('profile/update', 'Siswa::profile_update');
-    $s->post('approve_laporan', 'Siswa::approve_laporan', ['filter' => 'role:pembimbing,instansi,admin']);  // <-- DIUBAH
+    $s->post('approve_laporan', 'Siswa::approve_laporan', ['filter' => 'role:pembimbing,instansi,admin']);
     $s->post('activate/(:num)', 'Siswa::activate/$1', ['filter' => 'role:admin']);
     $s->post('upload_pernyataan', 'Siswa::upload_pernyataan');
     $s->post('upload_surat_balasan', 'Siswa::upload_surat_balasan', ['filter' => 'role:admin,pembimbing']);
@@ -158,7 +174,7 @@ $routes->group('tempat', function ($t) {
 });
 
 // Materi K3
-$routes->group('materi-k3', ['filter' => 'role:siswa,admin,pembimbing,instansi'], function ($mk) {  // <-- DIUBAH
+$routes->group('materi-k3', ['filter' => 'role:siswa,admin,pembimbing,instansi'], function ($mk) {
     $mk->get('/', 'MateriK3::index');
     $mk->post('store', 'MateriK3::store', ['filter' => 'role:admin']);
     $mk->post('update/(:num)', 'MateriK3::update/$1', ['filter' => 'role:admin']);
@@ -171,6 +187,11 @@ $routes->get('sertifikat/download/(:num)', 'Sertifikat::download/$1', ['filter' 
 $routes->get('sertifikat-kelola', 'Sertifikat::kelola', ['filter' => 'role:admin,pembimbing']);
 $routes->post('sertifikat/update-mode', 'Sertifikat::updateMode', ['filter' => 'role:admin,pembimbing']);
 $routes->post('sertifikat/upload', 'Sertifikat::upload', ['filter' => 'role:admin,pembimbing']);
+$routes->post('sertifikat/delete', 'Sertifikat::deleteUpload', ['filter' => 'role:admin,pembimbing']);
+
+// Penilaian Siswa
+$routes->post('nilai/store', 'Nilai::store', ['filter' => 'role:admin,pembimbing']);
+$routes->post('nilai/delete-file/(:num)', 'Nilai::delete_file/$1', ['filter' => 'role:admin,pembimbing']);
 
 // Application / Lamaran
 $routes->group('application', ['filter' => 'role:admin,pembimbing,siswa'], function ($app) {
@@ -181,7 +202,7 @@ $routes->group('application', ['filter' => 'role:admin,pembimbing,siswa'], funct
     $app->post('upload_template', 'Application::upload_template', ['filter' => 'role:admin,pembimbing']);
 });
 
-// Catatan Instansi (dulu dosen)  <-- DIUBAH
+// Catatan Instansi (dulu dosen)
 $routes->post('/logbook/catatan-instansi/update', 'LogBook::add_catatan_instansi', ['filter' => 'role:instansi,admin']);
 
 // Laporan
@@ -190,7 +211,7 @@ $routes->group('laporan', ['filter' => 'role:admin'], function($l) {
     $l->post('show', 'Laporan::index');
 });
 
-// Pesan  <-- DIUBAH
+// Pesan
 $routes->group('pesan', ['filter' => 'role:siswa,admin,pembimbing,instansi'], function($routes) {
     $routes->get('/', 'Pesan::index');
     $routes->get('(:num)', 'Pesan::index/$1');
@@ -203,6 +224,7 @@ $routes->group('pesan', ['filter' => 'role:siswa,admin,pembimbing,instansi'], fu
 
 // Alumni
 $routes->get('/alumni', 'Alumni::index', ['filter' => 'role:admin']);
+$routes->get('/alumni/export/excel', 'Alumni::exportExcel', ['filter' => 'role:admin']);
 $routes->post('/alumni/update/(:segment)', 'Alumni::update/$1', ['filter' => 'role:admin']);
 $routes->post('/alumni/reset/(:segment)', 'Alumni::reset/$1', ['filter' => 'role:admin']);
 

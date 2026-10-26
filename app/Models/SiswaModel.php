@@ -17,7 +17,7 @@ class SiswaModel extends Model
     protected $allowedFields = [
         'id',
         'user_id',
-        'dosen_id',   // <-- TAMBAHAN BARU: relasi ke dosen_pembimbing
+        'dosen_nama',   // <-- Ganti dari dosen_id (relasi lama) menjadi dosen_nama (string)
         'nim',
         'nama',
         'kelas',
@@ -60,13 +60,13 @@ class SiswaModel extends Model
     protected $deletedField  = 'deleted_at';
 
     /**
-     * Ambil siswa beserta data dosen pembimbing (JOIN)
+     * Ambil siswa beserta nama dosen pembimbing (sekarang langsung dari kolom siswa.dosen_nama).
+     * Tidak lagi JOIN ke tabel dosen_pembimbing karena relasi tersebut sudah dihapus.
      */
     public function withDosen($siswaId = null)
     {
         $builder = $this->db->table('siswa')
-            ->select('siswa.*, dosen_pembimbing.nama as dosen_nama, dosen_pembimbing.nip as dosen_nip, dosen_pembimbing.nidn as dosen_nidn, dosen_pembimbing.no_hp as dosen_hp, dosen_pembimbing.email as dosen_email')
-            ->join('dosen_pembimbing', 'dosen_pembimbing.id = siswa.dosen_id', 'left');
+            ->select('siswa.*');  // dosen_nama sudah termasuk dalam siswa.*
 
         if ($siswaId) {
             return $builder->where('siswa.id', $siswaId)->get()->getRow();
@@ -76,10 +76,11 @@ class SiswaModel extends Model
     }
 
     /**
-     * Ambil siswa berdasarkan user_id (untuk dosen lihat mahasiswa bimbingannya)
+     * Ambil siswa berdasarkan nama dosen pembimbing (untuk dosen lihat mahasiswa bimbingannya).
+     * Diperlukan karena relasi dosen_id sudah tidak ada — pencocokan dilakukan via nama dosen.
      */
-    public function getByDosen($dosenId)
+    public function getByDosen($dosenName)
     {
-        return $this->where('dosen_id', $dosenId)->findAll();
+        return $this->where('dosen_nama', $dosenName)->findAll();
     }
 }

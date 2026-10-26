@@ -78,6 +78,24 @@
 
 
 <!-- =========================================================
+     ALERT PROFIL BELUM LENGKAP
+     ========================================================= -->
+<?php if (in_groups('siswa') && (!isset($is_profile_complete) || !$is_profile_complete)) : ?>
+    <div class="alert alert-warning text-white border-radius-xl p-4 mb-4 shadow-lg animate__animated animate__pulse">
+        <div class="d-flex align-items-center">
+            <i class="material-icons me-3 fs-1">account_box</i>
+            <div>
+                <h5 class="text-white mb-1">Perhatian: Profil Anda Belum Lengkap!</h5>
+                <p class="text-sm mb-0 opacity-9">
+                    Anda belum dapat mendaftar divisi magang sebelum melengkapi data profil diri (seperti NIK, Tempat & Tanggal Lahir, Jenis Kelamin, dan No HP Emergency).
+                </p>
+                <a href="/profile" class="btn btn-sm btn-white text-warning font-weight-bold mb-0 mt-3">Lengkapi Profil Sekarang <i class="fas fa-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- =========================================================
      DAFTAR DIVISI
      ========================================================= -->
 
@@ -347,91 +365,66 @@
                                             ? 'disabled'
                                             : '' ?>
                                     >
-
-                                        Daftar
-
+                                        <i class="fa fa-paper-plane me-1"></i> Daftar
                                     </button>
 
+                                <?php elseif ($acceptedThis) : ?>
 
-                                <?php elseif (initCheck(user_id(), $t->id)) : ?>
+                                    <span class="registration-badge badge-accepted">
+                                        <i class="fa fa-check-circle me-1"></i> Terdaftar
+                                    </span>
+
+                                <?php elseif ($thisApp && $thisApp->status == 'pending') : ?>
+
+                                    <span class="registration-badge badge-pending">
+                                        Pending
+                                    </span>
+
+                                <?php elseif (
+                                    $thisApp &&
+                                    in_array(
+                                        $thisApp->status,
+                                        ['rejected', 'reject by system']
+                                    )
+                                ) : ?>
+
+                                    <span class="registration-badge badge-rejected">
+                                        Ditolak
+                                    </span>
+
+                                <?php elseif ($pendingCount >= 2) : ?>
+
+                                    <span class="registration-badge badge-limit">
+                                        Maks 2
+                                    </span>
+
+                                <?php elseif ($t->status == 'tutup' || getSlotAvailable($t->id) == 0) : ?>
+
+                                    <span class="registration-badge badge-full">
+                                        <?= $t->status == 'tutup' ? 'Tutup' : 'Penuh' ?>
+                                    </span>
+
+                                <?php elseif (in_groups('siswa') && (!isset($is_profile_complete) || !$is_profile_complete)) : ?>
+
+                                    <button
+                                        type="button"
+                                        class="btn-daftar btn-incomplete-profile"
+                                        data-instansi="<?= esc($t->nama) ?>"
+                                        title="Lengkapi profil diri terlebih dahulu untuk mendaftar"
+                                    >
+                                        <i class="fa fa-lock me-1"></i> Daftar
+                                    </button>
+
+                                <?php else : ?>
 
                                     <button
                                         type="button"
                                         class="btn-daftar"
                                         data-instansi="<?= esc($t->nama) ?>"
                                         data-tid="<?= $t->id ?>"
-                                        <?= $t->status == 'tutup' || getSlotAvailable($t->id) == 0
-                                            ? 'disabled'
-                                            : '' ?>
                                     >
-
-                                        Daftar
-
+                                        <i class="fa fa-paper-plane me-1"></i> Daftar
                                     </button>
-
-
-                                <?php else : ?>
-
-
-                                    <?php if ($acceptedThis) : ?>
-
-                                        <span class="registration-badge badge-accepted">
-                                            Terdaftar
-                                        </span>
-
-
-                                    <?php elseif ($thisApp && $thisApp->status == 'pending') : ?>
-
-                                        <span class="registration-badge badge-pending">
-                                            Pending
-                                        </span>
-
-
-                                    <?php elseif (
-                                        $thisApp &&
-                                        in_array(
-                                            $thisApp->status,
-                                            ['rejected', 'reject by system']
-                                        )
-                                    ) : ?>
-
-                                        <span class="registration-badge badge-rejected">
-                                            Ditolak
-                                        </span>
-
-
-                                    <?php elseif ($pendingCount >= 2) : ?>
-
-                                        <span class="registration-badge badge-limit">
-                                            Maks 2
-                                        </span>
-
-
-                                    <?php elseif (getSlotAvailable($t->id) == 0) : ?>
-
-                                        <span class="registration-badge badge-full">
-                                            Penuh
-                                        </span>
-
-
-                                    <?php elseif (
-                                        $t->status != 'tutup' &&
-                                        getSlotAvailable($t->id) > 0
-                                    ) : ?>
-
-                                        <button
-                                            type="button"
-                                            class="btn-daftar"
-                                            data-instansi="<?= esc($t->nama) ?>"
-                                            data-tid="<?= $t->id ?>"
-                                        >
-
-                                            Daftar
-
-                                        </button>
-
-                                    <?php endif; ?>
-
 
                                 <?php endif; ?>
 
@@ -1124,7 +1117,7 @@
 
     justify-content: center;
 
-    min-width: 72px;
+    min-width: 74px;
 
     height: 30px;
 
@@ -1134,7 +1127,7 @@
 
     border-radius: 8px;
 
-    background: #e91e63;
+    background: linear-gradient(135deg, #2dce89 0%, #28a745 100%);
 
     color: #ffffff;
 
@@ -1144,7 +1137,7 @@
 
     cursor: pointer;
 
-    box-shadow: 0 3px 7px rgba(233, 30, 99, 0.22);
+    box-shadow: 0 3px 8px rgba(40, 167, 69, 0.28);
 
     transition: all 0.2s ease;
 
@@ -1152,7 +1145,11 @@
 
 .btn-daftar:hover {
 
-    background: #d81b60;
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+
+    color: #ffffff;
+
+    box-shadow: 0 5px 12px rgba(40, 167, 69, 0.38);
 
     transform: translateY(-1px);
 
@@ -1165,6 +1162,34 @@
     cursor: not-allowed;
 
     transform: none;
+
+    box-shadow: none;
+
+}
+
+.btn-daftar.btn-incomplete-profile {
+
+    background: linear-gradient(135deg, #fb8c00 0%, #f57c00 100%) !important;
+
+    border-color: #fb8c00 !important;
+
+    box-shadow: 0 3px 8px rgba(251, 140, 0, 0.32) !important;
+
+    color: #ffffff !important;
+
+    cursor: pointer;
+
+}
+
+.btn-daftar.btn-incomplete-profile:hover {
+
+    background: linear-gradient(135deg, #f57c00 0%, #e65100 100%) !important;
+
+    border-color: #f57c00 !important;
+
+    box-shadow: 0 5px 12px rgba(251, 140, 0, 0.45) !important;
+
+    transform: translateY(-1px);
 
 }
 
@@ -1199,9 +1224,11 @@
 
 .badge-accepted {
 
-    color: #188038;
+    color: #0f5132;
 
-    background: #d9f1df;
+    background: #d1e7dd;
+
+    border: 1px solid #a3cfbb;
 
 }
 
@@ -1494,7 +1521,29 @@ $(document).ready(function() {
 
     $(document).on(
         'click',
-        '.btn-daftar:not(.btn-login-first)',
+        '.btn-incomplete-profile',
+        function() {
+            var instansi = $(this).data('instansi');
+            Swal.fire({
+                title: 'Profil Belum Lengkap!',
+                html: 'Anda belum dapat mendaftar magang di <b>' + instansi + '</b>.<br><br>Silakan lengkapi data profil diri Anda (seperti NIK, Tempat & Tanggal Lahir, Jenis Kelamin, dan No HP Emergency) terlebih dahulu pada menu Profil.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#344767',
+                cancelButtonColor: '#8392ab',
+                confirmButtonText: '<i class="fa fa-user-edit me-1"></i> Lengkapi Profil Sekarang',
+                cancelButtonText: 'Batal'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    window.location.href = '/profile';
+                }
+            });
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.btn-daftar:not(.btn-login-first):not(.btn-incomplete-profile)',
         function() {
 
             var instansi = $(this).data('instansi');
@@ -1523,7 +1572,7 @@ $(document).ready(function() {
 
                 showCancelButton: true,
 
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#188038',
 
                 cancelButtonColor: '#d33',
 

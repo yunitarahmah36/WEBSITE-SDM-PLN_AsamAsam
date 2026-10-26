@@ -198,7 +198,7 @@
         $('#formCatatan').on('submit', function(e) {
             e.preventDefault();
             $.ajax({
-                url: '/logbook/catatan-dosen/update',
+                url: '/logbook/catatan-instansi/update', // <--- URL INI SUDAH BENAR
                 type: 'POST',
                 data: $(this).serialize(),
                 dataType: 'JSON',

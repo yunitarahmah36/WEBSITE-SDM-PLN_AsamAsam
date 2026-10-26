@@ -1,6 +1,8 @@
 <?= $this->extend('main'); ?>
 <?= $this->section('content'); ?>
 
+<?php $isInstansi = ($role_type === 'instansi'); ?>
+
 <div class="row mb-5">
     <div class="col-12">
         <div class="card card-body p-3">
@@ -26,9 +28,13 @@
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Nama Instansi</th>
-                            <th>Jenis</th>
-                            <th>Alamat</th>
+                            <?php if ($isInstansi): ?>
+                                <th>Nama Instansi</th>
+                                <th>Jenis</th>
+                                <th>Alamat</th>
+                            <?php else: ?>
+                                <th>Nama Pembimbing</th>
+                            <?php endif; ?>
                             <th>Username</th>
                             <th>Email</th>
                             <th>No. HP</th>
@@ -41,18 +47,24 @@
                         <?php foreach ($user as $u): ?>
                             <tr>
                                 <td class="text-xs ps-4 font-weight-bold"><?= $i++ ?></td>
-                                <td class="text-xs ps-4 font-weight-bold"><?= esc($u->nama_instansi ?? '-') ?></td>
-                                <td class="text-xs ps-4 font-weight-bold">
-                                    <span class="badge bg-info"><?= esc($u->jenis_instansi ?? '-') ?></span>
-                                </td>
-                                <td class="text-xs ps-4 font-weight-bold">
-                                    <div><?= esc($u->alamat ?? '-') ?></div>
-                                    <div class="text-secondary" style="font-size: 10px;">
-                                        <?= esc($u->kecamatan ?? '') ?>
-                                        <?= !empty($u->kabupaten_kota) ? ', ' . esc($u->kabupaten_kota) : '' ?>
-                                        <?= !empty($u->provinsi) ? ', ' . esc($u->provinsi) : '' ?>
-                                    </div>
-                                </td>
+
+                                <?php if ($isInstansi): ?>
+                                    <td class="text-xs ps-4 font-weight-bold"><?= esc($u->nama_instansi ?? '-') ?></td>
+                                    <td class="text-xs ps-4 font-weight-bold">
+                                        <span class="badge bg-info"><?= esc($u->jenis_instansi ?? '-') ?></span>
+                                    </td>
+                                    <td class="text-xs ps-4 font-weight-bold">
+                                        <div><?= esc($u->alamat ?? '-') ?></div>
+                                        <div class="text-secondary" style="font-size: 10px;">
+                                            <?= esc($u->kecamatan ?? '') ?>
+                                            <?= !empty($u->kabupaten_kota) ? ', ' . esc($u->kabupaten_kota) : '' ?>
+                                            <?= !empty($u->provinsi) ? ', ' . esc($u->provinsi) : '' ?>
+                                        </div>
+                                    </td>
+                                <?php else: ?>
+                                    <td class="text-xs ps-4 font-weight-bold"><?= esc($u->nama ?? '-') ?></td>
+                                <?php endif; ?>
+
                                 <td class="text-xs ps-4 font-weight-bold"><?= esc($u->username) ?></td>
                                 <td class="text-xs ps-4 font-weight-bold">
                                     <a class="opacity-7" href="mailto:<?= esc($u->email, 'attr') ?>">
@@ -72,12 +84,16 @@
                                     <button type="button"
                                         class="badge border border-1 border-dark text-dark btn-edit"
                                         data-item="<?= esc($u->id, 'attr') ?>"
+                                        data-nama="<?= esc($u->nama ?? '', 'attr') ?>"
                                         data-nama-instansi="<?= esc($u->nama_instansi ?? '', 'attr') ?>"
                                         data-jenis-instansi="<?= esc($u->jenis_instansi ?? '', 'attr') ?>"
                                         data-alamat="<?= esc($u->alamat ?? '', 'attr') ?>"
                                         data-provinsi="<?= esc($u->provinsi ?? '', 'attr') ?>"
                                         data-kabupaten="<?= esc($u->kabupaten_kota ?? '', 'attr') ?>"
                                         data-kecamatan="<?= esc($u->kecamatan ?? '', 'attr') ?>"
+                                        data-username="<?= esc($u->username ?? '', 'attr') ?>"
+                                        data-email="<?= esc($u->email ?? '', 'attr') ?>"
+                                        data-hp="<?= esc($u->no_hp ?? '', 'attr') ?>"
                                         data-role="<?= esc($role_type, 'attr') ?>">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -114,24 +130,29 @@
 
                     <div class="card-body p-4">
                         <form id="fauser" data-action="" enctype="multipart/form-data">
+                            <input type="hidden" name="role" id="formRole" value="<?= esc($role_type ?? 'instansi') ?>">
                             <div class="row">
                                 <!-- Kolom Kiri -->
                                 <div class="col-12 col-md-6">
-                                    <div class="input-group input-group-outline mb-3">
-                                        <label for="nama_instansi" class="form-label">Nama Instansi</label>
-                                        <input type="text" name="nama_instansi" id="nama_instansi" class="form-control">
-                                    </div>
+                                    <!-- Field yang HANYA muncul untuk INSTANSI -->
+                                    <?php if ($isInstansi): ?>
+                                        <div class="input-group input-group-outline mb-3">
+                                            <label for="nama_instansi" class="form-label">Nama Instansi</label>
+                                            <input type="text" name="nama_instansi" id="nama_instansi" class="form-control">
+                                        </div>
 
-                                    <div class="input-group input-group-outline mb-3 is-filled">
-                                        <label for="jenis_instansi" class="form-label">Jenis Instansi</label>
-                                        <select name="jenis_instansi" id="jenis_instansi" class="form-control">
-                                            <option value="">-- Pilih Jenis --</option>
-                                            <option value="Perguruan tinggi">Perguruan Tinggi</option>
-                                            <option value="Sekolah">Sekolah</option>
-                                            <option value="Lainnya">Lainnya</option>
-                                        </select>
-                                    </div>
+                                        <div class="input-group input-group-outline mb-3 is-filled">
+                                            <label for="jenis_instansi" class="form-label">Jenis Instansi</label>
+                                            <select name="jenis_instansi" id="jenis_instansi" class="form-control">
+                                                <option value="">-- Pilih Jenis --</option>
+                                                <option value="Perguruan tinggi">Perguruan Tinggi</option>
+                                                <option value="Sekolah">Sekolah</option>
+                                                <option value="Lainnya">Lainnya</option>
+                                            </select>
+                                        </div>
+                                    <?php endif; ?>
 
+                                    <!-- Field yang MUNCUL untuk KEDUA role -->
                                     <div class="input-group input-group-outline mb-3">
                                         <label for="username" class="form-label">Username</label>
                                         <input type="text" name="username" id="username" class="form-control">
@@ -154,25 +175,36 @@
 
                                 <!-- Kolom Kanan -->
                                 <div class="col-12 col-md-6">
-                                    <div class="input-group input-group-outline mb-3">
-                                        <label for="alamat" class="form-label">Alamat Lengkap</label>
-                                        <input type="text" name="alamat" id="alamat" class="form-control">
-                                    </div>
+                                    <!-- Field yang HANYA muncul untuk PEMBIMBING LAPANGAN -->
+                                    <?php if (!$isInstansi): ?>
+                                        <div class="input-group input-group-outline mb-3">
+                                            <label for="nama" class="form-label">Nama Pembimbing</label>
+                                            <input type="text" name="nama" id="nama" class="form-control">
+                                        </div>
+                                    <?php endif; ?>
 
-                                    <div class="input-group input-group-outline mb-3">
-                                        <label for="provinsi" class="form-label">Provinsi</label>
-                                        <input type="text" name="provinsi" id="provinsi" class="form-control">
-                                    </div>
+                                    <!-- Field yang HANYA muncul untuk INSTANSI -->
+                                    <?php if ($isInstansi): ?>
+                                        <div class="input-group input-group-outline mb-3">
+                                            <label for="alamat" class="form-label">Alamat Lengkap</label>
+                                            <input type="text" name="alamat" id="alamat" class="form-control">
+                                        </div>
 
-                                    <div class="input-group input-group-outline mb-3">
-                                        <label for="kabupaten_kota" class="form-label">Kabupaten/Kota</label>
-                                        <input type="text" name="kabupaten_kota" id="kabupaten_kota" class="form-control">
-                                    </div>
+                                        <div class="input-group input-group-outline mb-3">
+                                            <label for="provinsi" class="form-label">Provinsi</label>
+                                            <input type="text" name="provinsi" id="provinsi" class="form-control">
+                                        </div>
 
-                                    <div class="input-group input-group-outline mb-3">
-                                        <label for="kecamatan" class="form-label">Kecamatan</label>
-                                        <input type="text" name="kecamatan" id="kecamatan" class="form-control">
-                                    </div>
+                                        <div class="input-group input-group-outline mb-3">
+                                            <label for="kabupaten_kota" class="form-label">Kabupaten/Kota</label>
+                                            <input type="text" name="kabupaten_kota" id="kabupaten_kota" class="form-control">
+                                        </div>
+
+                                        <div class="input-group input-group-outline mb-3">
+                                            <label for="kecamatan" class="form-label">Kecamatan</label>
+                                            <input type="text" name="kecamatan" id="kecamatan" class="form-control">
+                                        </div>
+                                    <?php endif; ?>
 
                                     <div class="input-group input-group-outline mb-3">
                                         <label for="hp" class="form-label">Nomor Hp/Wa</label>
@@ -209,6 +241,8 @@
 <script>
 $(document).ready(function () {
     const form = $('#fauser');
+    const isInstansi = <?= $isInstansi ? 'true' : 'false' ?>;
+    const roleType = '<?= esc($role_type ?? 'instansi') ?>';
 
     // Handle floating labels
     form.on('focus', '.form-control', function () {
@@ -248,11 +282,17 @@ $(document).ready(function () {
     });
 
     $('#btnAddPengelola').on('click', function () {
-        $('#modalTitle').text('Tambah Instansi');
-        $('#modalSubTitle').text('Tambah data Instansi Pendidikan');
+        if (isInstansi) {
+            $('#modalTitle').text('Tambah Instansi');
+            $('#modalSubTitle').text('Tambah data Instansi Pendidikan');
+        } else {
+            $('#modalTitle').text('Tambah Pembimbing');
+            $('#modalSubTitle').text('Tambah data Pembimbing Lapangan');
+        }
 
         form[0].reset();
         form.find('input[name="item"], input[name="old_email"]').remove();
+        $('#formRole').val(roleType);
 
         form.find('.form-control').each(function () {
             $(this).parent().removeClass('is-filled is-focused');
@@ -317,30 +357,41 @@ $(document).ready(function () {
         const item = tombol.data('item');
         const roleData = tombol.attr('data-role') || '';
 
+        // AMBIL DATA LANGSUNG DARI ATRIBUT DATA-* (TIDAK LAGI MENGHITUNG URUTAN TD)
+        const nama = tombol.attr('data-nama') || '';
         const namaInstansi = tombol.attr('data-nama-instansi') || '';
         const jenisInstansi = tombol.attr('data-jenis-instansi') || '';
         const alamat = tombol.attr('data-alamat') || '';
         const provinsi = tombol.attr('data-provinsi') || '';
         const kabupaten = tombol.attr('data-kabupaten') || '';
         const kecamatan = tombol.attr('data-kecamatan') || '';
+        const username = tombol.attr('data-username') || '';
+        const email = tombol.attr('data-email') || '';
+        const hp = tombol.attr('data-hp') || '';
 
-        // Ambil data dari baris tabel
-        const baris = tombol.closest('tr');
-        const username = baris.find('td:eq(4)').text().trim();
-        const email = baris.find('td:eq(5)').text().trim();
-        const hp = baris.find('td:eq(6)').text().trim();
+        // Sesuaikan judul modal
+        if (isInstansi) {
+            $('#modalTitle').text('Edit Instansi');
+            $('#modalSubTitle').text('Edit data Instansi Pendidikan');
+        } else {
+            $('#modalTitle').text('Edit Pembimbing');
+            $('#modalSubTitle').text('Edit data Pembimbing Lapangan');
+        }
 
-        $('#modalTitle').text('Edit Instansi');
-        $('#modalSubTitle').text('Edit data Instansi Pendidikan');
         $('#mtPengelola').modal('show');
 
-        // Isi form
-        form.find('input[name="nama_instansi"]').val(namaInstansi).parent().addClass('is-filled');
-        form.find('select[name="jenis_instansi"]').val(jenisInstansi).parent().addClass('is-filled');
-        form.find('input[name="alamat"]').val(alamat).parent().addClass('is-filled');
-        form.find('input[name="provinsi"]').val(provinsi).parent().addClass('is-filled');
-        form.find('input[name="kabupaten_kota"]').val(kabupaten).parent().addClass('is-filled');
-        form.find('input[name="kecamatan"]').val(kecamatan).parent().addClass('is-filled');
+        // Isi form sesuai role
+        if (isInstansi) {
+            form.find('input[name="nama_instansi"]').val(namaInstansi).parent().addClass('is-filled');
+            form.find('select[name="jenis_instansi"]').val(jenisInstansi).parent().addClass('is-filled');
+            form.find('input[name="alamat"]').val(alamat).parent().addClass('is-filled');
+            form.find('input[name="provinsi"]').val(provinsi).parent().addClass('is-filled');
+            form.find('input[name="kabupaten_kota"]').val(kabupaten).parent().addClass('is-filled');
+            form.find('input[name="kecamatan"]').val(kecamatan).parent().addClass('is-filled');
+        } else {
+            form.find('input[name="nama"]').val(nama).parent().addClass('is-filled');
+        }
+
         form.find('input[name="username"]').val(username).attr('readonly', true).parent().addClass('is-filled bg-gray-300');
         form.find('input[name="hp"]').val(hp).parent().addClass('is-filled');
         form.find('input[name="email"]').val(email).parent().addClass('is-filled');
@@ -350,6 +401,7 @@ $(document).ready(function () {
         $('#container-password label').text('Password (Biarkan kosong jika tidak diubah)');
 
         form.find('input[name="item"], input[name="old_email"]').remove();
+        $('#formRole').val(roleData || roleType);
 
         $('<input>', {
             type: 'hidden',
@@ -361,12 +413,6 @@ $(document).ready(function () {
             type: 'hidden',
             name: 'old_email',
             value: email
-        }).appendTo(form);
-
-        $('<input>', {
-            type: 'hidden',
-            name: 'role',
-            value: 'instansi'
         }).appendTo(form);
     });
 

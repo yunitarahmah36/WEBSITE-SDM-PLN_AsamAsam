@@ -332,7 +332,314 @@
         border-right: none;
         border-bottom: 1px solid rgba(255,255,255,0.08);
     }
+    body.theme-siswa .chat-sidebar {
+        border-right: none;
+        border-bottom: 1px solid #9dd6b3;
+    }
+    body.theme-pembimbing .chat-sidebar {
+        border-right: none;
+        border-bottom: 1px solid #b6d5fb;
+    }
     .chat-main { height: 1px; }
+}
+
+/* ── THEME SISWA (PASTEL SAGE / PLN GREEN) ─────────────── */
+body.theme-siswa .chat-wrapper {
+    box-shadow: 0 10px 30px rgba(13, 76, 44, 0.08), 0 2px 8px rgba(0,0,0,0.03);
+    border: 1px solid #cce5d5;
+}
+
+body.theme-siswa .chat-sidebar {
+    background: #b2e5c7; /* Match sidebar dashboard */
+    border-right: 1px solid #9dd6b3;
+}
+
+body.theme-siswa .chat-sidebar-header {
+    background: #9cdbb6;
+    border-bottom: 1px solid #8ecda7;
+}
+
+body.theme-siswa .chat-sidebar-header h5 {
+    color: #043319;
+    font-weight: 800;
+}
+
+body.theme-siswa .chat-sidebar-header h5 .material-icons {
+    color: #0a4524;
+}
+
+body.theme-siswa .chat-search {
+    background: #ffffff;
+    border: 1.5px solid #8ecda7;
+    color: #0c361d;
+}
+
+body.theme-siswa .chat-search::placeholder {
+    color: #3b6d4f;
+}
+
+body.theme-siswa .chat-search:focus {
+    border-color: #15803d;
+    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.15);
+}
+
+body.theme-siswa .chat-list::-webkit-scrollbar-thumb {
+    background: rgba(16, 75, 42, 0.2);
+}
+
+body.theme-siswa .chat-section-title {
+    color: #0d4a29;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+}
+
+body.theme-siswa .chat-contact {
+    border-left: 3px solid transparent;
+}
+
+body.theme-siswa .chat-contact:hover {
+    background: rgba(21, 128, 61, 0.10);
+}
+
+body.theme-siswa .chat-contact.active {
+    background: #7ece9d;
+    border-left-color: #033318;
+}
+
+body.theme-siswa .chat-avatar {
+    background: linear-gradient(135deg, #15803d, #22c55e);
+    color: #fff;
+    font-weight: 700;
+}
+
+body.theme-siswa .chat-contact-name {
+    color: #08341b;
+    font-weight: 700;
+}
+
+body.theme-siswa .chat-contact-last {
+    color: #2b5c3e !important;
+}
+
+body.theme-siswa .chat-contact-badge {
+    background: #15803d;
+}
+
+body.theme-siswa .chat-list .text-center {
+    color: #2b5c3e !important;
+}
+
+/* Chat Main Area */
+body.theme-siswa .chat-main {
+    background: #f7faf8;
+}
+
+body.theme-siswa .chat-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e1efe6;
+}
+
+body.theme-siswa .chat-header-avatar {
+    background: linear-gradient(135deg, #15803d, #22c55e);
+}
+
+body.theme-siswa .chat-header-name {
+    color: #08341b;
+    font-weight: 700;
+}
+
+body.theme-siswa .chat-header-role {
+    color: #3b6d4e;
+}
+
+body.theme-siswa .chat-no-partner span.material-icons {
+    color: #9ccdb0 !important;
+}
+
+body.theme-siswa .msg-bubble.sent {
+    background: linear-gradient(135deg, #15803d, #16a34a);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(21, 128, 61, 0.2);
+}
+
+body.theme-siswa .msg-bubble.received {
+    background: #ffffff;
+    border: 1px solid #e2efe7;
+    color: #1f2937;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+body.theme-siswa .msg-received-name {
+    color: #15803d;
+    font-weight: 700;
+}
+
+body.theme-siswa #chatInput:focus {
+    border-color: #15803d;
+    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.15);
+}
+
+body.theme-siswa .btn-send {
+    background: linear-gradient(135deg, #15803d, #16a34a);
+    box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);
+}
+
+body.theme-siswa .msg-action-btn:hover {
+    color: #15803d;
+    border-color: #15803d;
+}
+
+/* ── THEME PEMBIMBING (SOFT BLUE / BIRU LEMBUT) ────────── */
+body.theme-pembimbing .chat-wrapper {
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.08), 0 2px 8px rgba(0,0,0,0.03);
+    border: 1px solid #bfdbfe;
+}
+
+body.theme-pembimbing .chat-sidebar {
+    background: #cce3fe; /* Soft pastel blue */
+    border-right: 1px solid #b6d5fb;
+}
+
+body.theme-pembimbing .chat-sidebar-header {
+    background: #bad8fb;
+    border-bottom: 1px solid #a7cbf8;
+}
+
+body.theme-pembimbing .chat-sidebar-header h5 {
+    color: #0c386d;
+    font-weight: 800;
+}
+
+body.theme-pembimbing .chat-sidebar-header h5 .material-icons {
+    color: #0f4485;
+}
+
+body.theme-pembimbing .chat-search {
+    background: #ffffff;
+    border: 1.5px solid #a3c8f8;
+    color: #0c386d;
+}
+
+body.theme-pembimbing .chat-search::placeholder {
+    color: #4b73a3;
+}
+
+body.theme-pembimbing .chat-search:focus {
+    background: #ffffff;
+    color: #0c386d;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+body.theme-pembimbing .chat-list::-webkit-scrollbar-thumb {
+    background: rgba(12, 56, 109, 0.2);
+}
+
+body.theme-pembimbing .chat-section-title {
+    color: #12498a;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    font-size: 0.72rem;
+}
+
+body.theme-pembimbing .chat-contact {
+    border-left: 3px solid transparent;
+}
+
+body.theme-pembimbing .chat-contact:hover {
+    background: rgba(37, 99, 235, 0.10);
+}
+
+body.theme-pembimbing .chat-contact.active {
+    background: #9bc6fc;
+    border-left-color: #0c386d;
+}
+
+body.theme-pembimbing .chat-avatar {
+    background: linear-gradient(135deg, #1865cf, #3898ec);
+    color: #fff;
+    font-weight: 700;
+}
+
+body.theme-pembimbing .chat-contact-name {
+    color: #0a2f5c;
+    font-weight: 700;
+}
+
+body.theme-pembimbing .chat-contact-last {
+    color: #2b5586 !important;
+}
+
+body.theme-pembimbing .chat-contact.active .chat-contact-last {
+    color: #133c6d !important;
+}
+
+body.theme-pembimbing .chat-contact-badge {
+    background: #2563eb;
+}
+
+body.theme-pembimbing .chat-list .text-center {
+    color: #2b5586 !important;
+}
+
+/* Chat Main Area */
+body.theme-pembimbing .chat-main {
+    background: #f8fafc;
+}
+
+body.theme-pembimbing .chat-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+body.theme-pembimbing .chat-header-avatar {
+    background: linear-gradient(135deg, #1865cf, #3898ec);
+}
+
+body.theme-pembimbing .chat-header-name {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+body.theme-pembimbing .chat-header-role {
+    color: #64748b;
+}
+
+body.theme-pembimbing .chat-no-partner span.material-icons {
+    color: #93c5fd !important;
+}
+
+body.theme-pembimbing .msg-bubble.sent {
+    background: linear-gradient(135deg, #1865cf, #2563eb);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(24, 101, 207, 0.25);
+}
+
+body.theme-pembimbing .msg-bubble.received {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #1f2937;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+body.theme-pembimbing .msg-received-name {
+    color: #1865cf;
+    font-weight: 700;
+}
+
+body.theme-pembimbing #chatInput:focus {
+    border-color: #1865cf;
+    box-shadow: 0 0 0 3px rgba(24, 101, 207, 0.15);
+}
+
+body.theme-pembimbing .btn-send {
+    background: linear-gradient(135deg, #1865cf, #2563eb);
+    box-shadow: 0 2px 6px rgba(24, 101, 207, 0.25);
+}
+
+body.theme-pembimbing .msg-action-btn:hover {
+    color: #1865cf;
+    border-color: #1865cf;
 }
 </style>
 

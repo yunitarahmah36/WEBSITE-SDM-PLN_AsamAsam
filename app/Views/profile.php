@@ -217,6 +217,25 @@
                     <i class="fa fa-building"></i>
                     <div class="text-gray-800"><b>Instansi: </b> <?= $data->instansi ?: '-' ?></div>
                 </div>
+
+                <!-- ============================================= -->
+                <!-- RENCANA MAGANG -->
+                <!-- ============================================= -->
+                <div class="mb-2 d-flex gap-2 align-items-center text-sm">
+                    <i class="fa fa-calendar-alt text-gray-400"></i> 
+                    <div class="text-gray-800">
+                        <b>Rencana Magang: </b> 
+                        <?php 
+                            if (isset($siswa) && !empty($siswa->tgl_masuk) && !empty($siswa->tgl_selesai)) {
+                                echo date('d/m/Y', strtotime($siswa->tgl_masuk)) . ' s/d ' . date('d/m/Y', strtotime($siswa->tgl_selesai));
+                            } else {
+                                echo '-';
+                            }
+                        ?>
+                    </div>
+                </div>
+                <!-- ============================================= -->
+
                 <hr>
                 <h6 class="text-sm">Informasi Tambahan</h6>
                 <div class="mb-2 d-flex gap-2 align-items-center text-sm">
@@ -276,7 +295,7 @@
                 <?php endif; ?>
 
                 <!-- ============================================= -->
-                <!-- SECTION BERKAS (SUDAH DIPERBAIKI - TAMBAH TAKAFUL) -->
+                <!-- SECTION BERKAS (PERBAIKAN SURAT BALASAN)      -->
                 <!-- ============================================= -->
                 <div class="mt-3">
                     <span class="text-xs font-weight-bold">Berkas:</span><br>
@@ -308,10 +327,6 @@
 
                     <?php if (!empty($data->surat_pernyataan)) : $hasBerkas = true; ?>
                         <a href="/assets/berkas/<?= $data->surat_pernyataan ?>" target="_blank" class="badge badge-info border border-info mb-1 me-1"><i class="fa fa-file-pdf"></i> Surat Pernyataan</a>
-                    <?php endif; ?>
-
-                    <?php if (!empty($data->surat_balasan)) : $hasBerkas = true; ?>
-                        <a href="/assets/berkas/<?= $data->surat_balasan ?>" target="_blank" class="badge bg-gradient-success mb-1 me-1"><i class="fa fa-file-pdf"></i> Surat Balasan</a>
                     <?php endif; ?>
 
                     <?php if (!$hasBerkas) : ?>

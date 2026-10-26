@@ -5,7 +5,6 @@ namespace App\Controllers;
 use App\Models\PesanModel;
 use App\Models\SiswaModel;
 use App\Models\PembimbingModel;
-use App\Models\DosenPembimbingModel;
 use App\Models\ApplicationModel;
 
 class Pesan extends BaseController
@@ -45,7 +44,7 @@ class Pesan extends BaseController
         return view('pesan', [
             'title'        => 'Pesan',
             'page_title'   => 'Pesan',
-            'breadcrumb'   => ['Beranda' => '/', 'Pesan' => '/pesan'],
+            'breadcrumb'   => ['Pesan'],
             'segment'      => ['pesan'],
             'contacts'     => $contacts,
             'chatList'     => $chatList,
@@ -230,14 +229,6 @@ class Pesan extends BaseController
             return $isSmk ? 'Siswa' : 'Mahasiswa';
         };
 
-        $getDosenRole = function ($nidn) {
-            // NIDN is for Dosen. If it's missing, '0', '-', or not numeric, it's likely a Guru Pembimbing (SMK)
-            if (empty($nidn) || $nidn === '-' || strlen(trim($nidn)) < 5) {
-                return 'Guru Pembimbing';
-            }
-            return 'Dosen Pembimbing';
-        };
-
         // Admin is always available for everyone to message
         if (!in_array('admin', $roles)) {
             $admins = $db->table('users')
@@ -258,7 +249,8 @@ class Pesan extends BaseController
         }
 
         if (in_array('siswa', $roles)) {
-            // Student can message their assigned pembimbing lapangan and dosen pembimbing
+            // Student can message their assigned pembimbing lapangan only
+            // (dosen pembimbing sudah tidak punya akun user, jadi tidak bisa dihubungi via pesan)
             $appModel  = new ApplicationModel();
             $accepted  = $appModel->where('id_siswa', (new SiswaModel())->where('user_id', $userId)->first()?->id ?? 0)
                                   ->whereIn('status', ['accepted', 'selesai'])
@@ -281,22 +273,6 @@ class Pesan extends BaseController
                         ];
                     }
                 }
-
-                // Dosen pembimbing
-                if (isset($accepted->id_dosen_pembimbing) && $accepted->id_dosen_pembimbing) {
-                    $d = $db->table('dosen_pembimbing')
-                            ->join('users', 'users.id = dosen_pembimbing.user_id')
-                            ->where('dosen_pembimbing.id', $accepted->id_dosen_pembimbing)
-                            ->get()->getRow();
-                    if ($d) {
-                        $contacts[] = [
-                            'user_id' => $d->user_id,
-                            'nama'    => $d->nama,
-                            'role'    => $getDosenRole($d->nidn ?? ''),
-                            'foto'    => $d->foto ?? null,
-                        ];
-                    }
-                }
             }
         }
 
@@ -310,14 +286,11 @@ class Pesan extends BaseController
             foreach ($pembimbing as $p) {
                 $contacts[] = ['user_id' => $p->user_id, 'nama' => $p->nama, 'role' => 'Pembimbing Lapangan', 'foto' => $p->foto];
             }
-            $dosen = $db->table('dosen_pembimbing')->select('user_id, nama, foto, nidn')->get()->getResult();
-            foreach ($dosen as $d) {
-                $contacts[] = ['user_id' => $d->user_id, 'nama' => $d->nama, 'role' => $getDosenRole($d->nidn ?? ''), 'foto' => $d->foto];
-            }
+            // Dosen pembimbing sudah tidak punya akun user, jadi tidak bisa dimasukkan ke daftar kontak
         }
 
         if (in_array('pembimbing', $roles)) {
-            // Field supervisor: students in their division + dosen pembimbing of those students
+            // Field supervisor: students in their division
             $pembimbing = $db->table('pembimbing')->where('user_id', $userId)->get()->getRow();
             if ($pembimbing) {
                 // Students
@@ -336,35 +309,13 @@ class Pesan extends BaseController
                         'role'    => $getStudentRole($s->instansi, $s->kelas),
                         'foto'    => $s->foto ?? null,
                     ];
-                    // Their dosen pembimbing
-                    $lamaran = $db->table('lamaran')
-                        ->where('id_siswa', $s->id_siswa)
-                        ->whereIn('status', ['accepted', 'selesai'])
-                        ->get()->getRow();
-                    if ($lamaran && isset($lamaran->id_dosen_pembimbing) && $lamaran->id_dosen_pembimbing) {
-                        $d = $db->table('dosen_pembimbing')
-                                ->join('users', 'users.id = dosen_pembimbing.user_id')
-                                ->where('dosen_pembimbing.id', $lamaran->id_dosen_pembimbing)
-                                ->get()->getRow();
-                        if ($d) {
-                            $exists = array_filter($contacts, fn($c) => $c['user_id'] === (int)$d->user_id);
-                            if (empty($exists)) {
-                                $contacts[] = [
-                                    'user_id' => (int)$d->user_id,
-                                    'nama'    => $d->nama,
-                                    'role'    => $getDosenRole($d->nidn ?? ''),
-                                    'foto'    => $d->foto ?? null,
-                                ];
-                            }
-                        }
-                    }
                 }
             }
         }
 
-        if (in_array('dosen_pembimbing', $roles)) {
-            // Academic supervisor: their students + field supervisors of those students
-            $dosen = $db->table('dosen_pembimbing')->where('user_id', $userId)->get()->getRow();
+        if (in_array('dosen_pembimbing', $roles) || in_array('instansi', $roles)) {
+            // Academic supervisor: their students only
+            $dosen = $db->table('instansi')->where('user_id', $userId)->get()->getRow();
             if ($dosen) {
                 $lamarans = $db->table('lamaran')
                     ->select('lamaran.*, siswa.user_id as s_uid, siswa.nama as s_nama, siswa.foto as s_foto, siswa.instansi, siswa.kelas, 
@@ -429,20 +380,20 @@ class Pesan extends BaseController
         // Anyone can message an admin
         if (in_array('admin', $receiverRoles)) return true;
 
-        // Siswa -> pembimbing or dosen_pembimbing (must be assigned)
-        if (in_array('siswa', $senderRoles) && (in_array('pembimbing', $receiverRoles) || in_array('dosen_pembimbing', $receiverRoles))) {
+        // Siswa -> pembimbing (dosen tidak lagi punya akun user)
+        if (in_array('siswa', $senderRoles) && in_array('pembimbing', $receiverRoles)) {
             $contacts = $this->getContacts($senderId, $senderRoles);
             return !empty(array_filter($contacts, fn($c) => (int)$c['user_id'] === (int)$receiverId));
         }
 
-        // Pembimbing -> siswa or dosen_pembimbing
-        if (in_array('pembimbing', $senderRoles) && (in_array('siswa', $receiverRoles) || in_array('dosen_pembimbing', $receiverRoles))) {
+        // Pembimbing -> siswa
+        if (in_array('pembimbing', $senderRoles) && in_array('siswa', $receiverRoles)) {
             $contacts = $this->getContacts($senderId, $senderRoles);
             return !empty(array_filter($contacts, fn($c) => (int)$c['user_id'] === (int)$receiverId));
         }
 
-        // Dosen pembimbing -> siswa or pembimbing
-        if (in_array('dosen_pembimbing', $senderRoles) && (in_array('siswa', $receiverRoles) || in_array('pembimbing', $receiverRoles))) {
+        // Dosen pembimbing / Instansi -> siswa atau pembimbing
+        if ((in_array('dosen_pembimbing', $senderRoles) || in_array('instansi', $senderRoles)) && (in_array('siswa', $receiverRoles) || in_array('pembimbing', $receiverRoles))) {
             $contacts = $this->getContacts($senderId, $senderRoles);
             return !empty(array_filter($contacts, fn($c) => (int)$c['user_id'] === (int)$receiverId));
         }
@@ -456,16 +407,15 @@ class Pesan extends BaseController
 
         $user = $db->table('users')
             ->select('users.id, users.username, users.email,
-                COALESCE(s.nama, p.nama, d.nama) as nama,
-                COALESCE(s.foto, p.foto, d.foto) as foto,
+                COALESCE(s.nama, p.nama, i.nama_instansi) as nama,
+                COALESCE(s.foto, p.foto) as foto,
                 s.instansi as s_instansi, s.kelas as s_kelas,
-                d.nidn as d_nidn,
                 (SELECT GROUP_CONCAT(ag.name SEPARATOR ",") 
                  FROM auth_groups_users agu JOIN auth_groups ag ON ag.id = agu.group_id 
                  WHERE agu.user_id = users.id) as roles')
             ->join('siswa s', 's.user_id = users.id', 'left')
             ->join('pembimbing p', 'p.user_id = users.id', 'left')
-            ->join('dosen_pembimbing d', 'd.user_id = users.id', 'left')
+            ->join('instansi i', 'i.user_id = users.id', 'left')
             ->where('users.id', $partnerId)
             ->get()->getRow();
 
@@ -477,13 +427,8 @@ class Pesan extends BaseController
                     $formattedRoles[] = 'Admin';
                 } elseif ($r === 'pembimbing') {
                     $formattedRoles[] = 'Pembimbing Lapangan';
-                } elseif ($r === 'dosen_pembimbing') {
-                    $nidn = $user->d_nidn ?? '';
-                    if (empty($nidn) || $nidn === '-' || strlen(trim($nidn)) < 5) {
-                        $formattedRoles[] = 'Guru Pembimbing';
-                    } else {
-                        $formattedRoles[] = 'Dosen Pembimbing';
-                    }
+                } elseif ($r === 'dosen_pembimbing' || $r === 'instansi') {
+                    $formattedRoles[] = 'Instansi Pendidikan';
                 } elseif ($r === 'siswa') {
                     $instansiLower = strtolower($user->s_instansi ?? '');
                     $kelasLower = strtolower($user->s_kelas ?? '');
@@ -505,10 +450,9 @@ class Pesan extends BaseController
         try {
             $db           = \Config\Database::connect();
             $senderUser   = $db->table('users')
-                ->select('users.email, COALESCE(s.nama, p.nama, d.nama) as nama')
+                ->select('users.email, COALESCE(s.nama, p.nama) as nama')
                 ->join('siswa s', 's.user_id = users.id', 'left')
                 ->join('pembimbing p', 'p.user_id = users.id', 'left')
-                ->join('dosen_pembimbing d', 'd.user_id = users.id', 'left')
                 ->where('users.id', $senderId)
                 ->get()->getRow();
 

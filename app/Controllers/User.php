@@ -29,10 +29,10 @@ class User extends BaseController
             "active" => 1,
         ]);
 
-        // Data dasar pembimbing
+        // Data dasar (Mengambil dari name="hp")
         $user_detail = [
             "nama"  => $this->request->getPost("nama"),
-            "no_hp" => $this->request->getPost("hp"),
+            "no_hp" => $this->request->getPost("hp"), 
             "email" => $this->request->getPost("email"),
         ];
 
@@ -44,48 +44,41 @@ class User extends BaseController
             $user_detail['foto'] = $namaFoto;
         }
 
-        $role = $this->request->getPost("role") ?? 'pembimbing';
+        $role = $this->request->getPost("role");
+        if (empty($role)) {
+            $role = !empty($this->request->getPost("nama_instansi")) ? 'instansi' : 'pembimbing';
+        }
 
-        // Start Transaction
         $this->user->db->transStart();
 
         try {
-            // Validasi
-            if (!$this->validate([
+            $rules = [
                 'username' => 'required|min_length[3]|max_length[30]|is_unique[users.username]',
                 'email'    => 'required|valid_email|is_unique[users.email]',
-                'hp'       => 'required|numeric|min_length[10]',
                 'password' => 'permit_empty|min_length[8]',
-            ])) {
-                throw new \Exception(implode(", ", $this->validator->getErrors()));
+            ];
+
+            if ($role === 'instansi') {
+                $rules['hp']             = 'permit_empty|numeric|min_length[10]'; 
+                $rules['nama_instansi']  = 'required|min_length[3]|max_length[150]';
+                $rules['jenis_instansi'] = 'required|in_list[Perguruan tinggi,Sekolah,Lainnya]';
+                $rules['alamat']         = 'permit_empty';
+                $rules['provinsi']       = 'permit_empty|max_length[100]';
+                $rules['kabupaten_kota'] = 'permit_empty|max_length[100]';
+                $rules['kecamatan']      = 'permit_empty|max_length[100]';
+            } else {
+                $rules['hp']   = 'required|numeric|min_length[10]'; 
+                $rules['nama'] = 'required|min_length[3]';
             }
 
-            // Validasi khusus untuk role instansi
-            if ($role === 'instansi') {
-                if (!$this->validate([
-                    'nama_instansi'  => 'required|min_length[3]|max_length[150]',
-                    'jenis_instansi' => 'required|in_list[Perguruan tinggi,Sekolah,Lainnya]',
-                    'alamat'         => 'required',
-                    'provinsi'       => 'required|max_length[100]',
-                    'kabupaten_kota' => 'required|max_length[100]',
-                    'kecamatan'      => 'required|max_length[100]',
-                ])) {
-                    throw new \Exception(implode(", ", $this->validator->getErrors()));
-                }
-            } else {
-                // Validasi khusus role pembimbing
-                if (!$this->validate([
-                    'nama' => 'required|min_length[3]',
-                ])) {
-                    throw new \Exception(implode(", ", $this->validator->getErrors()));
-                }
+            if (!$this->validate($rules)) {
+                throw new \Exception(implode(", ", $this->validator->getErrors()));
             }
 
             if ($this->user->withGroup($role)->save($user)) {
                 $user_detail['user_id'] = $this->user->getInsertID();
 
                 if ($role === 'instansi') {
-                    // Field khusus instansi
                     $user_detail['nama_instansi']  = trim((string) $this->request->getPost('nama_instansi'));
                     $user_detail['jenis_instansi'] = $this->request->getPost('jenis_instansi');
                     $user_detail['alamat']         = trim((string) $this->request->getPost('alamat'));
@@ -94,9 +87,7 @@ class User extends BaseController
                     $user_detail['kecamatan']      = trim((string) $this->request->getPost('kecamatan'));
                     $user_detail['no_hp']          = $this->request->getPost('hp');
 
-                    // Hapus field yang tidak dipakai di tabel instansi
                     unset($user_detail['nama'], $user_detail['foto']);
-
                     $model = new \App\Models\DosenPembimbingModel();
                 } else {
                     $model = $this->pembimbing;
@@ -135,14 +126,16 @@ class User extends BaseController
     {
         $old_email = $this->request->getPost("old_email");
         $user = [];
-
         $uid = $this->request->getPost("item");
 
-        $role = $this->request->getPost("role") ?? 'pembimbing';
+        $role = $this->request->getPost("role");
+        if (empty($role)) {
+            $role = !empty($this->request->getPost("nama_instansi")) ? 'instansi' : 'pembimbing';
+        }
 
-        // Data dasar
+        // Data dasar (Mengambil dari input name="hp")
         $user_detail = [
-            "no_hp" => $this->request->getPost("hp"),
+            "no_hp" => $this->request->getPost("hp"), 
         ];
 
         if ($this->request->getPost("email") != $old_email) {
@@ -164,13 +157,13 @@ class User extends BaseController
             $user_detail['provinsi']       = trim((string) $this->request->getPost('provinsi'));
             $user_detail['kabupaten_kota'] = trim((string) $this->request->getPost('kabupaten_kota'));
             $user_detail['kecamatan']      = trim((string) $this->request->getPost('kecamatan'));
+            $user_detail['email']          = $this->request->getPost('email');
         } else {
             $model = $this->pembimbing;
             $pid = $model->select('id, foto')->where('user_id', $uid)->first();
             $user_detail['nama'] = $this->request->getPost("nama");
         }
 
-        // Upload foto (hanya untuk pembimbing)
         if ($role !== 'instansi') {
             $fileFoto = $this->request->getFile('foto');
             if ($fileFoto && $fileFoto->isValid() && !$fileFoto->hasMoved()) {
@@ -358,6 +351,6 @@ class User extends BaseController
         $user->force_pass_reset = false;
         $users->save($user);
 
-        return redirect()->back()->with('message', "Your password has been successfully changed");
+        return redirect()->back()->with('message', "Your password has been changed successfully");
     }
 }

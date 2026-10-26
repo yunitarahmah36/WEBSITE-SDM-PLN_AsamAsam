@@ -98,10 +98,6 @@ class LogBook extends BaseController
 
         if ($this->logbooks->save($data)) {
             $bukti->move('assets/img/logbook', $filename);
-            
-            // === NOTIFIKASI EMAIL DIHAPUS ===
-            // Kode asli: $email_status = $this->sendLogbookNotification($data);
-            // Kode asli: $msg_append = ($email_status === true) ? '' : ' (Namun notifikasi email gagal: ' . $email_status . ')';
 
             $response = [
                 'success'   => true,
@@ -129,14 +125,6 @@ class LogBook extends BaseController
         ];
 
         if ($this->logbooks->update($id, $data)) {
-            // === NOTIFIKASI EMAIL DIHAPUS ===
-            // Kode asli: 
-            // if ($status == 'accepted') {
-            //     $this->sendEmailNotifikasiLogbookSiswa($id, 'status_acc');
-            // } elseif ($status == 'rejected') {
-            //     $this->sendEmailNotifikasiLogbookSiswa($id, 'status_reject');
-            // }
-            
             $response = [
                 'success'   => true,
                 'status'    => 200,
@@ -153,15 +141,25 @@ class LogBook extends BaseController
         return $this->response->setJSON($response);
     }
 
-    public function add_catatan_dosen()
+    // Method ini yang tadinya bernama add_catatan_dosen, sekarang sudah disesuaikan dengan route
+    public function add_catatan_instansi()
     {
         $id = $this->request->getPost('id');
         $catatan = $this->request->getPost('catatan_dosen');
 
-        if ($this->logbooks->update($id, ['catatan_dosen' => $catatan, 'is_read_dosen' => 0])) {
-            // === NOTIFIKASI EMAIL DIHAPUS ===
-            // Kode asli: $this->sendEmailNotifikasiLogbookSiswa($id, 'catatan_dosen');
-            
+        // Pastikan id dan catatan tidak kosong
+        if (empty($id) || empty($catatan)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Data catatan tidak boleh kosong.'
+            ]);
+        }
+
+        // Update catatan dan set is_read_dosen = 0 agar muncul notif di siswa
+        if ($this->logbooks->update($id, [
+            'catatan_dosen' => $catatan, 
+            'is_read_dosen' => 0
+        ])) {
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Catatan bimbingan berhasil disimpan'
@@ -173,10 +171,4 @@ class LogBook extends BaseController
             'message' => 'Catatan bimbingan gagal disimpan'
         ]);
     }
-
-    // =========================================================
-    // FUNGSI PRIVATE UNTUK EMAIL SUDAH DIHAPUS SEMUANYA:
-    // - sendEmailNotifikasiLogbookSiswa() -> DIHAPUS
-    // - sendLogbookNotification() -> DIHAPUS
-    // =========================================================
 }

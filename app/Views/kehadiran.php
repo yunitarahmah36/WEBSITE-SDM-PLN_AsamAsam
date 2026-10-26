@@ -76,26 +76,78 @@
     }
 
     .btn-kamera {
-        background: #344767;
+        background: linear-gradient(135deg, #15803d, #16a34a);
         color: #fff;
-        border-color: #344767;
+        border: none;
+        box-shadow: 0 4px 10px rgba(21, 128, 61, 0.2);
     }
 
     .btn-kamera:hover {
-        background: #2c3a56;
+        background: linear-gradient(135deg, #166534, #15803d);
         color: #fff;
+        transform: translateY(-1px);
     }
 
     .btn-galeri {
-        background: #fff;
-        color: #344767;
-        border-color: #d9e0e8;
+        background: #ecfdf5;
+        color: #15803d;
+        border: 1.5px solid #a7f3d0;
+        font-weight: 600;
     }
 
     .btn-galeri:hover {
-        background: #f5f7fa;
-        color: #344767;
-        border-color: #8392ab;
+        background: #d1fae5;
+        color: #065f46;
+        border-color: #6ee7b7;
+    }
+
+    .btn-absen-submit {
+        background: linear-gradient(135deg, #15803d, #16a34a) !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 10px 24px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25) !important;
+        transition: all 0.2s ease;
+    }
+
+    .btn-absen-submit:hover {
+        background: linear-gradient(135deg, #166534, #15803d) !important;
+        color: #fff !important;
+        box-shadow: 0 6px 16px rgba(21, 128, 61, 0.35) !important;
+        transform: translateY(-1px);
+    }
+
+    .form-absen-card {
+        border: 1px solid #d2edd7 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 6px 24px rgba(15, 81, 50, 0.05) !important;
+    }
+
+    .form-absen-card .form-label {
+        color: #1e3a2b;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .form-absen-card .form-control:focus,
+    .form-absen-card select:focus,
+    .form-absen-card textarea:focus {
+        border-color: #15803d !important;
+        box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.15) !important;
+    }
+
+    .form-absen-card .input-group.input-group-outline.is-focused .form-label,
+    .form-absen-card .input-group.input-group-outline.is-filled .form-label {
+        color: #15803d !important;
+    }
+
+    .form-absen-card .input-group.input-group-outline.is-focused .form-control {
+        border-color: #15803d !important;
+        border-top-color: transparent !important;
+        box-shadow: inset 1px 0 #15803d, inset -1px 0 #15803d, inset 0 -1px #15803d !important;
     }
 
     /* Modal Kamera */
@@ -127,7 +179,7 @@
         width: 32px;
         height: 32px;
         border: 3px solid #e9edf3;
-        border-top-color: #344767;
+        border-top-color: #15803d;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
         margin: 0 auto 12px;
@@ -151,16 +203,29 @@
 
     /* Info teks */
     .bukti-info {
-        font-size: 11px;
-        color: #8392ab;
+        font-size: 11.5px;
+        color: #047857;
+        font-weight: 500;
         display: flex;
         align-items: center;
-        gap: 4px;
-        margin-top: 4px;
+        gap: 5px;
+        margin-top: 6px;
     }
 
     .bukti-info i {
-        font-size: 12px;
+        font-size: 14px;
+        color: #10b981;
+    }
+
+    /* Flatpickr tema hijau */
+    .flatpickr-calendar {
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px rgba(15, 81, 50, 0.15) !important;
+        border: 1px solid #d2edd7 !important;
+    }
+    .flatpickr-time .numInput:focus,
+    .flatpickr-time .numInput:hover {
+        background: #ecfdf5 !important;
     }
 </style>
 <?= $this->endSection(); ?>
@@ -179,10 +244,13 @@
                 </div>
             </div>
         <?php elseif ($tempat || (isSiswaActive(getSidByUid(user_id())) && getStatusSiswa(getSidByUid(user_id())) !== 'selesai')) : ?>
-            <div class="card">
+            <div class="card form-absen-card">
                 <div class="card-body">
                     <div class="mb-4">
-                        <h5>Form <?= isset($edit_logbook) ? 'Edit ' : ''  ?>Kehadiran</h5>
+                        <h5 style="color: #0f4423; font-weight: 700;">
+                            <span class="material-icons align-middle me-1 text-success" style="font-size: 1.4rem;">edit_calendar</span>
+                            Form <?= isset($edit_logbook) ? 'Edit ' : ''  ?>Kehadiran
+                        </h5>
                     </div>
                     <form class="form-absen" method="post" enctype="multipart/form-data">
                         <?php if (isset($edit_logbook)) : ?>
@@ -278,9 +346,9 @@
                                 </div>
                             </div>
 
-                            <button type="submit" class="btn bg-gradient-dark btn-block"><?= isset($edit_logbook) ? 'Perbarui' : '' ?> Absen</button>
+                            <button type="submit" class="btn btn-absen-submit btn-block"><?= isset($edit_logbook) ? 'Perbarui' : '' ?> Absen</button>
                             <?php if (isset($edit_logbook)) : ?>
-                                <button type="button" class="btn btn-secondary btn-block shadow me-2 btn-back">Kembali</button>
+                                <button type="button" class="btn btn-outline-success btn-block me-2 btn-back" style="border-radius: 10px; font-weight: 600;">Kembali</button>
                             <?php endif ?>
                         <?php endif ?>
                     </form>
@@ -290,13 +358,15 @@
     </div>
     <div class="col-12 col-md-8 mt-3">
         <?php if (isset($edit_logbook)) : ?>
-            <div class="badge badge-info border border-1 border-info w-100 px-3 py-2" style="text-align: start !important; text-transform: none !important; white-space: inherit;">
-                <h6 style="letter-spacing: 1px;">Perhatian !</h6>
-                <p style="line-height: .6cm;">Pastikan detail dari <strong>absensi</strong> dan <strong>logbook</strong> anda <u>sudah benar</u>, agar tidak terjadi penolakan oleh pembimbing magang.</p>
+            <div class="alert border shadow-sm w-100 text-start py-3 px-3" style="background-color: #ecfdf5 !important; border-color: #a7f3d0 !important; color: #065f46;">
+                <h6 style="color: #044e31; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px;">
+                    <span class="material-icons align-middle me-1" style="font-size: 1.2rem; color: #15803d;">info</span> Perhatian !
+                </h6>
+                <p class="mb-0" style="font-size: 0.85rem; line-height: 1.5; color: #065f46;">Pastikan detail dari <strong>absensi</strong> dan <strong>logbook</strong> Anda <u>sudah benar</u>, agar tidak terjadi penolakan oleh pembimbing magang.</p>
             </div>
         <?php else : ?>
-            <div class="alert alert-light border shadow-sm w-100 text-center py-3">
-                <span class="text-dark">Untuk melihat daftar logbook Anda, silakan buka menu <a href="/logbookku" class="text-primary font-weight-bold text-decoration-underline">Laporan Logbook</a>.</span>
+            <div class="alert border shadow-sm w-100 text-center py-3" style="background-color: #ecfdf5 !important; border-color: #a7f3d0 !important;">
+                <span style="color: #065f46;">Untuk melihat daftar logbook Anda, silakan buka menu <a href="/logbookku" style="color: #15803d; font-weight: 700; text-decoration: underline;">Laporan Logbook</a>.</span>
             </div>
         <?php endif ?>
     </div>
@@ -325,7 +395,7 @@
                 <div id="kameraError" class="camera-error" style="display:none;">
                     <i class="material-icons">no_photography</i>
                     <div id="kameraErrorMsg">Kamera tidak dapat diakses.</div>
-                    <button type="button" class="btn btn-sm btn-outline-dark mt-3" data-bs-dismiss="modal">Gunakan Galeri Saja</button>
+                    <button type="button" class="btn btn-sm btn-galeri mt-3" data-bs-dismiss="modal">Gunakan Galeri Saja</button>
                 </div>
 
                 <!-- Video Preview -->
@@ -336,7 +406,7 @@
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
                     <i class="material-icons" style="font-size: 16px; vertical-align: middle;">arrow_back</i> Batal
                 </button>
-                <button type="button" class="btn btn-sm bg-gradient-dark" id="btnCapture" disabled>
+                <button type="button" class="btn btn-sm btn-absen-submit" id="btnCapture" disabled>
                     <i class="material-icons" style="font-size: 16px; vertical-align: middle;">camera</i> Ambil Foto
                 </button>
             </div>

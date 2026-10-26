@@ -100,21 +100,6 @@
                         <textarea name="alamat" id="alamat" rows="2" class="form-control" placeholder="Alamat Lengkap" required><?= $siswa->alamat ?></textarea>
                     </div>
 
-                    <!-- ==================== SURAT BALASAN ==================== -->
-                    <div class="mb-3">
-                        <label class="form-label mb-0 text-sm" for="surat_balasan">Surat Balasan Magang (PDF)</label>
-                        <div class="input-group input-group-outline">
-                            <input type="file" name="surat_balasan" id="surat_balasan" class="form-control" accept=".pdf">
-                        </div>
-                        <?php if (!empty($siswa->surat_balasan)) : ?>
-                            <small class="text-xs text-success mt-1 d-block">
-                                Surat balasan saat ini: <a href="/assets/berkas/<?= $siswa->surat_balasan ?>" target="_blank" class="text-info text-decoration-underline">Lihat File</a>
-                            </small>
-                        <?php else: ?>
-                            <small class="text-xs text-secondary mt-1 d-block">Belum ada surat balasan yang diunggah.</small>
-                        <?php endif; ?>
-                    </div>
-
                     <!-- ==================== TOMBOL ==================== -->
                     <div class="text-center gap-3 d-flex align-items-center justify-content-end mt-4">
                         <a href="/man/siswa" class="btn btn-round bg-gradient-light">Batal</a>

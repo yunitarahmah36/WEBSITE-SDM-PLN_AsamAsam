@@ -7,6 +7,65 @@
     .t-w a:active {
         color: white !important;
     }
+
+    /* Metric Cards (Admin & Pembimbing) */
+    .card-metric {
+        background: #ffffff !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+        padding: 20px 22px !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-metric:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07) !important;
+    }
+    .metric-icon-box {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .metric-icon-box .material-icons {
+        font-size: 26px !important;
+    }
+    .metric-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748b;
+        display: block;
+        margin-bottom: 2px;
+    }
+    .metric-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: #1e293b;
+        line-height: 1.1;
+        margin-bottom: 0;
+    }
+    .metric-sub {
+        font-size: 12px;
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    .card-perhatian {
+        background: #eaf4ff !important;
+        border: 1.5px solid #a8d1ff !important;
+        border-radius: 16px !important;
+        box-shadow: 0 2px 10px rgba(25, 103, 210, 0.04) !important;
+        padding: 24px 26px !important;
+    }
+    .perhatian-text {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #0f4a8a;
+        line-height: 1.65;
+        letter-spacing: 0.3px;
+    }
 </style>
 
 <?php if (in_groups('siswa') && isset($is_profile_incomplete) && $is_profile_incomplete) : ?>
@@ -51,17 +110,17 @@
 <?php if (in_groups('siswa') && isset($my_application) && $my_application) : ?>
     <div class="row mb-4 animate__animated animate__fadeIn">
         <div class="col-12">
-            <div class="card shadow-lg border-radius-xl bg-gradient-light">
-                <div class="card-body p-3">
+            <div class="card shadow-sm border-radius-xl bg-white border" style="border-color: #d2edd7 !important;">
+                <div class="card-body p-4">
                     <div class="row align-items-center">
                         <div class="col-lg-8 col-md-8 col-7">
                             <div class="numbers">
-                                <p class="text-sm mb-0 text-uppercase font-weight-bold text-dark opacity-7">Status Lamaran Magang Saya</p>
+                                <p class="text-xs mb-1 text-uppercase font-weight-bold" style="color: #15803d; letter-spacing: 0.5px;">Status Lamaran Magang Saya</p>
                                 <h5 class="font-weight-bolder text-dark mb-1">
                                     <?= $my_application->instansi ?>
                                 </h5>
                                 <p class="mb-0 text-sm italic">
-                                    <span class="text-xs font-weight-bold opacity-7"><i class="fas fa-map-marker-alt me-1"></i> <?= $my_application->alamat ?></span>
+                                    <span class="text-xs font-weight-bold text-muted"><i class="fas fa-map-marker-alt me-1"></i> <?= $my_application->alamat ?></span>
                                 </p>
                                 <?php if ($my_application->status == 'rejected' || $my_application->status == 'reject by system') : ?>
                                     <p class="text-xs text-danger font-weight-bold mt-2 mb-0">
@@ -72,16 +131,16 @@
                         </div>
                         <div class="col-lg-4 col-md-4 col-5 text-end">
                             <?php if ($my_application->status == 'pending') : ?>
-                                <span class="badge bg-gradient-info shadow-info animate__animated animate__pulse animate__infinite">Menunggu Persetujuan</span>
+                                <span class="badge" style="background-color: #fef3c7; color: #92400e; font-weight: 700; border-radius: 20px; padding: 6px 14px;">Menunggu Persetujuan</span>
                             <?php elseif ($my_application->status == 'accepted') : ?>
-                                <span class="badge bg-gradient-success shadow-success">Diterima / Sedang Magang</span>
+                                <span class="badge" style="background-color: #d1fae5; color: #065f46; font-weight: 700; border-radius: 20px; padding: 6px 14px;">Diterima / Sedang Magang</span>
                             <?php elseif ($my_application->status == 'rejected' || $my_application->status == 'reject by system') : ?>
                                 <div class="d-flex flex-column align-items-end gap-2">
-                                    <span class="badge bg-gradient-danger shadow-danger mb-0">Lamaran Ditolak</span>
-                                    <a href="/tempat" class="btn btn-xs bg-gradient-dark mb-0 py-1 px-3">Cari Divisi Lain</a>
+                                    <span class="badge" style="background-color: #fee2e2; color: #991b1b; font-weight: 700; border-radius: 20px; padding: 6px 14px;">Lamaran Ditolak</span>
+                                    <a href="/tempat" class="btn btn-xs text-white mb-0 py-1 px-3" style="background-color: #156c3f; border-radius: 6px;">Cari Divisi Lain</a>
                                 </div>
                             <?php elseif ($my_application->status == 'selesai') : ?>
-                                <span class="badge bg-gradient-dark shadow-dark text-white">Magang Selesai</span>
+                                <span class="badge" style="background-color: #d1fae5; color: #065f46; font-weight: 700; border-radius: 20px; padding: 6px 14px;">Magang Selesai</span>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -91,145 +150,243 @@
     </div>
 <?php endif; ?>
 
-<div class="row">
-    <div class="col-lg-6 col-12 mb-3 mt-3 mb-lg-0 mt-lg-0">
-        <?php $is_admin_or_pembimbing = in_groups('admin') || in_groups('pembimbing'); ?>
-        <?php if ($is_admin_or_pembimbing) : ?>
-        <div class="row">
-            <div class="col-lg-6 col-md-6 col-sm-6 col-12 mb-4">
-                <div class="card">
-                    <div class="card-header p-3 py-2">
-                        <div class="icon icon-lg icon-shape bg-gradient-info shadow text-center border-radius-xl mt-n4 position-absolute">
-                            <i class="material-icons text-white opacity-10">
-                                account_circle
-                            </i>
+<?php $is_admin_or_pembimbing = in_groups('admin') || in_groups('pembimbing'); ?>
+<?php if ($is_admin_or_pembimbing) : ?>
+<?php $pendingCount = countPendingApplications(); ?>
+<?php if ($pendingCount > 0) : ?>
+    <div class="alert alert-info text-white border-radius-xl p-4 mb-4 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-3 animate__animated animate__fadeIn" style="background: linear-gradient(87deg, #0b519c 0%, #1771d9 100%) !important;">
+        <div class="d-flex align-items-center">
+            <div class="avatar avatar-md bg-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="min-width: 48px; height: 48px;">
+                <i class="material-icons fs-3" style="color: #0b519c;">note_add</i>
+            </div>
+            <div>
+                <h6 class="text-white mb-1 font-weight-bold">Pemberitahuan: Pendaftaran Peserta Baru</h6>
+                <p class="text-sm mb-0 text-white opacity-9">
+                    Terdapat <strong><?= $pendingCount ?></strong> pendaftaran magang baru yang sedang menunggu persetujuan Admin/Pembimbing.
+                </p>
+            </div>
+        </div>
+        <div>
+            <a href="/application" class="btn btn-white text-primary font-weight-bold mb-0 shadow-sm">
+                <i class="fas fa-clipboard-check me-1"></i> Tinjau Pendaftaran (<?= $pendingCount ?>)
+            </a>
+        </div>
+    </div>
+<?php endif; ?>
+<div class="row mb-4">
+    <div class="col-lg-7 col-xl-7 col-12 mb-3 mb-lg-0">
+        <div class="row g-3">
+            <div class="col-sm-6 col-12">
+                <div class="card card-metric">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="metric-icon-box" style="background-color: #104c8a;">
+                            <i class="material-icons text-white">account_circle</i>
                         </div>
-                        <div class="text-end pt-1">
-                            <p class="text-sm mb-0 text-capitalize d-none d-md-block">Siswa Terdaftar (Divisi)</p>
-                            <h4 class="mb-0"><?= $total_siswa ?></h4>
+                        <div class="text-end">
+                            <span class="metric-label">Siswa Terdaftar (Divisi)</span>
+                            <h2 class="metric-value"><?= $total_siswa ?></h2>
                         </div>
                     </div>
-                    <hr class="dark horizontal my-0 d-none d-md-block">
-                    <div class="card-footer p-3">
-                        <p class="mb-0 text-xs">
-                            Jumlah siswa terdaftar di divisi
-                        </p>
+                    <div class="mt-2">
+                        <p class="metric-sub mb-0">Jumlah siswa terdaftar di divisi</p>
                     </div>
                 </div>
             </div>
             
-            <div class="col-lg-6 col-md-6 col-sm-6 col-12 mb-4">
-                <div class="card">
-                    <div class="card-header p-3 py-2">
-                        <div class="icon icon-lg icon-shape bg-gradient-info shadow text-center border-radius-xl mt-n4 position-absolute">
-                            <i class="material-icons text-white opacity-10">
-                                business
-                            </i>
+            <div class="col-sm-6 col-12">
+                <div class="card card-metric">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="metric-icon-box" style="background-color: #3898ec;">
+                            <i class="material-icons text-white">apartment</i>
                         </div>
-                        <div class="text-end pt-1">
-                            <p class="text-sm mb-0 text-capitalize d-none d-md-block">Divisi Magang</p>
-                            <h4 class="mb-0"><?= $total_tempat ?></h4>
+                        <div class="text-end">
+                            <span class="metric-label">Divisi Magang</span>
+                            <h2 class="metric-value"><?= $total_tempat ?></h2>
                         </div>
                     </div>
-                    <hr class="dark horizontal my-0 d-none d-md-block">
-                    <div class="card-footer p-3">
-                        <p class="mb-0 text-xs">
-                            Jumlah divisi magang yang terdaftar
-                        </p>
+                    <div class="mt-2">
+                        <p class="metric-sub mb-0">Jumlah divisi magang yang terdaftar</p>
                     </div>
                 </div>
             </div>
-        </div>
-        <?php endif; ?>
-        <?php if ($is_admin_or_pembimbing) : ?>
-        <div class="row mt-2">
-            <div class="col-lg-6 col-md-6 col-sm-6 col-12">
-                <div class="card">
-                    <div class="card-header p-3 py-2">
-                        <div class="icon icon-lg icon-shape bg-gradient-success shadow text-center border-radius-xl mt-n4 position-absolute">
-                            <i class="material-icons text-white opacity-10">
-                                business
-                            </i>
-                        </div>
-                        <div class="text-end pt-1">
-                            <p class="text-sm mb-0 text-capitalize d-none d-md-block">Divisi Buka</p>
-                            <h4 class="mb-0"><?= $tempat_buka ?></h4>
-                        </div>
-                    </div>
-                    <hr class="dark horizontal my-0 d-none d-md-block">
-                    <div class="card-footer p-3">
-                        <p class="mb-0 text-xs">
-                            Jumlah divisi magang buka
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-md-6 col-sm-6 col-12">
-                <div class="card">
-                    <div class="card-header p-3 py-2">
-                        <div class="icon icon-lg icon-shape bg-gradient-primary shadow text-center border-radius-xl mt-n4 position-absolute">
-                            <i class="material-icons text-white opacity-10">
-                                business
-                            </i>
-                        </div>
-                        <div class="text-end pt-1">
-                            <p class="text-sm mb-0 text-capitalize d-none d-md-block">Divisi Tutup</p>
-                            <h4 class="mb-0"><?= $tempat_tutup ?></h4>
-                        </div>
-                    </div>
-                    <hr class="dark horizontal my-0 d-none d-md-block">
-                    <div class="card-footer p-3">
-                        <p class="mb-0 text-xs">
-                            Jumlah divisi magang tutup
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
-    </div>
-    <div class="col-lg-6 col-12 mt-lg-0">
-        <?php if (in_groups('admin') || in_groups('pembimbing')) : ?>
-            <div class="badge badge-info border border-info w-100 p-3" style="text-align: left; white-space: normal !important;">
-                <div class="font-weight-semibold mb-2" style="font-size: 14px;"><i class="fa fa-info-circle me-1"></i> Pehatian</div>
-                <div class="font-weight-normal" style="line-height: 0.48cm; font-size: 12px;">
-                    Semua informasi dan pengumuman harus disampaikan dengan jelas, detail dan tidak membingungkan demi membuat lingkungan yang kondusif dan mempermudah siswa dalam mendapatkan dan menjelaskan apa yang mereka perlukan.
-                </div>
-            </div>
-        <?php else : ?>
-            <div class="card h-100" title="Daftar Pengumuman terbaru" data-bs-toggle="tooltip">
-                <div class="card-body p-2">
-                    <ul class="list-group">
-                        <?php $i = 1 ?>
-                        <?php foreach ($pengumuman as $p) : ?>
-                            <?php if ($i <= 4) : ?>
-                                <li class="list-group-item info-items" data-num="<?= $p->id ?>">
-                                    <a href="#!" class="py-1 mb-1" style="text-transform: capitalize !important; ">
-                                        <span class="d-block opacity-8 text-sm"><?= $p->judul ?></span>
-                                        <span class="d-block opacity-6 text-xs"><strong><?= $p->pembimbing ?></strong> | <?= $p->created_at ?></span>
-                                    </a>
-                                </li>
-                            <?php endif ?>
-                            <?php $i++ ?>
-                        <?php endforeach ?>
-                    </ul>
-                    <div class="d-flex justify-content-end align-items-center w-100 mt-3">
-                        <a href="/pengumuman" class="badge border badge-dark border-dark">Lihat Lainnya <i class="fa fa-arrow-right ms-1"></i></a>
-                    </div>
-                </div>
-            </div>
-        <?php endif ?>
 
+            <div class="col-sm-6 col-12">
+                <div class="card card-metric">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="metric-icon-box" style="background-color: #3898ec;">
+                            <i class="material-icons text-white">apartment</i>
+                        </div>
+                        <div class="text-end">
+                            <span class="metric-label">Divisi Buka</span>
+                            <h2 class="metric-value"><?= $tempat_buka ?></h2>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p class="metric-sub mb-0">Jumlah divisi magang buka</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-12">
+                <div class="card card-metric">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="metric-icon-box" style="background-color: #5975db;">
+                            <i class="material-icons text-white">apartment</i>
+                        </div>
+                        <div class="text-end">
+                            <span class="metric-label">Divisi Tutup</span>
+                            <h2 class="metric-value"><?= $tempat_tutup ?></h2>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p class="metric-sub mb-0">Jumlah divisi magang tutup</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-5 col-xl-5 col-12">
+        <div class="card card-perhatian h-100">
+            <div class="d-flex align-items-center mb-3">
+                <span class="material-icons align-middle me-2" style="font-size: 20px; color: #0b519c;">info</span>
+                <h6 class="mb-0 font-weight-bold" style="color: #0b519c; font-size: 0.95rem; letter-spacing: 0.5px;">PERHATIAN</h6>
+            </div>
+            <p class="perhatian-text mb-0">
+                SEMUA INFORMASI DAN PENGUMUMAN HARUS DISAMPAIKAN DENGAN JELAS, DETAIL DAN TIDAK MEMBINGUNGKAN DEMI MEMBUAT LINGKUNGAN YANG KONDUSIF DAN MEMPERMUDAH SISWA DALAM MENDAPATKAN DAN MENJELASKAN APA YANG MEREKA PERLUKAN.
+            </p>
+        </div>
     </div>
 </div>
+<?php else : ?>
+<div class="row">
+    <div class="col-12 mt-lg-0">
+        <div class="card h-100" title="Daftar Pengumuman terbaru" data-bs-toggle="tooltip">
+            <div class="card-body p-2">
+                <ul class="list-group">
+                    <?php $i = 1 ?>
+                    <?php foreach ($pengumuman as $p) : ?>
+                        <?php if ($i <= 4) : ?>
+                            <li class="list-group-item info-items" data-num="<?= $p->id ?>">
+                                <a href="#!" class="py-1 mb-1" style="text-transform: capitalize !important; ">
+                                    <span class="d-block opacity-8 text-sm"><?= $p->judul ?></span>
+                                    <span class="d-block opacity-6 text-xs"><strong><?= $p->pembimbing ?></strong> | <?= $p->created_at ?></span>
+                                </a>
+                            </li>
+                        <?php endif ?>
+                        <?php $i++ ?>
+                    <?php endforeach ?>
+                </ul>
+                <div class="d-flex justify-content-end align-items-center w-100 mt-3">
+                    <a href="/pengumuman" class="badge border badge-dark border-dark">Lihat Lainnya <i class="fa fa-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
-<?php if (in_groups('admin')) : ?>
+<!-- ========================================== -->
+<!-- TAMPILAN DASHBOARD INSTANSI PENDIDIKAN     -->
+<!-- ========================================== -->
+<?php if (in_groups('instansi')) : ?>
+    <?php
+    $instansi_user = (new \App\Models\DosenPembimbingModel())->where('user_id', user_id())->first();
+    $konfig_dash = null;
+    if ($instansi_user) {
+        $konfig_dash = (new \App\Models\PenilaianKonfigurasiModel())->where('id_instansi', $instansi_user->id)->first();
+    }
+    ?>
+    <div class="row mt-4">
+        <div class="col-12 mb-3">
+            <div class="card bg-white border border-info shadow-sm border-radius-xl">
+                <div class="card-body p-3">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon icon-shape bg-gradient-info shadow-info text-center border-radius-xl p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <i class="material-icons opacity-10" translate="no">grading</i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 font-weight-bolder text-dark">Format & Atribut Penilaian PKL</h6>
+                                <p class="text-xs text-secondary mb-0">
+                                    <?php if ($konfig_dash && $konfig_dash->status === 'terkirim') : ?>
+                                        <span class="badge bg-success me-1"><i class="fa fa-check-circle me-1"></i> Terkirim ke Pembimbing</span>
+                                        Terkirim pada <?= date('d/m/Y H:i', strtotime($konfig_dash->tgl_kirim)) ?>
+                                    <?php else : ?>
+                                        <span class="badge bg-warning text-dark me-1"><i class="fa fa-exclamation-triangle me-1"></i> Belum Dikirim (Draf)</span>
+                                        Pembimbing lapangan belum dapat memberikan nilai sebelum Anda mengirimkan atribut penilaian.
+                                    <?php endif; ?>
+                                </p>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="/instansi/atribut-penilaian" class="btn btn-sm bg-gradient-info mb-0">
+                                <i class="fa fa-sliders-h me-1"></i> Kelola Atribut Penilaian
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Daftar Mahasiswa Bimbingan</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nama</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">NIM</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Divisi Magang</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($applications)) : ?>
+                                    <?php foreach ($applications as $app) : ?>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex px-2 py-1">
+                                                    <div class="d-flex flex-column justify-content-center">
+                                                        <h6 class="mb-0 text-sm"><?= $app->nama ?></h6>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <p class="text-xs font-weight-bold mb-0"><?= $app->nim ?></p>
+                                            </td>
+                                            <td>
+                                                <p class="text-xs font-weight-bold mb-0"><?= $app->instansi ?? '-' ?></p>
+                                            </td>
+                                            <td>
+                                                <?= genBadgeStatusApplication($app->status) ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else : ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center text-sm">Belum ada mahasiswa bimbingan.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if (in_groups('admin') || in_groups('pembimbing')) : ?>
     <div class="row mt-3">
         <div class="col-12">
             <div class="card card-body">
                 <div class="d-flex align-items-center justify-content-between">
                     <h5 class="px-4 pt-2">Daftar Pengumuman / Informasi Terbaru</h5>
-                    <a href="#!" class="badge badge-dark border border-dark" data-bs-toggle="modal" data-bs-target="#fapengumuman">+</a>
+                    <a href="#!" class="badge" style="background-color: #6596d1; border: 1px solid #6596d1; color: #ffffff; padding: 5px 8px; border-radius: 6px; font-weight: bold; font-size: 13px;" data-bs-toggle="modal" data-bs-target="#fapengumuman">+</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover table-stripped" id="table_pengumuman">
@@ -253,7 +410,7 @@
                                     <td class="text-sm ps-4"><?= $p->pembimbing ?></td>
                                     <td class="text-xs ps-4">
                                         <?php
-                                        $label = ['semua' => '🌐 Semua', 'siswa' => '🎓 Siswa', 'pembimbing' => '👷 Pembimbing Lapangan', 'dosen_pembimbing' => '🏫 Dosen Pembimbing'];
+                                        $label = ['semua' => '🌐 Semua', 'siswa' => '🎓 Siswa', 'pembimbing' => '👷 Pembimbing Lapangan', 'instansi' => '🏫 Instansi Pendidikan'];
                                         echo $label[$p->target_role ?? 'semua'] ?? '🌐 Semua';
                                         ?>
                                     </td>
@@ -301,10 +458,10 @@
                         <div class="mb-3">
                             <label class="form-label text-xs font-weight-bold mb-1">Pengumuman Untuk</label>
                             <select name="target_role" id="target_role" class="form-control form-select" required>
-                                <option value="semua">🌐 Semua (Siswa, Pembimbing, Dosen)</option>
+                                <option value="semua">🌐 Semua</option>
                                 <option value="siswa">🎓 Siswa Saja</option>
                                 <option value="pembimbing">👷 Pembimbing Lapangan Saja</option>
-                                <option value="dosen_pembimbing">🏫 Dosen Pembimbing Saja</option>
+                                <option value="instansi">🏫 Instansi Pendidikan Saja</option>
                             </select>
                         </div>
 
@@ -328,7 +485,6 @@
 <?php endif ?>
 
 <!-- modal detail pengumuman -->
-<!-- Modal -->
 <div class="modal fade" id="modalDetail" tabindex="-1" role="dialog" aria-labelledby="modalDetailLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -557,18 +713,6 @@
                     },
                 });
             });
-
-            // takerangan textarea
-            // const ta = $('#taketerangan').find('textarea');
-            // ta.on('focus', function() {
-            //     $(this).parent().addClass('is-filled');
-            // });
-
-            // ta.on('focusout', function() {
-            //     if ($(this).val() == '') {
-            //         $(this).parent().removeClass('is-filled');
-            //     }
-            // });
         });
     </script>
 <?php else : ?>

@@ -15,7 +15,8 @@ class NilaiModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        "idt", "ids", "n_disiplin", "n_motivasi", "n_kehadiran", "n_kreatifitas", "n_kejujuran", "n_kesopanan", "n_kerjasama", "n_laporan", "n_dosen"
+        "idt", "ids", "id_konfigurasi", "metode_penilaian", "total_nilai", "file_penilaian", "catatan",
+        "n_disiplin", "n_motivasi", "n_kehadiran", "n_kreatifitas", "n_kejujuran", "n_kesopanan", "n_kerjasama", "n_laporan", "n_dosen"
     ];
 
     // Dates

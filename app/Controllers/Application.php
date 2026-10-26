@@ -39,6 +39,15 @@ class Application extends BaseController
             ]);
         }
 
+        // Validasi: Wajib melengkapi data profil diri terlebih dahulu
+        if (!isProfileComplete($id_siswa, true)) {
+            return $this->response->setJSON([
+                'status'    => 403,
+                'success'   => false,
+                'message'   => 'Pendaftaran gagal: Anda belum melengkapi data profil diri (seperti NIK, Tempat & Tanggal Lahir, Jenis Kelamin, dan No HP Emergency). Silakan lengkapi profil Anda pada menu Profil terlebih dahulu.'
+            ]);
+        }
+
         // Prevent registering to the same division if already rejected
         $this_app = $this->app->where(['id_siswa' => $id_siswa, 'id_tempat' => $id_tempat])->first();
         if ($this_app && in_array($this_app->status, ['rejected', 'reject by system'])) {
@@ -107,6 +116,7 @@ class Application extends BaseController
         } else {
             if ($this->app->insert($data)) {
                 $this->sendEmailNotifPendaftaranBaru($id_siswa, $id_tempat);
+                $this->sendInAppNotifPendaftaranBaru($id_siswa, $id_tempat);
                 return $this->response->setJSON([
                     'status'    => 200,
                     'success'   => true,
@@ -278,6 +288,30 @@ class Application extends BaseController
             ->where('id_tempat', $id_tempat_baru)
             ->where('status', 'accepted')
             ->findAll();
+
+        // =====================================================
+        // PROSES UPLOAD SURAT BALASAN (TAMBAHAN BARU)
+        // =====================================================
+        $fileSurat = $this->request->getFile('surat_balasan');
+        
+        if ($fileSurat && $fileSurat->isValid() && !$fileSurat->hasMoved()) {
+            // Validasi ekstensi
+            if ($fileSurat->getExtension() == 'pdf') {
+                $newName = $fileSurat->getRandomName();
+                $fileSurat->move('assets/berkas/', $newName);
+                
+                // Simpan nama file ke tabel siswa
+                if ($siswa) {
+                    $siswaModel->update($id_siswa, ['surat_balasan' => $newName]);
+                }
+            } else {
+                return $this->response->setJSON([
+                    'status'    => 500,
+                    'success'   => false,
+                    'message'   => 'Format file surat balasan harus PDF.'
+                ]);
+            }
+        }
 
         // =====================================================
         // UPDATE DATA LAMARAN
@@ -546,4 +580,45 @@ class Application extends BaseController
 
         return redirect()->back()->with('error', 'Gagal mengupload template. Silakan coba lagi.');
     }
-}
+
+    /**
+     * Kirim notifikasi in-app (ke menu Pesan) untuk semua Admin
+     */
+    private function sendInAppNotifPendaftaranBaru($id_siswa, $id_tempat)
+    {
+        try {
+            $db = \Config\Database::connect();
+            $siswa = $db->table('siswa')->where('id', $id_siswa)->get()->getRow();
+            $tempat = $db->table('tempat_magang')->where('id', $id_tempat)->get()->getRow();
+            if (!$siswa || !$tempat) return false;
+
+            // Ambil semua user admin
+            $admins = $db->table('users')
+                ->select('users.id')
+                ->join('auth_groups_users', 'auth_groups_users.user_id = users.id')
+                ->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id')
+                ->where('auth_groups.name', 'admin')
+                ->get()->getResultArray();
+
+            $sender_id = $siswa->user_id ?? user_id();
+            $nama_tempat = $tempat->nama ?? 'Divisi Magang';
+            $pesanTeks = "📢 [Pemberitahuan Pendaftaran Peserta Baru]\n" .
+                         "Peserta {$siswa->nama} (NIM: {$siswa->nim}) telah mendaftar magang di divisi {$nama_tempat}.\n" .
+                         "Silakan lakukan verifikasi dan peninjauan pada menu Pendaftaran Peserta.";
+
+            $pesanModel = new \App\Models\PesanModel();
+            foreach ($admins as $adm) {
+                $pesanModel->insert([
+                    'sender_id'   => $sender_id,
+                    'receiver_id' => $adm['id'],
+                    'pesan'       => $pesanTeks,
+                    'is_read'     => 0
+                ]);
+            }
+            return true;
+        } catch (\Exception $e) {
+            log_message('error', 'Gagal kirim notif in-app: ' . $e->getMessage());
+            return false;
+        }
+    }
+}

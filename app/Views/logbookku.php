@@ -71,9 +71,9 @@
         align-items: center;
         gap: 4px;
         padding: 5px 12px;
-        background: #e3f2fd;
-        color: #1565c0;
-        border: 1px solid #90caf9;
+        background: #e8f5e9; /* Hijau muda */
+        color: #2e7d32; /* Teks hijau gelap */
+        border: 1px solid #a5d6a7;
         border-radius: 6px;
         font-size: 11px;
         font-weight: 700;
@@ -84,9 +84,9 @@
     }
 
     .btn-lihat-catatan:hover {
-        background: #1565c0;
+        background: #2e7d32; /* Hijau gelap */
         color: #fff;
-        border-color: #1565c0;
+        border-color: #2e7d32;
     }
 
     /* Rapikan input search dan page length */
@@ -131,7 +131,7 @@
     }
 
     /* =========================================
-       MODAL CATATAN DOSEN - TAMPILAN BARU
+       MODAL CATATAN DOSEN - TAMPILAN HIJAU
        ========================================= */
     .modal-catatan-dosen .modal-content {
         border: none;
@@ -141,7 +141,7 @@
     }
 
     .modal-catatan-dosen .modal-header {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        background: linear-gradient(135deg, #10b981, #059669); /* Gradasi Hijau */
         color: #fff;
         border-bottom: none;
         padding: 18px 22px;
@@ -170,9 +170,9 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #bfdbfe;
+        background: #ecfdf5; /* Hijau sangat muda */
+        color: #047857; /* Teks hijau */
+        border: 1px solid #a7f3d0;
         border-radius: 6px;
         padding: 4px 10px;
         font-size: 11px;
@@ -184,7 +184,7 @@
 
     .catatan-content {
         background: #f8fafc;
-        border-left: 4px solid #3b82f6;
+        border-left: 4px solid #10b981; /* Garis kiri hijau */
         border-radius: 8px;
         padding: 16px 18px;
         font-size: 14px;
@@ -226,7 +226,7 @@
         align-items: center;
         gap: 6px;
         padding: 8px 20px;
-        background: #3b82f6;
+        background: #10b981; /* Tombol Hijau */
         color: #fff;
         border: none;
         border-radius: 8px;
@@ -239,9 +239,9 @@
     }
 
     .btn-tutup-catatan:hover {
-        background: #2563eb;
+        background: #059669; /* Hijau lebih gelap saat di-hover */
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     }
 </style>
 
@@ -321,7 +321,7 @@
 </div>
 
 <!-- =========================================
-     MODAL CATATAN DOSEN (PENGGANTI SWEETALERT)
+     MODAL CATATAN DOSEN
      ========================================= -->
 <div class="modal fade modal-catatan-dosen" id="modalCatatanDosen" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

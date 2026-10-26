@@ -51,14 +51,35 @@
 .register-body .input-group.input-group-outline .form-control { display: block !important; width: 100% !important; height: 50px !important; min-height: 50px !important; padding: 14px 16px !important; border: 1px solid #d9e0e8 !important; border-radius: 8px !important; background-color: #fff !important; background-image: none !important; color: #344767 !important; font-size: 13px !important; box-shadow: none !important; transition: border-color 0.15s ease, box-shadow 0.15s ease !important; }
 
 /* =========================================================
-   FLOATING LABEL
+   FLOATING LABEL - DEFAULT (di tengah)
    ========================================================= */
-.register-body .input-group.input-group-outline .form-label { position: absolute !important; top: 50% !important; left: 16px !important; transform: translateY(-50%) !important; margin: 0 !important; padding: 0 4px !important; background: transparent !important; color: #8392ab !important; font-size: 13px !important; font-weight: 400 !important; line-height: 1 !important; pointer-events: none !important; transition: all 0.2s ease !important; z-index: 2 !important; width: auto !important; height: auto !important; }
+.register-body .input-group.input-group-outline .form-label { position: absolute !important; top: 50% !important; left: 16px !important; transform: translateY(-50%) !important; margin: 0 !important; padding: 0 4px !important; background: transparent !important; color: #8392ab !important; font-size: 13px !important; font-weight: 400 !important; line-height: 1.2 !important; pointer-events: none !important; transition: all 0.2s ease !important; z-index: 4 !important; width: auto !important; height: auto !important; }
 .register-body .input-group.input-group-outline .form-label::before,
 .register-body .input-group.input-group-outline .form-label::after { display: none !important; content: none !important; }
-.register-body .input-group.input-group-outline:focus-within .form-label { top: 0 !important; left: 12px !important; transform: translateY(-50%) scale(0.85) !important; transform-origin: left center !important; background-color: #fff !important; color: #5e72e4 !important; font-weight: 500 !important; padding: 0 6px !important; }
+
+/* =========================================================
+   FLOATING LABEL - FOKUS ATAU TERISI (naik ke atas)
+   ========================================================= */
+/* Untuk input teks: pakai :focus-within dan :not(:placeholder-shown) */
+.register-body .input-group.input-group-outline:focus-within .form-label,
 .register-body .input-group.input-group-outline .form-control.is-filled ~ .form-label,
-.register-body .input-group.input-group-outline .form-control:not(:placeholder-shown) ~ .form-label { top: 0 !important; left: 12px !important; transform: translateY(-50%) scale(0.85) !important; transform-origin: left center !important; background-color: #fff !important; color: #8392ab !important; font-weight: 500 !important; padding: 0 6px !important; }
+.register-body .input-group.input-group-outline .form-control:not(:placeholder-shown) ~ .form-label {
+    top: 0 !important;
+    left: 12px !important;
+    transform: translateY(-50%) scale(0.85) !important;
+    transform-origin: left center !important;
+    background-color: #fff !important;
+    font-weight: 500 !important;
+    padding: 0 6px !important;
+    z-index: 5 !important;
+}
+
+/* Warna label saat fokus (biru) */
+.register-body .input-group.input-group-outline:focus-within .form-label { color: #5e72e4 !important; }
+
+/* Warna label saat terisi tapi tidak fokus (abu-abu) */
+.register-body .input-group.input-group-outline .form-control.is-filled ~ .form-label,
+.register-body .input-group.input-group-outline .form-control:not(:placeholder-shown) ~ .form-label { color: #8392ab !important; }
 
 /* =========================================================
    FOCUS
@@ -82,12 +103,36 @@
 .register-body .input-group.input-group-outline:has(.is-invalid) .form-label { color: #5e72e4 !important; }
 
 /* =========================================================
-   SELECT JUMLAH PENDAFTAR
+   SELECT DROPDOWN
    ========================================================= */
-.register-body .input-group.input-group-outline:has(#kelas) .form-select { display: block !important; width: 100% !important; height: 50px !important; min-height: 50px !important; padding: 14px 16px !important; border: 1px solid #d9e0e8 !important; border-radius: 8px !important; background-color: #fff !important; background-image: none !important; color: #344767 !important; box-shadow: none !important; font-size: 13px !important; }
-.register-body .input-group.input-group-outline:has(#kelas) .form-select:focus { border: 1px solid #5e72e4 !important; box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.10) !important; outline: none !important; background-color: #fff !important; }
-.register-body .input-group.input-group-outline:has(#kelas) .form-select.is-filled { border: 1px solid #d9e0e8 !important; background-color: #fff !important; box-shadow: none !important; }
-.register-body .input-group.input-group-outline:has(#kelas) .form-select.is-invalid { border: 1px solid #5e72e4 !important; box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.10) !important; background-color: #fff !important; }
+.register-body .input-group.input-group-outline .form-select { display: block !important; width: 100% !important; height: 50px !important; min-height: 50px !important; padding: 14px 40px 14px 16px !important; border: 1px solid #d9e0e8 !important; border-radius: 8px !important; background-color: #fff !important; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23344767' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important; background-repeat: no-repeat !important; background-position: right 16px center !important; background-size: 12px !important; color: #344767 !important; box-shadow: none !important; font-size: 13px !important; appearance: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; }
+.register-body .input-group.input-group-outline .form-select:focus { border: 1px solid #5e72e4 !important; box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.10) !important; outline: none !important; background-color: #fff !important; }
+.register-body .input-group.input-group-outline .form-select.is-invalid { border: 1px solid #5e72e4 !important; box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.10) !important; background-color: #fff !important; }
+
+/* Label untuk SELECT yang belum dipilih -> di tengah */
+.register-body .input-group.input-group-outline:has(select.form-select:not(.is-filled):not(:focus)) .form-label {
+    top: 50% !important;
+    left: 16px !important;
+    transform: translateY(-50%) !important;
+    background-color: transparent !important;
+    color: #8392ab !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    padding: 0 4px !important;
+}
+
+/* Label untuk SELECT yang sudah dipilih atau fokus -> naik ke atas */
+.register-body .input-group.input-group-outline:has(select.form-select.is-filled) .form-label,
+.register-body .input-group.input-group-outline:has(select.form-select:focus) .form-label {
+    top: 0 !important;
+    left: 12px !important;
+    transform: translateY(-50%) scale(0.85) !important;
+    transform-origin: left center !important;
+    background-color: #fff !important;
+    font-weight: 500 !important;
+    padding: 0 6px !important;
+    z-index: 5 !important;
+}
 
 /* =========================================================
    TANGGAL
@@ -270,8 +315,8 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <div class="input-group input-group-outline">
-                                                    <select class="form-control form-select" name="kelas" id="kelas" required>
-                                                        <option value="" disabled <?= !old('kelas') ? 'selected' : '' ?>>Pilih jumlah</option>
+                                                    <select class="form-control form-select <?= old('kelas') ? 'is-filled' : '' ?>" name="kelas" id="kelas" required>
+                                                        <option value="" disabled <?= !old('kelas') ? 'selected' : '' ?>></option>
                                                         <option value="1 Orang" <?= old('kelas') == '1 Orang' ? 'selected' : '' ?>>1 Orang</option>
                                                         <option value="2 Orang" <?= old('kelas') == '2 Orang' ? 'selected' : '' ?>>2 Orang</option>
                                                         <option value="3 Orang" <?= old('kelas') == '3 Orang' ? 'selected' : '' ?>>3 Orang</option>
@@ -324,7 +369,16 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <div class="input-group input-group-outline">
-                                                    <input type="text" class="form-control <?= session('errors.instansi') ? 'is-invalid' : '' ?>" name="instansi" id="instansi" placeholder=" " <?= old('instansi') ? 'value="' . old('instansi') . '"' : '' ?> required>
+                                                    <select class="form-control form-select <?= old('instansi') ? 'is-filled' : '' ?> <?= session('errors.instansi') ? 'is-invalid' : '' ?>" name="instansi" id="instansi" required>
+                                                        <option value="" disabled <?= !old('instansi') ? 'selected' : '' ?>></option>
+                                                        <?php if(isset($instansi) && is_array($instansi)): ?>
+                                                            <?php foreach($instansi as $ins): ?>
+                                                                <option value="<?= esc($ins['nama_instansi']) ?>" <?= old('instansi') == $ins['nama_instansi'] ? 'selected' : '' ?>>
+                                                                    <?= esc($ins['nama_instansi']) ?>
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                        <?php endif; ?>
+                                                    </select>
                                                     <label class="form-label" for="instansi">Nama Instansi</label>
                                                 </div>
                                                 <?php if (session('errors.instansi')) : ?>
@@ -382,11 +436,6 @@
                                         <p>Isi data dosen/guru pembimbing dari kampus/sekolah Anda</p>
                                     </div>
 
-                                    <div class="dosen-info-badge">
-                                        <i class="fas fa-info-circle"></i>
-                                        Wajib: isi minimal salah satu — NIP (dosen PNS) atau NIDN (dosen non-PNS)
-                                    </div>
-
                                     <div class="form-group">
                                         <div class="input-group input-group-outline">
                                             <input type="text" class="form-control <?= session('errors.dosen_nama') ? 'is-invalid' : '' ?>" name="dosen_nama" id="dosen_nama" placeholder=" " value="<?= old('dosen_nama') ?>" required>
@@ -395,50 +444,6 @@
                                         <?php if (session('errors.dosen_nama')) : ?>
                                             <small class="text-danger text-xxs ms-1"><?= session('errors.dosen_nama') ?></small>
                                         <?php endif; ?>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <div class="input-group input-group-outli   ne">
-                                                    <input type="text" class="form-control <?= session('errors.dosen_nip') ? 'is-invalid' : '' ?>" name="dosen_nip" id="dosen_nip" placeholder=" " value="<?= old('dosen_nip') ?>">
-                                                    <label class="form-label" for="dosen_nip">NIP Dosen/Guru (untuk PNS)</label>
-                                                </div>
-                                                <?php if (session('errors.dosen_nip')) : ?>
-                                                    <small class="text-danger text-xxs ms-1"><?= session('errors.dosen_nip') ?></small>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <div class="input-group input-group-outline">
-                                                    <input type="text" class="form-control <?= session('errors.dosen_nidn') ? 'is-invalid' : '' ?>" name="dosen_nidn" id="dosen_nidn" placeholder=" " value="<?= old('dosen_nidn') ?>">
-                                                    <label class="form-label" for="dosen_nidn">NIDN Dosen/Guru (untuk Non-PNS)</label>
-                                                </div>
-                                                <?php if (session('errors.dosen_nidn')) : ?>
-                                                    <small class="text-danger text-xxs ms-1"><?= session('errors.dosen_nidn') ?></small>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <div class="input-group input-group-outline">
-                                                    <input type="text" class="form-control" name="dosen_hp" id="dosen_hp" placeholder=" " value="<?= old('dosen_hp') ?>" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                                    <label class="form-label" for="dosen_hp">No. WhatsApp Dosen/Guru (Opsional)</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <div class="input-group input-group-outline">
-                                                    <input type="email" class="form-control" name="dosen_email" id="dosen_email" placeholder=" " value="<?= old('dosen_email') ?>">
-                                                    <label class="form-label" for="dosen_email">Email Dosen/Guru (Opsional)</label>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <!-- DOKUMEN -->
@@ -568,35 +573,9 @@ $(document).ready(function () {
         return valid;
     }
 
-    // Validasi tambahan: NIP/NIDN dosen minimal salah satu
-    $('#registerForm').on('submit', function(e) {
-        const nip = $('#dosen_nip').val().trim();
-        const nidn = $('#dosen_nidn').val().trim();
-        const namaDosen = $('#dosen_nama').val().trim();
-
-        if (namaDosen === '') {
-            e.preventDefault();
-            alert('Nama Dosen Pembimbing wajib diisi!');
-            $('#dosen_nama').addClass('is-invalid').focus();
-            return false;
-        }
-
-        if (nip === '' && nidn === '') {
-            e.preventDefault();
-            alert('Minimal isi NIP atau NIDN dosen pembimbing!');
-            $('#dosen_nip').addClass('is-invalid').focus();
-            return false;
-        }
-    });
-
-    $('#nextStep').on('click', function () {
-        if (validateStepOne()) showStep(2);
-    });
-
-    $('#prevStep').on('click', function () {
-        showStep(1);
-    });
-
+    // =====================================================
+    // UPDATE FILLED STATE UNTUK INPUT DAN SELECT
+    // =====================================================
     function updateFilledState() {
         $('#registerForm input, #registerForm select').each(function () {
             const value = $(this).val();
@@ -608,6 +587,10 @@ $(document).ready(function () {
         });
     }
 
+    // Jalankan saat halaman load
+    updateFilledState();
+
+    // Jalankan saat ada perubahan
     $('#registerForm input, #registerForm select').on('input change', function () {
         updateFilledState();
         const value = $(this).val();
@@ -616,20 +599,30 @@ $(document).ready(function () {
         }
     });
 
-    updateFilledState();
+    // Khusus untuk select: jalankan saat select dibuka/ditutup
+    $('#registerForm select').on('focus blur', function() {
+        updateFilledState();
+    });
 
-    function checkInstansi() {
-        let val = $('input[name="instansi"]').val() || '';
-        val = val.toLowerCase();
-        if (val.indexOf('smk') !== -1 || val.indexOf('sekolah') !== -1) {
-            $('label[for="nim"]').text('NIS');
-        } else {
-            $('label[for="nim"]').text('NIM/NIS');
+    // Validasi: Nama Dosen wajib diisi
+    $('#registerForm').on('submit', function(e) {
+        const namaDosen = $('#dosen_nama').val().trim();
+
+        if (namaDosen === '') {
+            e.preventDefault();
+            alert('Nama Dosen Pembimbing wajib diisi!');
+            $('#dosen_nama').addClass('is-invalid').focus();
+            return false;
         }
-    }
+    });
 
-    $('input[name="instansi"]').on('input change', checkInstansi);
-    checkInstansi();
+    $('#nextStep').on('click', function () {
+        if (validateStepOne()) showStep(2);
+    });
+
+    $('#prevStep').on('click', function () {
+        showStep(1);
+    });
 });
 </script>
 

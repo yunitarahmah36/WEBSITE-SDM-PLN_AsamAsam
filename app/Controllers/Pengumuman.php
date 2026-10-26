@@ -15,10 +15,10 @@ class Pengumuman extends BaseController
 
     public function index()
     {
-        $db = $this->pengumuman->select("pengumuman.*, CASE WHEN auth_groups.name = 'admin' THEN 'Admin' ELSE COALESCE(pembimbing.nama, dosen_pembimbing.nama, users.username) END as pembimbing")
+        $db = $this->pengumuman->select("pengumuman.*, CASE WHEN auth_groups.name = 'admin' THEN 'Admin' ELSE COALESCE(pembimbing.nama, instansi.nama_instansi, users.username) END as pembimbing")
             ->join('users', 'users.id = pengumuman.oleh')
             ->join('pembimbing', 'pembimbing.user_id = users.id', 'left')
-            ->join('dosen_pembimbing', 'dosen_pembimbing.user_id = users.id', 'left')
+            ->join('instansi', 'instansi.user_id = users.id', 'left')
             ->join('auth_groups_users', 'auth_groups_users.user_id = users.id', 'left')
             ->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id', 'left')
             ->orderBy('pengumuman.created_at', "DESC")
@@ -33,10 +33,10 @@ class Pengumuman extends BaseController
                    ->orWhere('pengumuman.target_role', null)
                    ->orWhere('pengumuman.target_role', '')
                    ->groupEnd();
-            } elseif (in_groups('dosen_pembimbing')) {
+            } elseif (in_groups('instansi')) {
                 $db->groupStart()
                    ->where('pengumuman.target_role', 'semua')
-                   ->orWhere('pengumuman.target_role', 'dosen_pembimbing')
+                   ->orWhere('pengumuman.target_role', 'instansi')
                    ->orWhere('pengumuman.target_role', null)
                    ->orWhere('pengumuman.target_role', '')
                    ->groupEnd();
@@ -55,19 +55,19 @@ class Pengumuman extends BaseController
 
         return view('pengumuman', [
             "title"         => "Magang | Dashboard",
-            "page_title"    => in_groups('admin') ? 'Dashboard Admin' : (in_groups('pembimbing') ? 'Dashboard Pembimbing' : 'Dashboard Siswa'),
+            "page_title"    => in_groups('admin') ? 'Dashboard Admin' : (in_groups('pembimbing') ? 'Dashboard Pembimbing' : (in_groups('instansi') ? 'Dashboard Instansi' : 'Dashboard Siswa')),
             "segment"       => $this->request->getUri()->getSegments(),
-            "breadcrumb"    => in_groups('admin') ? ['Dashboard', 'Admin'] : (in_groups('pembimbing') ? ['Dashboard', 'Pembimbing'] : ['Dashboard', user()->username]),
+            "breadcrumb"    => in_groups('admin') ? ['Dashboard', 'Admin'] : (in_groups('pembimbing') ? ['Dashboard', 'Pembimbing'] : (in_groups('instansi') ? ['Dashboard', 'Instansi'] : ['Dashboard', user()->username])),
             "pengumuman"    => $pengumuman
         ]);
     }
 
     public function get($id)
     {
-        $pengumuman = $this->pengumuman->select("pengumuman.*, CASE WHEN auth_groups.name = 'admin' THEN 'Admin' ELSE COALESCE(pembimbing.nama, dosen_pembimbing.nama, users.username) END as pembimbing")
+        $pengumuman = $this->pengumuman->select("pengumuman.*, CASE WHEN auth_groups.name = 'admin' THEN 'Admin' ELSE COALESCE(pembimbing.nama, instansi.nama_instansi, users.username) END as pembimbing")
             ->join('users', 'users.id = pengumuman.oleh')
             ->join('pembimbing', 'pembimbing.user_id = users.id', 'left')
-            ->join('dosen_pembimbing', 'dosen_pembimbing.user_id = users.id', 'left')
+            ->join('instansi', 'instansi.user_id = users.id', 'left')
             ->join('auth_groups_users', 'auth_groups_users.user_id = users.id', 'left')
             ->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id', 'left')
             ->where('pengumuman.id', $id)

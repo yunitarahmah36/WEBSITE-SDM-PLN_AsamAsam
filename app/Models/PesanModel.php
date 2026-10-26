@@ -47,40 +47,83 @@ class PesanModel extends Model
     }
 
     /**
-     * Get all conversation partners for a user with last message
+     * Get all conversation partners for a user with last message.
+     * Versi kompatibel untuk MySQL 5.7 / MariaDB 10.x (tanpa ROW_NUMBER / CTE).
      */
     public function getConversationList(int $userId)
     {
         $db = \Config\Database::connect();
-        $sql = "
+
+        // Step 1: Ambil semua partner unik + ID pesan terakhir
+        // Menggunakan MAX(id) sebagai penanda "pesan terakhir" (asumsi: id auto increment, jadi lebih besar = lebih baru)
+        $sql_partners = "
             SELECT 
-                u.id as partner_id,
-                u.username as partner_username,
-                COALESCE(s.nama, p.nama, d.nama) as partner_nama,
-                COALESCE(s.foto, p.foto, d.foto) as partner_foto,
-                (SELECT GROUP_CONCAT(ag.name ORDER BY ag.id) 
-                 FROM auth_groups_users agu2 
-                 JOIN auth_groups ag ON ag.id = agu2.group_id
-                 WHERE agu2.user_id = u.id) as partner_role,
-                last_msg.pesan as last_message,
-                last_msg.created_at as last_time,
-                (SELECT COUNT(*) FROM pesan WHERE receiver_id = ? AND sender_id = u.id AND is_read = 0) as unread_count
-            FROM users u
-            LEFT JOIN siswa s ON s.user_id = u.id
-            LEFT JOIN pembimbing p ON p.user_id = u.id
-            LEFT JOIN dosen_pembimbing d ON d.user_id = u.id
-            JOIN (
-                SELECT 
-                    CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END as partner_id,
-                    pesan,
-                    created_at,
-                    ROW_NUMBER() OVER (PARTITION BY CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END ORDER BY created_at DESC) as rn
-                FROM pesan
-                WHERE sender_id = ? OR receiver_id = ?
-            ) last_msg ON last_msg.partner_id = u.id AND last_msg.rn = 1
-            ORDER BY last_msg.created_at DESC
+                CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END AS partner_id,
+                MAX(id) AS last_msg_id
+            FROM pesan
+            WHERE sender_id = ? OR receiver_id = ?
+            GROUP BY partner_id
+            ORDER BY last_msg_id DESC
         ";
-        return $db->query($sql, [$userId, $userId, $userId, $userId, $userId])->getResult();
+
+        $partners = $db->query($sql_partners, [$userId, $userId, $userId])->getResult();
+
+        if (empty($partners)) {
+            return [];
+        }
+
+        // Step 2: Ambil detail pesan terakhir, user info, dan unread count per partner
+        $result = [];
+
+        foreach ($partners as $p) {
+            $partnerId = (int) $p->partner_id;
+            $lastMsgId = (int) $p->last_msg_id;
+
+            // Ambil pesan terakhir
+            $lastMsg = $db->table('pesan')
+                ->select('pesan, created_at')
+                ->where('id', $lastMsgId)
+                ->get()
+                ->getRow();
+
+            // Ambil info partner (user + siswa/pembimbing/instansi)
+            $user = $db->table('users')
+                ->select('users.id as partner_id, users.username as partner_username,
+                          COALESCE(s.nama, p.nama, i.nama_instansi) as partner_nama,
+                          COALESCE(s.foto, p.foto) as partner_foto,
+                          (SELECT GROUP_CONCAT(ag.name ORDER BY ag.id) 
+                           FROM auth_groups_users agu2 
+                           JOIN auth_groups ag ON ag.id = agu2.group_id
+                           WHERE agu2.user_id = users.id) as partner_role')
+                ->join('siswa s', 's.user_id = users.id', 'left')
+                ->join('pembimbing p', 'p.user_id = users.id', 'left')
+                ->join('instansi i', 'i.user_id = users.id', 'left')
+                ->where('users.id', $partnerId)
+                ->get()
+                ->getRow();
+
+            if (!$user) continue;
+
+            // Hitung unread
+            $unread = $db->table('pesan')
+                ->where('receiver_id', $userId)
+                ->where('sender_id', $partnerId)
+                ->where('is_read', 0)
+                ->countAllResults();
+
+            $result[] = (object) [
+                'partner_id'       => $partnerId,
+                'partner_username' => $user->partner_username,
+                'partner_nama'     => $user->partner_nama,
+                'partner_foto'     => $user->partner_foto,
+                'partner_role'     => $user->partner_role,
+                'last_message'     => $lastMsg ? $lastMsg->pesan : null,
+                'last_time'        => $lastMsg ? $lastMsg->created_at : null,
+                'unread_count'     => $unread,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -89,7 +132,6 @@ class PesanModel extends Model
     public function countUnread(int $userId): int
     {
         return $this->db->table($this->table)
-            ->join('users', 'users.id = pesan.sender_id')
             ->where('pesan.receiver_id', $userId)
             ->where('pesan.is_read', 0)
             ->countAllResults();

@@ -77,97 +77,192 @@ if (isset($siswa)) {
         <?php endif ?>
     </div>
     <div class="col-12 col-md-7">
-        <div class="card">
+        <div class="card shadow-sm border-0">
             <div class="card-header pb-0 mb-0">
-                <h6>Capaian Hasil Kegiatan Magang</h6>
+                <h6 class="mb-0 font-weight-bolder">Capaian Hasil Kegiatan Magang</h6>
             </div>
             <div class="card-body pt-0 mt-2">
                 <?php if ($nilai) : ?>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-normal mb-0 pb-0">Kedisiplinan</h6>
-                        <h6 class="mb-0 pb-0"><?= $nilai->n_disiplin ?></h6>
-                    </div>
-                    <hr class="dark horizontal my-1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-normal mb-0 pb-0">Kemauan Kerja / Motivasi</h6>
-                        <h6 class="mb-0 pb-0"><?= $nilai->n_motivasi ?></h6>
-                    </div>
-                    <hr class="dark horizontal my-1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-normal mb-0 pb-0">Kehadiran</h6>
-                        <h6 class="mb-0 pb-0"><?= $nilai->n_kehadiran ?></h6>
-                    </div>
-                    <hr class="dark horizontal my-1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-normal mb-0 pb-0">Inisiatif dan kreatifitas</h6>
-                        <h6 class="mb-0 pb-0"><?= $nilai->n_kreatifitas ?></h6>
-                    </div>
-                    <hr class="dark horizontal my-1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-normal mb-0 pb-0">Kejujuran dan Tanggung Jawab</h6>
-                        <h6 class="mb-0 pb-0"><?= $nilai->n_kejujuran ?></h6>
-                    </div>
-                    <hr class="dark horizontal my-1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-normal mb-0 pb-0">Kesopanan dan Personalia</h6>
-                        <h6 class="mb-0 pb-0"><?= $nilai->n_kesopanan ?></h6>
-                    </div>
-                    <hr class="dark horizontal my-1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-normal mb-0 pb-0">Kerjasama</h6>
-                        <h6 class="mb-0 pb-0"><?= $nilai->n_kerjasama ?></h6>
-                    </div>
-                    <?php 
-                    $includeLaporan = !$isSmk || !empty($siswa->laporan);
-                    if ($includeLaporan) : 
-                    ?>
-                    <hr class="dark horizontal my-1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-normal mb-0 pb-0">Laporan</h6>
-                        <h6 class="mb-0 pb-0"><?= $nilai->n_laporan ?></h6>
-                    </div>
-                    <?php endif; ?>
-                    <?php if (isset($nilai->n_dosen) && $nilai->n_dosen !== null) : ?>
-                    <hr class="dark horizontal my-1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-normal mb-0 pb-0 text-info">Nilai Akademik (Dosen)</h6>
-                        <h6 class="mb-0 pb-0 text-info"><?= $nilai->n_dosen ?></h6>
-                    </div>
+                    <?php if (!empty($nilai->file_penilaian)) : ?>
+                        <div class="alert alert-success text-white p-3 mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2 shadow-sm" style="border-radius: 10px; background: linear-gradient(135deg, #2dce89 0%, #28a745 100%);">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa fa-file-circle-check text-2xl"></i>
+                                <div>
+                                    <strong class="d-block text-xs font-weight-bolder">Berkas Lembar Penilaian Fisik Terlampir</strong>
+                                    <span class="text-xxs opacity-9">Pembimbing lapangan telah melampirkan lembar nilai fisik resmi bertanda tangan.</span>
+                                </div>
+                            </div>
+                            <a href="<?= base_url('assets/file_penilaian/' . $nilai->file_penilaian) ?>" target="_blank" class="btn btn-xs bg-white text-success font-weight-bold mb-0 shadow-sm">
+                                <i class="fa fa-download me-1"></i> Unduh Berkas Nilai
+                            </a>
+                        </div>
                     <?php endif; ?>
 
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="font-weight-bold text-lg mb-0 pb-0">Rata-rata</h6>
-                        <h6 class="mb-0 pb-0 text-lg">
+                    <?php if (!empty($nilaiDetails)) : ?>
+                        <?php 
+                        $isModeBerkas = (!empty($nilai->file_penilaian) && (($nilai->metode_penilaian ?? '') === 'file' || empty($nilai->total_nilai) || (!empty($nilaiDetails) && count($nilaiDetails) === 1 && $nilaiDetails[0]->nama_atribut === 'Berkas Lembar Penilaian Resmi Pembimbing Lapangan')));
+                        ?>
+                        <div class="mb-2 text-xs text-muted">
+                            Format penilaian dari instansi: <strong><?= esc($siswa->instansi ?? '-') ?></strong>
+                        </div>
+                        <?php foreach ($nilaiDetails as $idx => $dt) : ?>
                             <?php 
-                                // rata-rata nilai: Normalisasi nilai pembimbing (skala 10) ke skala 100
-                                $items_pembimbing = [
-                                    $nilai->n_disiplin, $nilai->n_motivasi, $nilai->n_kehadiran, 
-                                    $nilai->n_kreatifitas, $nilai->n_kejujuran, $nilai->n_kesopanan, 
-                                    $nilai->n_kerjasama
-                                ];
-                                if ($includeLaporan) {
-                                    $items_pembimbing[] = $nilai->n_laporan;
-                                }
-                                
-                                $total_pembimbing = 0;
-                                foreach ($items_pembimbing as $ni) {
-                                    $total_pembimbing += ($ni <= 10) ? ($ni * 10) : $ni;
-                                }
-
-                                $total_nilai = $total_pembimbing;
-                                $pembagi = $includeLaporan ? 8 : 7;
-                                
-                                if (isset($nilai->n_dosen) && $nilai->n_dosen !== null) {
-                                    $total_nilai += $nilai->n_dosen;
-                                    $pembagi++;
-                                }
-                                $rata = $total_nilai / $pembagi;
-
-                                // echo nilai
-                                echo round($rata, 2);
+                            $isItemBerkas = ($isModeBerkas || $dt->nama_atribut === 'Berkas Lembar Penilaian Resmi Pembimbing Lapangan' || !empty($nilai->file_penilaian));
                             ?>
-                        </h6>
-                    </div>
+                            <?php if ($idx > 0) : ?>
+                                <hr class="dark horizontal my-1">
+                            <?php endif; ?>
+                            <div class="d-flex justify-content-between align-items-center py-1">
+                                <div>
+                                    <h6 class="font-weight-normal mb-0 pb-0 text-sm"><?= esc($dt->nama_atribut) ?></h6>
+                                    <?php if (!$isItemBerkas && !empty($dt->bobot) && $dt->bobot > 0 && ($nilai->metode_penilaian ?? '') === 'bobot') : ?>
+                                        <span class="text-xxs text-muted d-block">Bobot: <?= $dt->bobot ?>%</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="text-end">
+                                    <?php if ($isItemBerkas) : ?>
+                                        <?php if (!empty($nilai->file_penilaian)) : ?>
+                                            <a href="<?= base_url('assets/file_penilaian/' . $nilai->file_penilaian) ?>" target="_blank" class="badge bg-gradient-success text-xxs text-white shadow-sm" title="Lihat Berkas Penilaian">
+                                                <i class="fa fa-file-pdf me-1"></i> Lihat Berkas Penilaian
+                                            </a>
+                                        <?php else : ?>
+                                            <span class="badge bg-gradient-success text-xxs">Lihat Berkas Penilaian</span>
+                                        <?php endif; ?>
+                                    <?php elseif ($dt->nilai > 0) : ?>
+                                        <h6 class="mb-0 pb-0 font-weight-bold text-sm"><?= $dt->nilai ?></h6>
+                                    <?php else : ?>
+                                        <h6 class="mb-0 pb-0 font-weight-bold text-sm"><?= $dt->nilai ?></h6>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+
+                        <?php if (isset($nilai->n_dosen) && $nilai->n_dosen !== null) : ?>
+                            <hr class="dark horizontal my-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="font-weight-normal mb-0 pb-0 text-info">Nilai Akademik (Dosen)</h6>
+                                <h6 class="mb-0 pb-0 text-info font-weight-bold"><?= $nilai->n_dosen ?></h6>
+                            </div>
+                        <?php endif; ?>
+
+                        <hr class="dark horizontal mt-3 my-2">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded bg-gray-100">
+                            <div>
+                                <h6 class="font-weight-bold text-base mb-0 pb-0">Nilai Akhir</h6>
+                                <span class="text-xxs text-muted">
+                                    Metode: <?= $isModeBerkas ? 'Berkas Lembar Penilaian Fisik' : (($nilai->metode_penilaian ?? '') === 'bobot' ? 'Pembobotan Atribut' : 'Rata-rata Atribut') ?>
+                                </span>
+                            </div>
+                            <h5 class="mb-0 pb-0 font-weight-bolder text-success">
+                                <?php if ($isModeBerkas) : ?>
+                                    <?php if (!empty($nilai->file_penilaian)) : ?>
+                                        <a href="<?= base_url('assets/file_penilaian/' . $nilai->file_penilaian) ?>" target="_blank" class="badge bg-gradient-success text-xs text-white shadow-sm" title="Lihat Berkas Penilaian">
+                                            <i class="fa fa-file-pdf me-1"></i> Lihat Berkas Penilaian
+                                        </a>
+                                    <?php else : ?>
+                                        <span class="badge bg-gradient-success text-xs">Lihat Berkas Penilaian</span>
+                                    <?php endif; ?>
+                                <?php elseif (($nilai->total_nilai ?? 0) > 0) : ?>
+                                    <?= $nilai->total_nilai ?>
+                                <?php else : ?>
+                                    0
+                                <?php endif; ?>
+                            </h5>
+                        </div>
+
+                        <?php if (!empty($nilai->catatan)) : ?>
+                            <div class="mt-3 p-3 rounded bg-light border">
+                                <label class="text-xs font-weight-bolder text-dark mb-1 d-block">
+                                    <i class="fa fa-comment-dots text-success me-1"></i> Catatan & Komentar Evaluasi Pembimbing:
+                                </label>
+                                <p class="text-xs text-secondary mb-0" style="white-space: pre-line;"><?= esc($nilai->catatan) ?></p>
+                            </div>
+                        <?php endif; ?>
+                    <?php else : ?>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-normal mb-0 pb-0">Kedisiplinan</h6>
+                            <h6 class="mb-0 pb-0"><?= $nilai->n_disiplin ?></h6>
+                        </div>
+                        <hr class="dark horizontal my-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-normal mb-0 pb-0">Kemauan Kerja / Motivasi</h6>
+                            <h6 class="mb-0 pb-0"><?= $nilai->n_motivasi ?></h6>
+                        </div>
+                        <hr class="dark horizontal my-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-normal mb-0 pb-0">Kehadiran</h6>
+                            <h6 class="mb-0 pb-0"><?= $nilai->n_kehadiran ?></h6>
+                        </div>
+                        <hr class="dark horizontal my-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-normal mb-0 pb-0">Inisiatif dan kreatifitas</h6>
+                            <h6 class="mb-0 pb-0"><?= $nilai->n_kreatifitas ?></h6>
+                        </div>
+                        <hr class="dark horizontal my-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-normal mb-0 pb-0">Kejujuran dan Tanggung Jawab</h6>
+                            <h6 class="mb-0 pb-0"><?= $nilai->n_kejujuran ?></h6>
+                        </div>
+                        <hr class="dark horizontal my-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-normal mb-0 pb-0">Kesopanan dan Personalia</h6>
+                            <h6 class="mb-0 pb-0"><?= $nilai->n_kesopanan ?></h6>
+                        </div>
+                        <hr class="dark horizontal my-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-normal mb-0 pb-0">Kerjasama</h6>
+                            <h6 class="mb-0 pb-0"><?= $nilai->n_kerjasama ?></h6>
+                        </div>
+                        <?php 
+                        $includeLaporan = !$isSmk || !empty($siswa->laporan);
+                        if ($includeLaporan) : 
+                        ?>
+                        <hr class="dark horizontal my-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-normal mb-0 pb-0">Laporan</h6>
+                            <h6 class="mb-0 pb-0"><?= $nilai->n_laporan ?></h6>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (isset($nilai->n_dosen) && $nilai->n_dosen !== null) : ?>
+                        <hr class="dark horizontal my-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-normal mb-0 pb-0 text-info">Nilai Akademik (Dosen)</h6>
+                            <h6 class="mb-0 pb-0 text-info"><?= $nilai->n_dosen ?></h6>
+                        </div>
+                        <?php endif; ?>
+
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <h6 class="font-weight-bold text-lg mb-0 pb-0">Rata-rata</h6>
+                            <h6 class="mb-0 pb-0 text-lg">
+                                <?php 
+                                    $items_pembimbing = [
+                                        $nilai->n_disiplin, $nilai->n_motivasi, $nilai->n_kehadiran, 
+                                        $nilai->n_kreatifitas, $nilai->n_kejujuran, $nilai->n_kesopanan, 
+                                        $nilai->n_kerjasama
+                                    ];
+                                    if ($includeLaporan) {
+                                        $items_pembimbing[] = $nilai->n_laporan;
+                                    }
+                                    
+                                    $total_pembimbing = 0;
+                                    foreach ($items_pembimbing as $ni) {
+                                        $total_pembimbing += ($ni <= 10) ? ($ni * 10) : $ni;
+                                    }
+
+                                    $total_nilai = $total_pembimbing;
+                                    $pembagi = $includeLaporan ? 8 : 7;
+                                    
+                                    if (isset($nilai->n_dosen) && $nilai->n_dosen !== null) {
+                                        $total_nilai += $nilai->n_dosen;
+                                        $pembagi++;
+                                    }
+                                    $rata = $total_nilai / $pembagi;
+
+                                    echo round($rata, 2);
+                                ?>
+                            </h6>
+                        </div>
+                    <?php endif; ?>
 
                 <?php else : ?>
                     <div class="badge badge-info border border-info w-100 p-3" style="text-align: left; white-space: normal !important;">
@@ -188,6 +283,10 @@ if (isset($siswa)) {
             </div>
             <div class="card-body pt-0 mt-0">
                 <?php if ($nilai && getStatusSiswa($siswa->id) == 'selesai'): ?>
+                    <?php 
+                    $isSyaratLengkap = $siswa->is_safety_ready && ($siswa->is_laporan_approved || ($isSmk && empty($siswa->laporan)));
+                    $hasCertFile = !empty($siswa->sertifikat_file);
+                    ?>
                     <div class="mb-3">
                         <div class="d-flex align-items-center mb-2">
                             <i class="fa <?= $siswa->is_safety_ready ? 'fa-check-circle text-success' : 'fa-times-circle text-danger' ?> me-2"></i>
@@ -201,18 +300,47 @@ if (isset($siswa)) {
                             <i class="fa fa-check-circle text-success me-2"></i>
                             <span class="text-sm">Nilai Akhir Terverifikasi</span>
                         </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fa <?= $hasCertFile ? 'fa-check-circle text-success' : ($isSyaratLengkap ? 'fa-clock text-warning' : 'fa-lock text-secondary') ?> me-2"></i>
+                            <span class="text-sm font-weight-bold <?= $hasCertFile ? 'text-success' : ($isSyaratLengkap ? 'text-warning' : 'text-secondary') ?>">
+                                <?= $hasCertFile ? 'Sertifikat Resmi Sudah Diupload' : 'Sertifikat Resmi Bernama' ?>
+                            </span>
+                        </div>
                     </div>
 
-                    <?php if ($siswa->is_safety_ready && ($siswa->is_laporan_approved || ($isSmk && empty($siswa->laporan)))): ?>
-                        <p class="text-success text-bold mb-2"><i class="fa fa-check-circle"></i> E-Sertifikat Siap Diunduh.</p>
-                        <a href="/sertifikat/download/<?= $siswa->id ?>" class="btn btn-info w-100 mb-3">
-                            <i class="fa fa-download me-1"></i> Download E-Sertifikat
-                        </a>
-                    <?php else: ?>
-                        <div class="alert alert-light border border-warning p-2 mb-3">
-                            <small class="text-dark">Sertifikat akan tersedia setelah seluruh persyaratan di atas terpenuhi (Centang Hijau).</small>
+                    <?php if ($hasCertFile): ?>
+                        <div class="alert alert-success text-white p-3 mb-3 shadow-sm" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa fa-check-circle fs-5"></i>
+                                <div>
+                                    <strong class="d-block text-xs">Sertifikat Resmi Tersedia</strong>
+                                    <small class="text-xxs">Sertifikat magang resmi yang telah bernama dan bertanda tangan telah diunggah oleh pihak PLN.</small>
+                                </div>
+                            </div>
                         </div>
-                        <button disabled class="btn btn-secondary w-100 mb-3 opacity-5">
+                        <a href="/sertifikat/download/<?= $siswa->id ?>" class="btn btn-success w-100 mb-3 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                            <i class="fa fa-download"></i> Unduh Sertifikat Resmi (PDF)
+                        </a>
+                    <?php elseif ($isSyaratLengkap): ?>
+                        <div class="alert alert-light border border-warning p-3 mb-3 shadow-sm" style="border-radius: 8px; background: #fffdf5;">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="fa fa-hourglass-half text-warning fs-5 mt-1"></i>
+                                <div>
+                                    <strong class="text-xs text-dark d-block mb-1">Menunggu Unggahan Sertifikat Resmi</strong>
+                                    <p class="text-xxs text-secondary mb-0" style="line-height: 1.45;">
+                                        Kegiatan magang dan nilai Anda telah selesai. Sertifikat magang resmi yang telah bernama dan bertanda tangan saat ini sedang diproses oleh Pembimbing PKL / Admin. Anda dapat mengunduh sertifikat segera setelah berkas diunggah ke sistem.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <button disabled class="btn btn-secondary w-100 mb-3 opacity-6" style="cursor: not-allowed;">
+                            <i class="fa fa-clock me-1"></i> Menunggu Upload Sertifikat
+                        </button>
+                    <?php else: ?>
+                        <div class="alert alert-light border border-secondary p-2 mb-3" style="border-radius: 8px;">
+                            <small class="text-dark">Sertifikat akan diproses setelah seluruh persyaratan di atas terpenuhi (Centang Hijau).</small>
+                        </div>
+                        <button disabled class="btn btn-secondary w-100 mb-3 opacity-5" style="cursor: not-allowed;">
                             <i class="fa fa-lock me-1"></i> Sertifikat Terkunci
                         </button>
                     <?php endif; ?>

@@ -11,7 +11,7 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table table-hover table-stripped" id="tbbimbingan">
+                <table class="table table-hover table-stripped" id="tbbimbingan" style="width: 100%;">
                     <thead>
                         <tr>
                             <th class="ps-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No</th>
@@ -29,36 +29,56 @@
                         <?php foreach ($applications as $app) : ?>
                             <tr>
                                 <td class="ps-3 text-xs font-weight-bold"><?= $no++ ?></td>
-                                 <td class="ps-3 text-xs font-weight-bold">
+                                <td class="ps-3 text-xs font-weight-bold">
                                     <div class="badge badge-secondary"><?= $app->nim ?></div>
                                 </td>
                                 <td class="ps-3 text-xs font-weight-bold"><?= $app->nama ?></td>
                                 <td class="ps-3 text-xs font-weight-bold"><?= $app->kelas ?></td>
-                                <td class="ps-3 text-xs font-weight-bold"><?= $app->instansi ?: '-' ?></td>
+                                
                                 <td class="ps-3 text-xs font-weight-bold">
-                                    <?= genBadgeStatusApplication($app->status) ?>
+                                    <?= $app->nama_divisi ?? $app->instansi ?? '-' ?>
                                 </td>
+                                
+                                <!-- Badge Status Memanjang -->
+                                <td class="ps-3 text-xs font-weight-bold">
+                                    <?php 
+                                        $badgeHtml = genBadgeStatusApplication($app->status);
+                                        $badgeHtml = str_replace('class="', 'class="w-100 py-2 text-center d-block ', $badgeHtml);
+                                        echo $badgeHtml;
+                                    ?>
+                                </td>
+                                
                                 <td class="ps-3 text-xs font-weight-bold">
                                     <?php if ($app->laporan) : ?>
                                         <div class="d-flex flex-column gap-2">
-                                            <a href="<?= base_url('assets/laporan/' . $app->laporan) ?>" target="_blank" class="badge badge-info border border-info shadow text-center w-100">LIHAT LAPORAN</a>
+                                            <a href="<?= base_url('assets/laporan/' . $app->laporan) ?>" target="_blank" class="btn btn-sm btn-success mb-0 w-100" style="border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.3px;">
+                                                <i class="fa fa-file-pdf me-1"></i> LIHAT LAPORAN
+                                            </a>
                                             
-                                            <?php if ($app->is_laporan_approved) : ?>
-                                                <button class="badge btn-outline-info border-info text-info btn-report-approve w-100" data-approved="0" data-id="<?= $app->sid ?>">
-                                                    <i class="fa fa-times me-1"></i> BATALKAN
-                                                </button>
-                                            <?php else : ?>
-                                                <button class="badge bg-gradient-info text-white border-0 btn-report-approve w-100" data-approved="1" data-id="<?= $app->sid ?>">
-                                                    <i class="fa fa-check me-1"></i> SETUJUI
-                                                </button>
+                                            <!-- Tombol Setujui hanya untuk admin & pembimbing -->
+                                            <?php if (in_groups('admin') || in_groups('pembimbing')) : ?>
+                                                <?php if ($app->is_laporan_approved) : ?>
+                                                    <button class="btn btn-sm btn-outline-danger mb-0 w-100 btn-report-approve" data-approved="0" data-id="<?= $app->sid ?>" style="border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                                        <i class="fa fa-times me-1"></i> BATALKAN
+                                                    </button>
+                                                <?php else : ?>
+                                                    <button class="btn btn-sm btn-info mb-0 w-100 text-white btn-report-approve" data-approved="1" data-id="<?= $app->sid ?>" style="border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                                        <i class="fa fa-check me-1"></i> SETUJUI
+                                                    </button>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
                                     <?php else : ?>
-                                        <span class="badge badge-dark border border-dark opacity-5">BELUM ADA</span>
+                                        <span class="badge bg-secondary text-white w-100 py-2" style="border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.3px;">
+                                            BELUM ADA
+                                        </span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="ps-3 text-xs font-weight-bold">
-                                    <a href="<?= base_url('/bimbingan-dosen/logbook/' . $app->nim) ?>" class="badge badge-primary border border-primary shadow">LIHAT LOGBOOK</a>
+                                    <!-- TOMBOL LIHAT LOGBOOK WARNA HIJAU -->
+                                    <a href="<?= base_url('/bimbingan-dosen/logbook/' . $app->nim) ?>" class="btn btn-sm btn-success mb-0 w-100" style="border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.3px;">
+                                        <i class="fa fa-book me-1"></i> LIHAT LOGBOOK
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -83,6 +103,7 @@
         $("#tbbimbingan").DataTable({
             dom: '<"row"<"col-12"tr>><"row mt-2 px-3"<"col-12 col-md-6"i><"col-12 col-md-6"p>>',
             pageLength: 10,
+            autoWidth: false,
             language: {
                 paginate: {
                     next: '<i class="fas fa-angle-right"></i>',
@@ -110,20 +131,11 @@
                     $.ajax({
                         url: "/siswa/approve_laporan",
                         type: "POST",
-                        data: {
-                            id: id,
-                            approved: approved
-                        },
+                        data: { id: id, approved: approved },
                         dataType: "JSON",
                         success: function(res) {
                             if (res.success) {
-                                Swal.fire({
-                                    title: "Berhasil!",
-                                    text: res.message,
-                                    icon: "success",
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                }).then(() => location.reload());
+                                Swal.fire({ title: "Berhasil!", text: res.message, icon: "success", timer: 1500, showConfirmButton: false }).then(() => location.reload());
                             } else {
                                 Swal.fire("Gagal!", res.message, "error");
                             }

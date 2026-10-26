@@ -10,38 +10,32 @@ class InitialSeed extends Seeder
     {
         /**
          * =============== FAKE DATA ===============
-         * faker initialize
          */
         $fake = \Faker\Factory::create('id_ID');
 
-
         /**
          * =============== GROUP USER =============== 
-         * input group user
+         * Menghapus dosen_pembimbing, fokus ke instansi
          */
         $this->db->table('auth_groups')->insertBatch([
             ['name' => 'admin', 'description' => 'Site Administrator'],
             ['name' => 'pembimbing', 'description' => 'Pembimbing magang'],
-            ['name' => 'dosen_pembimbing', 'description' => 'Dosen Pembimbing Magang'],
             ['name' => 'siswa', 'description' => 'Siswa'],
+            ['name' => 'instansi', 'description' => 'Instansi Pendidikan'],
         ]);
-
 
         /**
          * =============== JURUSAN ===============
-         * input jurusan
          */
         $jurusan = new \App\Models\JurusanModel();
         $jurusan->insertBatch([
-            ['id' => 1, 'nama_jurusan' => 'RPL',],
-            ['id' => 2, 'nama_jurusan' => 'TKJ',],
-            ['id' => 2, 'nama_jurusan' => 'TKR',]
+            ['id' => 1, 'nama_jurusan' => 'RPL'],
+            ['id' => 2, 'nama_jurusan' => 'TKJ'],
+            ['id' => 3, 'nama_jurusan' => 'TKR'],
         ]);
-
 
         /**
          * =============== ANGKATAN ===============
-         * input angkatan
          */
         $angkatan = new \App\Models\AngkatanModel();
         $angkatan->insertBatch([
@@ -49,10 +43,8 @@ class InitialSeed extends Seeder
             ['tahun' => 2023, 'nama' => '2023 Gelombang 2', 'tgl_mulai' => '2023-05-05', 'tgl_selesai' => '2023-07-05'],
         ]);
 
-
         /**
          * =============== PEMBIMBING ===============
-         * input user as pembimbing
          */
         $pembimbing = new \App\Models\PembimbingModel();
         $user       = new \App\Models\UserModel();
@@ -74,44 +66,63 @@ class InitialSeed extends Seeder
                 ]);
                 $idPembimbing[] = $pembimbing->getInsertID();
             } else {
-                $user->delete($user->getInsertID());
                 echo implode(", ", $user->errors()) . "\n";
             }
         }
 
-
         /**
          * =============== ADMIN ===============
-         * input user as admin
          */
-        $user->withGroup('admin')->insert(new \App\Entities\User([
+        if ($user->withGroup('admin')->insert(new \App\Entities\User([
             "email"     => 'admin@gmail.com',
             "username"  => 'admin',
             "password"  => 'adminasama123',
             "active"    => 1,
-        ]));
-        $pembimbing->save([
-            'user_id'   => $user->getInsertID(),
-            'nama'      => $fake->firstName(),
-            'no_hp'     => $fake->e164PhoneNumber(),
-            'email'     => $fake->email(),
-        ]);
-
+        ]))) {
+            $pembimbing->save([
+                'user_id'   => $user->getInsertID(),
+                'nama'      => 'Administrator',
+                'no_hp'     => '08123456789',
+                'email'     => 'admin@gmail.com',
+            ]);
+        }
 
         /**
-         * =============== ID ANGKATAN ===============
-         * get all id angkatan
+         * =============== INSTANSI ===============
+         * Menggantikan dosen_pembimbing
+         */
+        $instansiModel = new \App\Models\DosenPembimbingModel(); 
+        
+        for ($i = 0; $i < 3; $i++) {
+            $fakeEmail = $fake->freeEmail();
+            if ($user->withGroup('instansi')->save(new \App\Entities\User([
+                "email"     => $fakeEmail,
+                "username"  => 'instansi' . ($i + 1),
+                "password"  => '12345678',
+                "active"    => 1,
+            ]))) {
+                $instansiModel->save([
+                    'user_id'        => $user->getInsertID(),
+                    'nama_instansi'  => $fake->company(),
+                    'jenis_instansi' => $fake->randomElement(['Perguruan tinggi', 'Sekolah', 'Lainnya']),
+                    'alamat'         => $fake->address(),
+                    'provinsi'       => $fake->state(),
+                    'kabupaten_kota' => $fake->city(),
+                    'kecamatan'      => $fake->district(),
+                    'no_hp'          => $fake->phoneNumber(),
+                    'email'          => $fakeEmail,
+                ]);
+            }
+        }
+
+        /**
+         * =============== SISWA ===============
          */
         $idAngkatan = [];
         foreach ($angkatan->select('id')->findAll() as $key => $value) {
             $idAngkatan[] = $value->id;
         }
 
-
-        /**
-         * =============== SISWA ===============
-         * input user as siswa
-         */
         $idSiswa = [];
         $siswa = new \App\Models\SiswaModel();
         for ($i = 0; $i < $fake->numberBetween(5, 10); $i++) {
@@ -134,15 +145,12 @@ class InitialSeed extends Seeder
                 ]);
                 $idSiswa[] = $siswa->getInsertID();
             } else {
-                $siswa->delete($user->getInsertID());
                 echo implode(", ", $user->errors()) . "\n";
             }
         }
 
-
         /**
          * =============== TEMPAT MAGANG ===============
-         * input tempat magang
          */
         $idTempat = [];
         $tempat = new \App\Models\TempatModel();
@@ -161,10 +169,8 @@ class InitialSeed extends Seeder
             $idTempat[] = $tempat->getInsertID();
         }
 
-
         /**
          * =============== PENGUMUMAN ===============
-         * input pengumuman
          */
         $pengumuman = new \App\Models\PengumumanModel();
         for ($i = 0; $i < $fake->numberBetween(5, 10); $i++) {
@@ -175,26 +181,5 @@ class InitialSeed extends Seeder
                 'lampiran'     => 'https://propertywiselaunceston.com.au/wp-content/themes/property-wise/images/no-image@2x.png',
             ]);
         }
-
-
-        /**
-         * =============== APPLICATION ===============
-         * input application / pendaftaran siswa
-         */
-        // $application = new \App\Models\ApplicationModel();
-        // for ($i = 0; $i <= count($idSiswa); $i++) {
-        //     $ids = $fake->randomElement($idSiswa);
-        //     $idSiswa = array_diff($idSiswa, [$ids]);
-
-        //     if (!$application->save([
-        //         'id_siswa'      => $ids,
-        //         'id_tempat'     => $fake->randomElement($idTempat),
-        //         'status'        => $fake->randomElement(['accepted', 'selesai']),
-        //         // 'tanggal_mulai' => $fake->dateTimeBetween('-1 month', '+1 month')->format('Y-m-d'),
-        //         // 'tanggal_selesai' => $fake->dateTimeBetween('+1 month', '+3 month')->format('Y-m-d'),
-        //     ])) {
-        //         echo implode(", ", $application->errors()) . "\n";
-        //     }
-        // }
     }
 }

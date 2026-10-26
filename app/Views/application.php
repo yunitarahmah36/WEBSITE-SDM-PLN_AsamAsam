@@ -27,7 +27,7 @@
         }
 
         /* =====================================================
-           MODAL EDIT PENDAFTARAN - SIMPLE
+           MODAL EDIT PENDAFTARAN - DARK NAVY
            ===================================================== */
         #modalEditApplication .modal-content {
             border: none;
@@ -36,7 +36,7 @@
         }
 
         #modalEditApplication .modal-header {
-            background: #1e293b;
+            background: #2b3654; /* Warna Biru Gelap / Navy */
             padding: 16px 22px;
             border: none;
         }
@@ -48,10 +48,13 @@
             margin: 0;
         }
 
+        /* PERBAIKAN TOMBOL X */
         #modalEditApplication .modal-header .btn-close {
-            filter: invert(1) brightness(2);
-            opacity: 0.7;
+            filter: none; /* Hapus filter */
+            color: #ffffff; /* Warna putih */
+            opacity: 0.8;
             box-shadow: none;
+            background: none; /* Hilangkan background image bawaan bootstrap */
         }
 
         #modalEditApplication .modal-header .btn-close:hover {
@@ -95,8 +98,8 @@
 
         #modalEditApplication .select2-container--default.select2-container--focus .select2-selection--single,
         #modalEditApplication .select2-container--default.select2-container--open .select2-selection--single {
-            border-color: #1e293b !important;
-            box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.1) !important;
+            border-color: #2b3654 !important;
+            box-shadow: 0 0 0 3px rgba(43, 54, 84, 0.1) !important;
         }
 
         .select2-results__option .badge-kuota {
@@ -247,6 +250,80 @@
                 padding-right: 6px !important;
             }
         }
+
+        /* =====================================================
+           TEMA SURAT MAGANG PESERTA (SOFT GREEN SAGE)
+           ===================================================== */
+        .card-surat-magang {
+            border: 1px solid #d2edd7 !important;
+            border-radius: 16px !important;
+            box-shadow: 0 4px 20px rgba(15, 81, 50, 0.05) !important;
+        }
+        .card-pernyataan-inner {
+            background: linear-gradient(145deg, #f0fdf4, #eaf8ee) !important;
+            border: 1.5px solid #bbf7d0 !important;
+            border-radius: 14px !important;
+            box-shadow: 0 2px 10px rgba(15, 81, 50, 0.04) !important;
+        }
+        .btn-unduh-template {
+            background: linear-gradient(135deg, #15803d, #16a34a) !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+            letter-spacing: 0.5px;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 8px 18px !important;
+            box-shadow: 0 4px 10px rgba(21, 128, 61, 0.22) !important;
+            transition: all 0.2s ease;
+        }
+        .btn-unduh-template:hover {
+            background: linear-gradient(135deg, #166534, #15803d) !important;
+            color: #ffffff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(21, 128, 61, 0.3) !important;
+        }
+        .btn-unggah-pernyataan {
+            background-color: #ecfdf5 !important;
+            color: #15803d !important;
+            border: 1.5px solid #86efac !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+            letter-spacing: 0.5px;
+            border-radius: 8px !important;
+            padding: 7px 16px !important;
+            transition: all 0.2s ease;
+        }
+        .btn-unggah-pernyataan:hover {
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
+            border-color: #4ade80 !important;
+        }
+        .input-file-pernyataan {
+            border: 1px solid #a7f3d0 !important;
+            border-radius: 8px !important;
+            background-color: #ffffff !important;
+            font-size: 12px !important;
+            color: #064e28 !important;
+        }
+        .badge-sudah-diunggah {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
+            border: 1px solid #86efac !important;
+            border-radius: 8px !important;
+            padding: 6px 14px !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+            transition: all 0.2s ease;
+        }
+        .badge-sudah-diunggah:hover {
+            background-color: #a7f3d0 !important;
+            color: #044e31 !important;
+        }
     </style>
 <?= $this->endSection(); ?>
 
@@ -254,7 +331,7 @@
 
 <div class="row">
     <div class="col-12">
-        <div class="card card-body py-3 px-4">
+        <div class="card card-body py-4 px-4 <?= in_groups('siswa') ? 'card-surat-magang' : '' ?>">
             <?php if (in_groups('admin') || in_groups('pembimbing')) : ?>
                 <div class="d-flex justify-content-between align-items-center px-2 page-header-responsive">
                     <div>
@@ -323,7 +400,7 @@
                                         <?= isVerifiedInstansi($application->id_tempat) ?><span class="iname"><?= $instansi ?></span>
                                     </td>
                                     <td class="ps-3 text-xs font-weight-bold" data-label="Dosen Pembimbing">
-                                        <?= $application->nama_dosen ?: '<span class="text-secondary opacity-6">Belum ada</span>' ?>
+                                        <?= !empty($application->dosen_nama) ? esc($application->dosen_nama) : '<span class="text-secondary opacity-6">Belum ada</span>' ?>
                                     </td>
                                     <td class="ps-3 text-xs font-weight-bold" data-label="Surat Pernyataan">
                                         <?php if (isset($application->surat_pernyataan) && $application->surat_pernyataan) : ?>
@@ -340,7 +417,34 @@
                                         <?php endif ?>
                                     </td>
                                     <td class="ps-3 text-xs font-weight-bold" data-label="Aksi">
-                                        <button class="badge border border-1 border-info text-info btn-view-profile" title="Lihat Profil" data-nama="<?= htmlspecialchars($application->nama) ?>" data-nim="<?= $application->nim ?>" data-kelas="<?= $application->kelas ?>" data-jurusan="<?= $application->jurusan ?? '-' ?>" data-instansi="<?= htmlspecialchars($application->instansi ?? '-') ?>" data-tgl_masuk="<?= $application->tgl_masuk ?>" data-tgl_selesai="<?= $application->tgl_selesai ?>" data-nik="<?= $application->nik ?>" data-tempat_lahir="<?= htmlspecialchars($application->tempat_lahir ?? '-') ?>" data-tanggal_lahir="<?= $application->tanggal_lahir ?>" data-jenis_kelamin="<?= $application->jenis_kelamin ?>" data-nohp_emergency="<?= $application->no_hp_emergency ?>" data-surat_permohonan="<?= $application->surat_permohonan ?>" data-cv="<?= $application->cv ?>" data-ktp="<?= $application->ktp ?>" data-bpjs="<?= $application->bpjs ?>" data-ktm="<?= $application->ktm ?>" data-takaful="<?= $application->takaful ?? '' ?>" data-surat_balasan="<?= $application->surat_balasan ?? '' ?>" data-nohp="<?= $application->no_hp ?>" data-alamat="<?= htmlspecialchars($application->alamat) ?>" data-foto="<?= $application->foto ? '/assets/img/foto_siswa/'.$application->foto : '/assets/img/default.jpg' ?>" data-issmk="<?= isSmkSiswa($application) ? 'true' : 'false' ?>"><i class="fas fa-eye"></i></button>
+                                        <button class="badge border border-1 border-info text-info btn-view-profile" 
+                                            title="Lihat Profil" 
+                                            data-nama="<?= htmlspecialchars($application->nama) ?>" 
+                                            data-nim="<?= $application->nim ?>" 
+                                            data-kelas="<?= $application->kelas ?>" 
+                                            data-jurusan="<?= $application->jurusan ?? '-' ?>" 
+                                            data-instansi="<?= htmlspecialchars($application->instansi ?? '-') ?>" 
+                                            data-tgl_masuk="<?= $application->tgl_masuk ?>" 
+                                            data-tgl_selesai="<?= $application->tgl_selesai ?>" 
+                                            data-nik="<?= $application->nik ?>" 
+                                            data-tempat_lahir="<?= htmlspecialchars($application->tempat_lahir ?? '-') ?>" 
+                                            data-tanggal_lahir="<?= $application->tanggal_lahir ?>" 
+                                            data-jenis_kelamin="<?= $application->jenis_kelamin ?>" 
+                                            data-nohp_emergency="<?= $application->no_hp_emergency ?>" 
+                                            data-surat_permohonan="<?= $application->surat_permohonan ?>" 
+                                            data-cv="<?= $application->cv ?>" 
+                                            data-ktp="<?= $application->ktp ?>" 
+                                            data-bpjs="<?= $application->bpjs ?>" 
+                                            data-ktm="<?= $application->ktm ?>" 
+                                            data-takaful="<?= $application->takaful ?? '' ?>" 
+                                            data-surat_balasan="<?= $application->surat_balasan ?? '' ?>" 
+                                            data-nohp="<?= $application->no_hp ?>" 
+                                            data-alamat="<?= htmlspecialchars($application->alamat) ?>" 
+                                            data-foto="<?= $application->foto ? '/assets/img/foto_siswa/'.$application->foto : '/assets/img/default.jpg' ?>" 
+                                            data-dosen_nama="<?= htmlspecialchars($application->dosen_nama ?? '') ?>"
+                                            data-issmk="<?= isSmkSiswa($application) ? 'true' : 'false' ?>">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
 
                                         <?php if (in_groups('admin')) : ?>
                                             <button <?= $application->status != 'pending' ? 'disabled style="opacity: 0.6;"' : '' ?> 
@@ -399,6 +503,12 @@
                                         <div class="text-xs text-secondary font-weight-bold">Instansi Asal</div>
                                         <div class="text-sm text-dark font-weight-bold" id="prof_instansi">-</div>
                                     </div>
+
+                                    <div class="col-12 mb-3">
+                                        <div class="text-xs text-secondary font-weight-bold">Dosen/Guru Pembimbing</div>
+                                        <div class="text-sm text-dark font-weight-bold" id="prof_dosen_nama">-</div>
+                                    </div>
+
                                     <div class="col-6 mb-3">
                                         <div class="text-xs text-secondary font-weight-bold">Tanggal Masuk</div>
                                         <div class="text-sm text-dark font-weight-bold" id="prof_tgl_masuk">-</div>
@@ -457,10 +567,13 @@
                                     <h5 class="modal-title">
                                         <i class="fas fa-edit me-2"></i> Update Pendaftaran
                                     </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    <!-- TOMBOL X DIGANTI DENGAN IKON FONT AWESOME -->
+                                    <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close" style="background: none; opacity: 1;">
+                                        <i class="fas fa-times" style="font-size: 20px;"></i>
+                                    </button>
                                 </div>
 
-                                <form id="formEditApplication">
+                                <form id="formEditApplication" enctype="multipart/form-data">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="item" id="edit_app_id">
                                     
@@ -501,13 +614,21 @@
                                             </select>
                                         </div>
 
+                                        <div class="mb-3">
+                                            <label for="edit_surat_balasan" class="form-label">
+                                                Surat Balasan Magang (PDF)
+                                            </label>
+                                            <input type="file" name="surat_balasan" id="edit_surat_balasan" class="form-control" accept=".pdf" style="height: auto; padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                                            <small class="text-xs text-secondary mt-1 d-block">*Unggah surat balasan jika status diubah menjadi "Terima".</small>
+                                        </div>
+
                                     </div>
 
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">
                                             Batal
                                         </button>
-                                        <button type="submit" class="btn btn-sm" style="background: #1e293b; color: white; font-weight: 600;">
+                                        <button type="submit" class="btn btn-sm" style="background: #2b3654; color: white; font-weight: 600;">
                                             <i class="fas fa-save me-1"></i> Simpan
                                         </button>
                                     </div>
@@ -553,17 +674,22 @@
                     </div>
                 <?php endif; ?>
             <?php else : ?>
-                <div class="d-flex justify-content-between align-items-center px-2 mb-4">
+                <div class="d-flex justify-content-between align-items-center px-1 mb-4">
                     <div>
-                        <span class="h5 mb-0 pb-0">Surat Magang</span> <br>
-                        Silakan unduh dan unggah surat magang anda di sini.
+                        <h4 class="m-0 p-0 font-weight-bold" style="color: #0f4423;">
+                            <span class="material-icons align-middle me-1" style="color: #15803d; font-size: 1.6rem;">description</span>
+                            Surat Magang
+                        </h4>
+                        <p class="text-sm text-secondary mt-1 mb-0">Silakan unduh dan unggah surat magang Anda di sini.</p>
                     </div>
                 </div>
 
                 <div>
-                    <div class="card card-body rounded bg-gradient-light shadow-sm p-3 mb-4 border border-info">
-                        <h6 class="text-info mb-2"><i class="fas fa-file-signature me-1"></i> Surat Pernyataan Magang</h6>
-                        <p class="text-sm mb-3">Silakan unduh template surat magang berikut, lengkapi, lalu unggah kembali dalam format PDF/Word.</p>
+                    <div class="card card-body card-pernyataan-inner p-4 mb-3">
+                        <h6 class="mb-2 font-weight-bold" style="color: #064e28;">
+                            <i class="fas fa-file-signature me-1" style="color: #15803d;"></i> Surat Pernyataan Magang
+                        </h6>
+                        <p class="text-sm mb-3" style="color: #2d5a3e;">Silakan unduh template surat magang berikut, lengkapi, lalu unggah kembali dalam format PDF/Word.</p>
                         
                         <div class="d-flex flex-wrap align-items-center gap-3">
                             <?php 
@@ -573,7 +699,7 @@
                                 elseif (file_exists(FCPATH . 'assets/berkas/template_surat_magang.doc')) $fileUrl = '/assets/berkas/template_surat_magang.doc';
                             ?>
                             <?php if ($fileUrl) : ?>
-                                <a href="<?= $fileUrl ?>" target="_blank" class="btn btn-sm btn-info mb-0">
+                                <a href="<?= $fileUrl ?>" target="_blank" class="btn btn-sm btn-unduh-template mb-0">
                                     <i class="fas fa-download me-1"></i> Unduh Template
                                 </a>
                             <?php else : ?>
@@ -582,15 +708,16 @@
                             
                             <form action="/siswa/upload_pernyataan" method="post" enctype="multipart/form-data" class="d-flex align-items-center mb-0 m-0 flex-wrap gap-2">
                                 <?= csrf_field() ?>
-                                <input type="file" name="surat_pernyataan" class="form-control form-control-sm border px-2 py-1" style="max-width: 200px;" accept=".pdf,.doc,.docx" required>
-                                <button type="submit" class="btn btn-sm btn-success mb-0">
+                                <input type="file" name="surat_pernyataan" class="form-control form-control-sm input-file-pernyataan px-2 py-1" style="max-width: 220px;" accept=".pdf,.doc,.docx" required>
+                                <button type="submit" class="btn btn-sm btn-unggah-pernyataan mb-0">
                                     <i class="fas fa-upload me-1"></i> Unggah
                                 </button>
                             </form>
                             
                             <?php if (isset($siswa_data) && isset($siswa_data->surat_pernyataan) && $siswa_data->surat_pernyataan) : ?>
-                                <a href="/assets/berkas/<?= $siswa_data->surat_pernyataan ?>" target="_blank" class="text-success text-sm font-weight-bold ms-2">
-                                    <i class="fas fa-check-circle me-1"></i> Sudah Diunggah
+                                <a href="/assets/berkas/<?= $siswa_data->surat_pernyataan ?>" target="_blank" class="badge-sudah-diunggah ms-lg-2">
+                                    <i class="fas fa-check-circle" style="color: #10b981;"></i> Sudah Diunggah
+                                    <i class="fas fa-external-link-alt ms-1 opacity-7" style="font-size: 10px;"></i>
                                 </a>
                             <?php endif; ?>
                         </div>
@@ -733,19 +860,22 @@
                 });
 
                 // =====================================================
-                // SUBMIT form update pendaftaran
+                // SUBMIT form update pendaftaran (PERBAIKAN AJAX)
                 // =====================================================
                 $('#formEditApplication').on('submit', function(e) {
                     e.preventDefault();
                     
-                    const data = $(this).serialize();
+                    const formData = new FormData(this);
                     const btn = $('#formEditApplication button[type=submit]');
 
                     $.ajax({
                         url: "/application/status/update",
                         type: "post",
                         dataType: "json",
-                        data: data,
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        cache: false,
                         beforeSend: function() {
                             btn.attr('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
                         },
@@ -790,6 +920,8 @@
                     $('#prof_kelas').text(d.kelas || '-');
                     $('#prof_jurusan').text(d.jurusan || '-');
                     $('#prof_instansi').text(d.instansi || '-');
+
+                    $('#prof_dosen_nama').text(d.dosen_nama || 'Belum ada');
                     
                     const formatDate = (dateStr) => {
                         if (!dateStr || dateStr === '0000-00-00') return '-';

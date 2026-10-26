@@ -13,15 +13,21 @@
                     </div>
                 <?php else : ?>
                     <?php foreach ($siswas as $s) : ?>
-                        <a href="<?= base_url('/logbook/' . $idt . '/' . $s->nim) ?>" <?= getStatusSiswa($s->sid) == 'selesai' ? 'data-bs-toggle="tooltip" title="selesai"' : '' ?>>
+                        <a href="<?= base_url('/logbook/' . $idt . '/' . $s->nim) ?>">
                             <div class="card card-body p-2 bg-gray-200 shadow-none rounded px-4 mb-2">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <div class="">
-                                        <div class="mb-0 <?= getStatusSiswa($s->sid) == 'selesai' ? 'text-info' : '' ?>"><b><?= $s->nama ?></b></div>
-                                        <span class="text-sm <?= getStatusSiswa($s->sid) == 'selesai' ? 'text-info' : '' ?>"><?= $s->nim ?></span>
+                                    <div>
+                                        <div class="mb-0 <?= getStatusSiswa($s->sid) == 'selesai' ? 'text-info' : '' ?>"><b><?= esc($s->nama) ?></b></div>
+                                        <span class="text-sm <?= getStatusSiswa($s->sid) == 'selesai' ? 'text-info' : '' ?>"><?= esc($s->nim) ?></span>
                                     </div>
                                     <div>
-                                        <div class="text-sm <?= getStatusSiswa($s->sid) == 'selesai' ? 'text-info' : '' ?>"><?= $s->kelas ?></div>
+                                        <?php if (getStatusSiswa($s->sid) == 'selesai' || ($s->status ?? '') == 'selesai') : ?>
+                                            <span class="badge bg-gradient-success text-xxs px-2 py-1">Selesai</span>
+                                        <?php elseif (getStatusSiswa($s->sid) == 'unfinish' || ($s->status ?? '') == 'unfinish') : ?>
+                                            <span class="badge bg-gradient-secondary text-xxs px-2 py-1">Tidak Aktif</span>
+                                        <?php else : ?>
+                                            <span class="badge bg-gradient-info text-xxs px-2 py-1">Aktif</span>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
